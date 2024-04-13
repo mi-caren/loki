@@ -39,9 +39,10 @@ void enable_raw_mode() {
     // In canonical mode, the terminal passes the input to the program
     // only when a ENTER is pressed. If we disable it, we read input byte-by-byte
     // disable ICRNL to avoid translating \r to \n
-    raw.c_iflag &= ~(ICRNL | IXON);
+    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
     // disable output translation of \n to \n\r
     raw.c_oflag &= ~(OPOST);
+    raw.c_cflag &= ~(CS8);
     raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
     // Impostiamo il numero minimo di carrateri
     // per il read noncanonical, in modo che read non ritorni
