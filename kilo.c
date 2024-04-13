@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
@@ -53,6 +54,12 @@ int main() {
     enable_raw_mode();
 
     char c;
-    while (read(STDIN_FILENO, &c, 1) && c != 'q');
+    while (read(STDIN_FILENO, &c, 1) && c != 'q') {
+        if (iscntrl(c)) {
+            printf("%*d\n", 3, c);
+        } else {
+            printf("%*d (%c)\n", 3, c, c);
+        }
+    }
     return 0;
 }
