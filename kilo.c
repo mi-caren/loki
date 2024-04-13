@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -10,7 +11,14 @@
 #define CTRL_KEY(k)    ((k) & 0x1f)
 
 // *** data ***
-struct termios orig_termios;
+
+struct editor_config {
+    int screenrows;
+    int screencols;
+    struct termios orig_termios;
+};
+
+struct editor_config e_conf;
 
 
 // *** terminal ***
@@ -33,7 +41,7 @@ void disable_raw_mode() {
     // TCSAFLUSH, prima di uscire scarta tutti gli input non letti,
     // quindi non tutto ciò che c'è dopo il carattere 'q' non viene 
     // più passato al terminale ma viene scartato
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1) {
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &e_conf.orig_termios) == -1) {
         die("disable_raw_mode/tcsetattr");
     }
 }
@@ -44,14 +52,14 @@ void disable_raw_mode() {
  */
 void enable_raw_mode() {
     // Legge gli attributi del terminale nella struct raw
-    if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) {
+    if (tcgetattr(STDIN_FILENO, &e_conf.orig_termios) == -1) {
         die("enable_raw_mode/tcgetattr");
     }
     // Registriamo una funzione perchè sia chiamata quando
     // il programma termina, o perchè ritorna da main,
     // o perchè viene chiamato exit()
     atexit(disable_raw_mode);
-    struct termios raw = orig_termios;
+    struct termios raw = e_conf.orig_termios;
     // disabilita l'echoing: ciò che si digita
     // non saràstampato a terminale
     // Flags:
@@ -92,11 +100,23 @@ char editor_read_key() {
     return c;
 }
 
+int get_window_size(int *rows, int *cols) {
+    struct winsize ws;
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+        return -1;
+    } else {
+        *cols = ws.ws_col;
+        *rows = ws.ws_row;
+        return 0;
+    }
+}
+
 // *** output ***
 
 void editor_draw_rows() {
     int y;
-    for (y = 0; y < 24; y++) {
+    for (y = 0; y < e_conf.screenrows; y++) {
         write(STDOUT_FILENO, "~\r\n", 3);
     }
 }
@@ -126,8 +146,16 @@ void editor_process_keypress() {
 }
 
 // *** init ***
+
+void init_editor() {
+    if (get_window_size(&e_conf.screenrows, &e_conf.screencols) == -1) {
+        die("get_window_size");
+    }
+}
+
 int main() {
     enable_raw_mode();
+    init_editor();
 
     while (1) {
         editor_refresh_screen();
