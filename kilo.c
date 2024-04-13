@@ -1,10 +1,19 @@
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
 
 struct termios orig_termios;
+
+/*
+ * Print error message and exit with 1
+ */
+void die(const char *s) {
+    perror(s);
+    exit(1);
+}
 
 /*
  * Reimposta gli attributi del terminale allo stato
@@ -14,7 +23,9 @@ void disable_raw_mode() {
     // TCSAFLUSH, prima di uscire scarta tutti gli input non letti,
     // quindi non tutto ciò che c'è dopo il carattere 'q' non viene 
     // più passato al terminale ma viene scartato
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1) {
+        die("disable_raw_mode/tcsetattr");
+    }
 }
 
 /*
@@ -23,7 +34,9 @@ void disable_raw_mode() {
  */
 void enable_raw_mode() {
     // Legge gli attributi del terminale nella struct raw
-    tcgetattr(STDIN_FILENO, &orig_termios);
+    if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) {
+        die("enable_raw_mode/tcgetattr");
+    }
     // Registriamo una funzione perchè sia chiamata quando
     // il programma termina, o perchè ritorna da main,
     // o perchè viene chiamato exit()
@@ -53,7 +66,9 @@ void enable_raw_mode() {
     // TCSAFLUSH specifica quindo devono essere applicate le modifich:
     //    aspetta che tutti gli output siano stati scritti sul terminale
     //    e scarta tutti gli input non letti
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
+        die("enable_raw_mode/tcsetattr");
+    }
 }
 
 int main() {
@@ -62,7 +77,11 @@ int main() {
     char c;
     while (1) {
         c = 0;
-        read(STDIN_FILENO, &c, 1);
+        // In Cygwin, when read() times out it returns -1 with an errno of EAGAIN,
+        // instead of just returning 0 like it’s supposed to.
+        if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN) {
+            die("read");
+        }
         if (iscntrl(c)) {
             printf("%*d\r\n", 3, c);
         } else {
