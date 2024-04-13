@@ -1,3 +1,4 @@
+// *** includes ***
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -5,11 +6,14 @@
 #include <termios.h>
 #include <unistd.h>
 
+// *** defines ***
 #define CTRL_KEY(k)    ((k) & 0x1f)
 
-
+// *** data ***
 struct termios orig_termios;
 
+
+// *** terminal ***
 /*
  * Print error message and exit with 1
  */
@@ -74,23 +78,34 @@ void enable_raw_mode() {
     }
 }
 
+char editor_read_key() {
+    int nread;
+    char c;
+    while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
+        if (nread == -1 && errno != EAGAIN) {
+            die("read");
+        }
+    }
+    return c;
+}
+
+// *** input ***
+void editor_process_keypress() {
+    char c = editor_read_key();
+
+    switch (c) {
+        case CTRL_KEY('q'):
+            exit(0);
+            break;
+    }
+}
+
+// *** init ***
 int main() {
     enable_raw_mode();
 
-    char c;
     while (1) {
-        c = 0;
-        // In Cygwin, when read() times out it returns -1 with an errno of EAGAIN,
-        // instead of just returning 0 like it’s supposed to.
-        if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN) {
-            die("read");
-        }
-        if (iscntrl(c)) {
-            printf("%*d\r\n", 3, c);
-        } else {
-            printf("%*d (%c)\r\n", 3, c, c);
-        }
-        if (c == CTRL_KEY('q')) break;
+        editor_process_keypress();
     }
     return 0;
 }
