@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
@@ -34,7 +35,7 @@ void enable_raw_mode() {
     //    c_iflag -> input flags
     //    c_oflag -> output flags
     //    c_cflag -> control flags
-    raw.c_lflag &= ~(ECHO);
+    raw.c_lflag &= ~(ECHO | ICANON);
     // scrive il nuovo valore della struct raw
     // TCSAFLUSH specifica quindo devono essere applicate le modifich:
     //    aspetta che tutti gli output siano stati scritti sul terminale
@@ -45,7 +46,9 @@ void enable_raw_mode() {
 int main() {
     enable_raw_mode();
 
-    char c;
-    while (read(STDIN_FILENO, &c, 1) == 1 && c != 'q');
+    char c = 0;
+    while (c != 'q') {
+        read(STDIN_FILENO, &c, 1);
+    }
     return 0;
 }
