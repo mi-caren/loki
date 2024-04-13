@@ -35,7 +35,13 @@ void enable_raw_mode() {
     //    c_iflag -> input flags
     //    c_oflag -> output flags
     //    c_cflag -> control flags
+    // In canonical mode, the terminal passes the input to the program
+    // only when a ENTER is pressed. If we disable it, we read input byte-by-byte
     raw.c_lflag &= ~(ECHO | ICANON);
+    // Impostiamo il numero minimo di carrateri
+    // per il read noncanonical, in modo che read non ritorni
+    // subito ma aspetti che un carattere venga passato
+    raw.c_cc[VMIN] = 1;
     // scrive il nuovo valore della struct raw
     // TCSAFLUSH specifica quindo devono essere applicate le modifich:
     //    aspetta che tutti gli output siano stati scritti sul terminale
@@ -46,9 +52,7 @@ void enable_raw_mode() {
 int main() {
     enable_raw_mode();
 
-    char c = 0;
-    while (c != 'q') {
-        read(STDIN_FILENO, &c, 1);
-    }
+    char c;
+    while (read(STDIN_FILENO, &c, 1) && c != 'q');
     return 0;
 }
