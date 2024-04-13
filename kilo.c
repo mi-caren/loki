@@ -47,7 +47,8 @@ void enable_raw_mode() {
     // Impostiamo il numero minimo di carrateri
     // per il read noncanonical, in modo che read non ritorni
     // subito ma aspetti che un carattere venga passato
-    raw.c_cc[VMIN] = 1;
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 1;
     // scrive il nuovo valore della struct raw
     // TCSAFLUSH specifica quindo devono essere applicate le modifich:
     //    aspetta che tutti gli output siano stati scritti sul terminale
@@ -59,12 +60,15 @@ int main() {
     enable_raw_mode();
 
     char c;
-    while (read(STDIN_FILENO, &c, 1) && c != 'q') {
+    while (1) {
+        c = 0;
+        read(STDIN_FILENO, &c, 1);
         if (iscntrl(c)) {
             printf("%*d\r\n", 3, c);
         } else {
             printf("%*d (%c)\r\n", 3, c, c);
         }
+        if (c == 'q') break;
     }
     return 0;
 }
