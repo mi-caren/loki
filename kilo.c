@@ -38,8 +38,11 @@ void enable_raw_mode() {
     //    c_cflag -> control flags
     // In canonical mode, the terminal passes the input to the program
     // only when a ENTER is pressed. If we disable it, we read input byte-by-byte
-    raw.c_iflag &= ~(IXON);
-    raw.c_lflag &= ~(ECHO | ICANON | ISIG);
+    // disable ICRNL to avoid translating \r to \n
+    raw.c_iflag &= ~(ICRNL | IXON);
+    // disable output translation of \n to \n\r
+    raw.c_oflag &= ~(OPOST);
+    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
     // Impostiamo il numero minimo di carrateri
     // per il read noncanonical, in modo che read non ritorni
     // subito ma aspetti che un carattere venga passato
@@ -57,9 +60,9 @@ int main() {
     char c;
     while (read(STDIN_FILENO, &c, 1) && c != 'q') {
         if (iscntrl(c)) {
-            printf("%*d\n", 3, c);
+            printf("%*d\r\n", 3, c);
         } else {
-            printf("%*d (%c)\n", 3, c, c);
+            printf("%*d (%c)\r\n", 3, c, c);
         }
     }
     return 0;
