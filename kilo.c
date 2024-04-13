@@ -162,6 +162,10 @@ void editor_draw_rows(struct abuf *ab) {
 
 void editor_refresh_screen() {
     struct abuf ab = ABUF_INIT;
+
+    // hide cursor while drawing on screen
+    ab_append(&ab, "\x1b[?25l", 6);
+
     // clear entire screen
     ab_append(&ab, "\x1b[2J", 4);
     // ensure cursor is positioned top-left
@@ -170,6 +174,9 @@ void editor_refresh_screen() {
     editor_draw_rows(&ab);
 
     ab_append(&ab, "\x1b[H", 3);
+
+    // show cursor
+    ab_append(&ab, "\x1b[?25h", 6);
 
     write(STDOUT_FILENO, ab.b, ab.len);
     ab_free(&ab);
