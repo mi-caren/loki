@@ -38,7 +38,7 @@ void enable_raw_mode() {
     //    c_cflag -> control flags
     // In canonical mode, the terminal passes the input to the program
     // only when a ENTER is pressed. If we disable it, we read input byte-by-byte
-    raw.c_lflag &= ~(ECHO | ICANON);
+    raw.c_lflag &= ~(ECHO | ICANON | ISIG);
     // Impostiamo il numero minimo di carrateri
     // per il read noncanonical, in modo che read non ritorni
     // subito ma aspetti che un carattere venga passato
