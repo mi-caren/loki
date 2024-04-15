@@ -9,6 +9,8 @@
 #include <unistd.h>
 
 // *** defines ***
+#define KILO_VERSION    "0.0.1"
+
 #define CTRL_KEY(k)    ((k) & 0x1f)
 
 // *** data ***
@@ -152,7 +154,25 @@ void ab_free(struct abuf *ab) {
 void editor_draw_rows(struct abuf *ab) {
     int y;
     for (y = 0; y < e_conf.screenrows; y++) {
-        ab_append(ab, "~", 1);
+        if (y == e_conf.screenrows / 3) {
+            char welcome[80];
+            int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
+            if (welcomelen > e_conf.screencols) {
+                welcomelen = e_conf.screencols;
+            }
+
+            int padding = (e_conf.screencols - welcomelen) / 2;
+            if (padding) {
+                ab_append(ab, "~", 1);
+                padding--;
+            }
+            while (padding--) {
+                ab_append(ab, " ", 1);
+            }
+            ab_append(ab, welcome, welcomelen);
+        } else {
+            ab_append(ab, "~", 1);
+        }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
         ab_append(ab, "\x1b[K", 3);
