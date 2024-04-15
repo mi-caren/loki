@@ -153,6 +153,9 @@ void editor_draw_rows(struct abuf *ab) {
     int y;
     for (y = 0; y < e_conf.screenrows; y++) {
         ab_append(ab, "~", 1);
+        // erase the part of the line to the right of the cursor:
+        // we erase all that is remained after drawing the line
+        ab_append(ab, "\x1b[K", 3);
 
         if (y < e_conf.screenrows -1) {
             ab_append(ab, "\r\n", 2);
@@ -166,8 +169,6 @@ void editor_refresh_screen() {
     // hide cursor while drawing on screen
     ab_append(&ab, "\x1b[?25l", 6);
 
-    // clear entire screen
-    ab_append(&ab, "\x1b[2J", 4);
     // ensure cursor is positioned top-left
     ab_append(&ab, "\x1b[H", 3);
 
