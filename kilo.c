@@ -14,7 +14,7 @@
 #define CTRL_KEY(k)    ((k) & 0x1f)
 
 enum editor_key {
-    ARROW_LEFT = 1000,
+    ARROW_LEFT = 1000,    // avoid conflicts with regular chars
     ARROW_RIGHT,
     ARROW_UP,
     ARROW_DOWN
@@ -239,16 +239,24 @@ void editor_refresh_screen() {
 void editor_move_cursor(int key) {
     switch (key) {
         case ARROW_UP:
-            e_conf.cy--;
+            if (e_conf.cy != 0) {
+                e_conf.cy--;
+            }
             break;
         case ARROW_LEFT:
-            e_conf.cx--;
+            if (e_conf.cx != 0) {
+                e_conf.cx--;
+            }
             break;
         case ARROW_DOWN:
-            e_conf.cy++;
+            if (e_conf.cy < e_conf.screenrows - 1) {
+                e_conf.cy++;
+            }
             break;
         case ARROW_RIGHT:
-            e_conf.cx++;
+            if (e_conf.cx < e_conf.screencols - 1) {
+                e_conf.cx++;
+            }
             break;
     }
 }
