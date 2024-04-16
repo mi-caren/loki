@@ -16,6 +16,7 @@
 // *** data ***
 
 struct editor_config {
+    int cx, cy;
     int screenrows;
     int screencols;
     struct termios orig_termios;
@@ -194,7 +195,9 @@ void editor_refresh_screen() {
 
     editor_draw_rows(&ab);
 
-    ab_append(&ab, "\x1b[H", 3);
+    char buf[32];
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", e_conf.cy + 1, e_conf.cx + 1);
+    ab_append(&ab, buf, strlen(buf));
 
     // show cursor
     ab_append(&ab, "\x1b[?25h", 6);
@@ -204,6 +207,24 @@ void editor_refresh_screen() {
 }
 
 // *** input ***
+
+void editor_move_cursor(char key) {
+    switch (key) {
+        case 'w':
+            e_conf.cy--;
+            break;
+        case 'a':
+            e_conf.cx--;
+            break;
+        case 's':
+            e_conf.cy++;
+            break;
+        case 'd':
+            e_conf.cx++;
+            break;
+    }
+}
+
 void editor_process_keypress() {
     char c = editor_read_key();
 
@@ -213,12 +234,21 @@ void editor_process_keypress() {
             write(STDOUT_FILENO, "\x1b[H", 3);
             exit(0);
             break;
+
+        case 'w':
+        case 'a':
+        case 's':
+        case 'd':
+            editor_move_cursor(c);
+            break;
     }
 }
 
 // *** init ***
 
 void init_editor() {
+    e_conf.cx = 0;
+    e_conf.cy = 0;
     if (get_window_size(&e_conf.screenrows, &e_conf.screencols) == -1) {
         die("get_window_size");
     }
