@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -27,10 +28,17 @@ enum editor_key {
 
 // *** data ***
 
+typedef struct erow {
+    int size;
+    char *chars;
+} erow;
+
 struct editor_config {
     int cx, cy;
     int screenrows;
     int screencols;
+    int numrows;
+    erow row;
     struct termios orig_termios;
 };
 
@@ -183,6 +191,19 @@ int get_window_size(int *rows, int *cols) {
     return get_cursor_position(rows, cols);
 }
 
+// *** file i/o ***
+
+void editor_open() {
+    char *line = "Hello, World!";
+    ssize_t linelen = 13;
+
+    e_conf.row.size = 13;
+    e_conf.row.chars = malloc(linelen + 1);
+    memcpy(e_conf.row.chars, line, linelen);
+    e_conf.row.chars[linelen] = '\0';
+    e_conf.numrows = 1;
+}
+
 // *** append buffer ***
 
 struct abuf {
@@ -210,24 +231,30 @@ void ab_free(struct abuf *ab) {
 void editor_draw_rows(struct abuf *ab) {
     int y;
     for (y = 0; y < e_conf.screenrows; y++) {
-        if (y == e_conf.screenrows / 3) {
-            char welcome[80];
-            int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
-            if (welcomelen > e_conf.screencols) {
-                welcomelen = e_conf.screencols;
-            }
+        if (y >= e_conf.numrows) {
+            if (y == e_conf.screenrows / 3) {
+                char welcome[80];
+                int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
+                if (welcomelen > e_conf.screencols) {
+                    welcomelen = e_conf.screencols;
+                }
 
-            int padding = (e_conf.screencols - welcomelen) / 2;
-            if (padding) {
+                int padding = (e_conf.screencols - welcomelen) / 2;
+                if (padding) {
+                    ab_append(ab, "~", 1);
+                    padding--;
+                }
+                while (padding--) {
+                    ab_append(ab, " ", 1);
+                }
+                ab_append(ab, welcome, welcomelen);
+            } else {
                 ab_append(ab, "~", 1);
-                padding--;
             }
-            while (padding--) {
-                ab_append(ab, " ", 1);
-            }
-            ab_append(ab, welcome, welcomelen);
         } else {
-            ab_append(ab, "~", 1);
+            int len = e_conf.row.size;
+            if (len > e_conf.screencols) len = e_conf.screencols;
+            ab_append(ab, e_conf.row.chars, len);
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
@@ -329,6 +356,7 @@ void editor_process_keypress() {
 void init_editor() {
     e_conf.cx = 0;
     e_conf.cy = 0;
+    e_conf.numrows = 0;
     if (get_window_size(&e_conf.screenrows, &e_conf.screencols) == -1) {
         die("get_window_size");
     }
@@ -337,6 +365,7 @@ void init_editor() {
 int main() {
     enable_raw_mode();
     init_editor();
+    editor_open();
 
     while (1) {
         editor_refresh_screen();
