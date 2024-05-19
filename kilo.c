@@ -1,4 +1,8 @@
 // *** includes ***
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -28,17 +32,17 @@ enum editor_key {
 
 // *** data ***
 
-typedef struct erow {
+struct erow {
     int size;
     char *chars;
-} erow;
+};
 
 struct editor_config {
     int cx, cy;
     int screenrows;
     int screencols;
     int numrows;
-    erow row;
+    struct erow row;
     struct termios orig_termios;
 };
 
@@ -193,15 +197,30 @@ int get_window_size(int *rows, int *cols) {
 
 // *** file i/o ***
 
-void editor_open() {
-    char *line = "Hello, World!";
-    ssize_t linelen = 13;
+void editor_open(char *filename) {
+    FILE *fp = fopen(filename, "r");
+    if (!fp) die("fopen");
 
-    e_conf.row.size = 13;
-    e_conf.row.chars = malloc(linelen + 1);
-    memcpy(e_conf.row.chars, line, linelen);
-    e_conf.row.chars[linelen] = '\0';
-    e_conf.numrows = 1;
+    char *line = NULL;
+    size_t linecap = 0;
+    ssize_t linelen;
+    linelen = getline(&line, &linecap, fp);
+
+    if (linelen != -1) {
+        while (linelen > 0 && (line[linelen - 1] == '\n' ||
+                               line[linelen - 1] == '\r')) {
+            linelen--;
+        }
+
+        e_conf.row.size = linelen;
+        e_conf.row.chars = malloc(linelen + 1);
+        memcpy(e_conf.row.chars, line, linelen);
+        e_conf.row.chars[linelen] = '\0';
+        e_conf.numrows = 1;
+    }
+
+    free(line);
+    fclose(fp);
 }
 
 // *** append buffer ***
@@ -362,10 +381,12 @@ void init_editor() {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     enable_raw_mode();
     init_editor();
-    editor_open();
+    if (argc >= 2) {
+        editor_open(argv[1]);
+    }
 
     while (1) {
         editor_refresh_screen();
