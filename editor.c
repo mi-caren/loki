@@ -143,7 +143,7 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
-        UNWRAP(dbuf_append(dbuf, "\x1b[K", 3), void);
+        UNWRAP(dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE), void);
 
         if (y < terminal.screenrows -1) {
             UNWRAP(dbuf_append(dbuf, "\r\n", 2), void);
@@ -155,7 +155,7 @@ void editor_refresh_screen() {
     struct DynamicBuffer dbuf = DBUF_INIT;
 
     // hide cursor while drawing on screen
-    UNWRAP(dbuf_append(&dbuf, "\x1b[?25l", 6), void);
+    UNWRAP(dbuf_append(&dbuf, HIDE_CURSOR_SEQ, HIDE_CURSOR_SEQ_SIZE), void);
 
     // ensure cursor is positioned top-left
     UNWRAP(dbuf_append(&dbuf, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE), void);
@@ -163,11 +163,12 @@ void editor_refresh_screen() {
     editor_draw_rows(&dbuf);
 
     char buf[32];
+    // move cursor to terminal cursor position
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal.cy + 1, terminal.cx + 1);
     UNWRAP(dbuf_append(&dbuf, buf, strlen(buf)), void);
 
     // show cursor
-    UNWRAP(dbuf_append(&dbuf, "\x1b[?25h", 6), void);
+    UNWRAP(dbuf_append(&dbuf, SHOW_CURSOR_SEQ, SHOW_CURSOR_SEQ_SIZE), void);
 
     write(STDOUT_FILENO, dbuf.b, dbuf.len);
     dbuf_free(&dbuf);

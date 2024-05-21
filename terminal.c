@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include "editor.h"
+#include "terminal.h"
 
 extern struct Editor editor;
 extern struct Terminal terminal;
@@ -76,7 +77,7 @@ RESULT(void) get_cursor_position(int *rows, int *cols) {
 
     RESULT(void) res = INIT_RESULT_VOID;
 
-    if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) {
+    if (WRITE_SEQ(REQUEST_CURSOR_POSITION) != 4) {
         ERROR(res, 1, "terminal/get_cursor_position/request_position");
     };
 
@@ -98,7 +99,7 @@ RESULT(void) get_cursor_position(int *rows, int *cols) {
 }
 
 RESULT(void) get_window_size(int *rows, int *cols) {
-    if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12) {
+    if (WRITE_SEQ(MOVE_CURSOR_TO_BOTTOM_RIGHT) != 12) {
         RESULT(void) res = INIT_RESULT_VOID;
         ERROR(res, 1, "terminal/get_window_size/move_cursor_to_bottom_right");
     };
