@@ -1,6 +1,8 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
+#include <termios.h>
+
 #include "utils.h"
 
 
