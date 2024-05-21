@@ -40,10 +40,15 @@
 
 
 
-#define ERROR(ERR, CODE, MSG) { \
-    ERR.err.code = CODE; \
-    ERR.err.message = MSG; \
-    return ERR; \
+#define ERROR(RES, CODE, MSG) { \
+    RES.err.code = CODE; \
+    RES.err.message = MSG; \
+    return RES; \
+}
+
+#define RETVAL(RES, VAL) { \
+    RES.val = VAL; \
+    return RES; \
 }
 
 

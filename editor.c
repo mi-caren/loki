@@ -20,16 +20,17 @@
 
 extern struct Editor editor;
 extern struct Terminal terminal;
-extern void die(const char *s);
+extern void die(Error err);
 
 
-int editor_read_key() {
+RESULT(int) editor_read_key() {
     int nread;
     char c;
+    RESULT(int) res = INIT_RESULT(int);
+
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
-        if (nread == -1 && errno != EAGAIN) {
-            die("read");
-        }
+        if (nread == -1 && errno != EAGAIN)
+            ERROR(res, 1, "editor/editor_read_key/read");
     }
 
     if (c == '\x1b') {
@@ -38,42 +39,42 @@ int editor_read_key() {
         // if we read an escape charcater we immediatly read two more bytes
         // if either of this two reads times out we assume the user
         // just pressed the ESCAPE key
-        if (read(STDOUT_FILENO, &seq[0], 1) != 1) return '\x1b';
-        if (read(STDOUT_FILENO, &seq[1], 1) != 1) return '\x1b';
+        if (read(STDOUT_FILENO, &seq[0], 1) != 1) RETVAL(res, '\x1b');
+        if (read(STDOUT_FILENO, &seq[1], 1) != 1) RETVAL(res, '\x1b');
 
         if (seq[0] == '[') {
             if (seq[1] >= '0' && seq[1] <= '9') {
-                if (read(STDOUT_FILENO, &seq[2], 1) != 1) return '\x1b';
+                if (read(STDOUT_FILENO, &seq[2], 1) != 1) RETVAL(res, '\x1b');
                 if (seq[2] == '~') {
                     switch (seq[1]) {
-                        case '1': return HOME_KEY;
-                        case '3': return DEL_KEY;
-                        case '4': return END_KEY;
-                        case '5': return PAGE_UP;
-                        case '6': return PAGE_DOWN;
-                        case '7': return HOME_KEY;
-                        case '8': return END_KEY;
+                        case '1': RETVAL(res, HOME_KEY);
+                        case '3': RETVAL(res, DEL_KEY);
+                        case '4': RETVAL(res, END_KEY);
+                        case '5': RETVAL(res, PAGE_UP);
+                        case '6': RETVAL(res, PAGE_DOWN);
+                        case '7': RETVAL(res, HOME_KEY);
+                        case '8': RETVAL(res, END_KEY);
                     }
                 }
             } else {
                 switch (seq[1]) {
-                    case 'A': return ARROW_UP;
-                    case 'B': return ARROW_DOWN;
-                    case 'C': return ARROW_RIGHT;
-                    case 'D': return ARROW_LEFT;
-                    case 'H': return HOME_KEY;
-                    case 'F': return END_KEY;
+                    case 'A': RETVAL(res, ARROW_UP);
+                    case 'B': RETVAL(res, ARROW_DOWN);
+                    case 'C': RETVAL(res, ARROW_RIGHT);
+                    case 'D': RETVAL(res, ARROW_LEFT);
+                    case 'H': RETVAL(res, HOME_KEY);
+                    case 'F': RETVAL(res, END_KEY);
                 }
             }
         } else if (seq[0] == 'O') {
             switch (seq[1]) {
-                case 'H': return HOME_KEY;
-                case 'F': return END_KEY;
+                case 'H': RETVAL(res, HOME_KEY);
+                case 'F': RETVAL(res, END_KEY);
             }
         }
-        return '\x1b';
+        RETVAL(res, '\x1b');
     } else {
-        return c;
+        RETVAL(res, c);
     }
 }
 
@@ -200,7 +201,7 @@ void editor_move_cursor(int key) {
 }
 
 void editor_process_keypress() {
-    int c = editor_read_key();
+    int c = UNWRAP(editor_read_key(), int);
 
     switch (c) {
         case CTRL_KEY('q'):
