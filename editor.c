@@ -20,7 +20,7 @@
 
 extern struct Editor editor;
 extern struct Terminal terminal;
-extern void die(Error err);
+// extern void die(Error err);
 
 
 RESULT(int) editor_read_key() {
@@ -205,8 +205,8 @@ void editor_process_keypress() {
 
     switch (c) {
         case CTRL_KEY('q'):
-            write(STDOUT_FILENO, CLEAR_SCREEN_SEQ, CLEAR_SCREEN_SEQ_SIZE);
-            write(STDOUT_FILENO, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE);
+            WRITE_SEQ(CLEAR_SCREEN);
+            WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
             exit(0);
             break;
 

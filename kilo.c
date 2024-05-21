@@ -15,8 +15,8 @@ struct Terminal terminal;
  * Print error message and exit with 1
  */
 void die(Error err) {
-    write(STDOUT_FILENO, CLEAR_SCREEN_SEQ, CLEAR_SCREEN_SEQ_SIZE);
-    write(STDOUT_FILENO, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE);
+    WRITE_SEQ(CLEAR_SCREEN);
+    WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
 
     printf("ERROR CODE %d, MSG: %s\n\r", err.code, err.message);
     exit(1);
