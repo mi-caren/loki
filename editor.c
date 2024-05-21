@@ -126,27 +126,27 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
 
                 int padding = (terminal.screencols - welcomelen) / 2;
                 if (padding) {
-                    dbuf_append(dbuf, "~", 1);
+                    UNWRAP(dbuf_append(dbuf, "~", 1), void);
                     padding--;
                 }
                 while (padding--) {
-                    dbuf_append(dbuf, " ", 1);
+                    UNWRAP(dbuf_append(dbuf, " ", 1), void);
                 }
-                dbuf_append(dbuf, welcome, welcomelen);
+                UNWRAP(dbuf_append(dbuf, welcome, welcomelen), void);
             } else {
-                dbuf_append(dbuf, "~", 1);
+                UNWRAP(dbuf_append(dbuf, "~", 1), void);
             }
         } else {
             int len = editor.row.size;
             if (len > terminal.screencols) len = terminal.screencols;
-            dbuf_append(dbuf, editor.row.chars, len);
+            UNWRAP(dbuf_append(dbuf, editor.row.chars, len), void);
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
-        dbuf_append(dbuf, "\x1b[K", 3);
+        UNWRAP(dbuf_append(dbuf, "\x1b[K", 3), void);
 
         if (y < terminal.screenrows -1) {
-            dbuf_append(dbuf, "\r\n", 2);
+            UNWRAP(dbuf_append(dbuf, "\r\n", 2), void);
         }
     }
 }
@@ -155,19 +155,19 @@ void editor_refresh_screen() {
     struct DynamicBuffer dbuf = DBUF_INIT;
 
     // hide cursor while drawing on screen
-    dbuf_append(&dbuf, "\x1b[?25l", 6);
+    UNWRAP(dbuf_append(&dbuf, "\x1b[?25l", 6), void);
 
     // ensure cursor is positioned top-left
-    dbuf_append(&dbuf, "\x1b[H", 3);
+    UNWRAP(dbuf_append(&dbuf, "\x1b[H", 3), void);
 
     editor_draw_rows(&dbuf);
 
     char buf[32];
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal.cy + 1, terminal.cx + 1);
-    dbuf_append(&dbuf, buf, strlen(buf));
+    UNWRAP(dbuf_append(&dbuf, buf, strlen(buf)), void);
 
     // show cursor
-    dbuf_append(&dbuf, "\x1b[?25h", 6);
+    UNWRAP(dbuf_append(&dbuf, "\x1b[?25h", 6), void);
 
     write(STDOUT_FILENO, dbuf.b, dbuf.len);
     dbuf_free(&dbuf);

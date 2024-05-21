@@ -77,7 +77,7 @@ struct DynamicBuffer {
 
 
 
-void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len);
+RESULT(void) dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) __attribute__((warn_unused_result));
 void dbuf_free(struct DynamicBuffer *dbuf);
 
 
