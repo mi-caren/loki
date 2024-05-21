@@ -40,10 +40,11 @@
 
 
 
-#define ERROR(ERR, CODE, MSG) \
+#define ERROR(ERR, CODE, MSG) { \
     ERR.err.code = CODE; \
     ERR.err.message = MSG; \
-    return ERR
+    return ERR; \
+}
 
 
 typedef struct Error {

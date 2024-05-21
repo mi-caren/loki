@@ -79,9 +79,12 @@ int editor_read_key() {
 
 // *** file i/o ***
 
-void editor_open(char *filename) {
+RESULT(void) editor_open(char *filename) {
+    RESULT(void) res = INIT_RESULT_VOID;
+
     FILE *fp = fopen(filename, "r");
-    if (!fp) die("fopen");
+    if (!fp)
+        ERROR(res, 1, "editor/editor_open/open_file");
 
     char *line = NULL;
     size_t linecap = 0;
@@ -103,6 +106,8 @@ void editor_open(char *filename) {
 
     free(line);
     fclose(fp);
+
+    return res;
 }
 
 // *** output ***

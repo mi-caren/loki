@@ -31,7 +31,7 @@ enum EditorKey {
 
 
 int editor_read_key();
-void editor_open(char *filename);
+RESULT(void) editor_open(char *filename) __attribute__((warn_unused_result));
 void editor_draw_rows(struct DynamicBuffer *dbuf);
 void editor_refresh_screen();
 void editor_move_cursor(int key);
