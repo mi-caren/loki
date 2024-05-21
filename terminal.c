@@ -66,11 +66,17 @@ void enable_raw_mode() {
     }
 }
 
-int get_cursor_position(int *rows, int *cols) {
+RESULT(void) get_cursor_position(int *rows, int *cols) {
     char buf[32];
     unsigned int i = 0;
 
-    if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) return -1;
+    RESULT(void) res = INIT_RESULT_VOID;
+
+    if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) {
+        res.err.code = 1;
+        res.err.message = "ERROR terminal/get_cursor_position/request_position";
+        return res;
+    };
 
     while (i < sizeof(buf) - 1) {
         if (read(STDIN_FILENO, &buf[i], 1) != 1) break;
@@ -79,13 +85,26 @@ int get_cursor_position(int *rows, int *cols) {
     }
     buf[i] = '\0';
 
-    if (buf[0] != '\x1b' || buf[1] != '[') return -1;
-    if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) return -1;
+    if (buf[0] != '\x1b' || buf[1] != '[') {
+        res.err.code = 2;
+        res.err.message = "ERROR terminal/get_cursor_position/read_escape_seq";
+        return res;
+    };
+    if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) {
+        res.err.code = 3;
+        res.err.message = "ERROR terminal/get_cursor_position/read_terminal_response";
+        return res;
+    };
 
-    return 0;
+    return res;
 }
 
-int get_window_size(int *rows, int *cols) {
-    if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12) return -1;
+RESULT(void) get_window_size(int *rows, int *cols) {
+    if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12) {
+        RESULT(void) res = INIT_RESULT_VOID;
+        res.err.code = 1;
+        res.err.message = "ERROR terminal/get_window_size/move_cursor_to_mottom_right";
+        return res;
+    };
     return get_cursor_position(rows, cols);
 }

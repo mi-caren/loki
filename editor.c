@@ -237,7 +237,5 @@ void init_editor() {
     terminal.cx = 0;
     terminal.cy = 0;
     editor.numrows = 0;
-    if (get_window_size(&terminal.screenrows, &terminal.screencols) == -1) {
-        die("get_window_size");
-    }
+    UNWRAP(get_window_size(&terminal.screenrows, &terminal.screencols), void);
 }
