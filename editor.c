@@ -106,7 +106,7 @@ void editor_open(char *filename) {
 
 // *** output ***
 
-void editor_draw_rows(struct abuf *ab) {
+void editor_draw_rows(struct DynamicBuffer *ab) {
     int y;
     for (y = 0; y < editor.screenrows; y++) {
         if (y >= editor.numrows) {
@@ -145,7 +145,7 @@ void editor_draw_rows(struct abuf *ab) {
 }
 
 void editor_refresh_screen() {
-    struct abuf ab = ABUF_INIT;
+    struct DynamicBuffer ab = ABUF_INIT;
 
     // hide cursor while drawing on screen
     ab_append(&ab, "\x1b[?25l", 6);

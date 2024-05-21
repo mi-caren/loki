@@ -2,7 +2,7 @@
 #define UTILS_H
 
 
-struct abuf {
+struct DynamicBuffer {
     char *b;
     int len;
 };
@@ -10,8 +10,8 @@ struct abuf {
 #define ABUF_INIT {NULL, 0};
 
 
-void ab_append(struct abuf *ab, const char *s, int len);
-void ab_free(struct abuf *ab);
+void ab_append(struct DynamicBuffer *ab, const char *s, int len);
+void ab_free(struct DynamicBuffer *ab);
 
 
 #endif

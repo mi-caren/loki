@@ -3,7 +3,7 @@
 
 #include "utils.h"
 
-void ab_append(struct abuf *ab, const char *s, int len) {
+void ab_append(struct DynamicBuffer *ab, const char *s, int len) {
     char *new = realloc(ab->b, ab->len + len);
 
     if (new == NULL) return;
@@ -12,6 +12,6 @@ void ab_append(struct abuf *ab, const char *s, int len) {
     ab->len += len;
 }
 
-void ab_free(struct abuf *ab) {
+void ab_free(struct DynamicBuffer *ab) {
     free(ab->b);
 }
