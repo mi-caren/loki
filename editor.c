@@ -106,7 +106,7 @@ void editor_open(char *filename) {
 
 // *** output ***
 
-void editor_draw_rows(struct DynamicBuffer *ab) {
+void editor_draw_rows(struct DynamicBuffer *dbuf) {
     int y;
     for (y = 0; y < editor.screenrows; y++) {
         if (y >= editor.numrows) {
@@ -119,51 +119,51 @@ void editor_draw_rows(struct DynamicBuffer *ab) {
 
                 int padding = (editor.screencols - welcomelen) / 2;
                 if (padding) {
-                    ab_append(ab, "~", 1);
+                    dbuf_append(dbuf, "~", 1);
                     padding--;
                 }
                 while (padding--) {
-                    ab_append(ab, " ", 1);
+                    dbuf_append(dbuf, " ", 1);
                 }
-                ab_append(ab, welcome, welcomelen);
+                dbuf_append(dbuf, welcome, welcomelen);
             } else {
-                ab_append(ab, "~", 1);
+                dbuf_append(dbuf, "~", 1);
             }
         } else {
             int len = editor.row.size;
             if (len > editor.screencols) len = editor.screencols;
-            ab_append(ab, editor.row.chars, len);
+            dbuf_append(dbuf, editor.row.chars, len);
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
-        ab_append(ab, "\x1b[K", 3);
+        dbuf_append(dbuf, "\x1b[K", 3);
 
         if (y < editor.screenrows -1) {
-            ab_append(ab, "\r\n", 2);
+            dbuf_append(dbuf, "\r\n", 2);
         }
     }
 }
 
 void editor_refresh_screen() {
-    struct DynamicBuffer ab = ABUF_INIT;
+    struct DynamicBuffer dbuf = DBUF_INIT;
 
     // hide cursor while drawing on screen
-    ab_append(&ab, "\x1b[?25l", 6);
+    dbuf_append(&dbuf, "\x1b[?25l", 6);
 
     // ensure cursor is positioned top-left
-    ab_append(&ab, "\x1b[H", 3);
+    dbuf_append(&dbuf, "\x1b[H", 3);
 
-    editor_draw_rows(&ab);
+    editor_draw_rows(&dbuf);
 
     char buf[32];
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.cy + 1, editor.cx + 1);
-    ab_append(&ab, buf, strlen(buf));
+    dbuf_append(&dbuf, buf, strlen(buf));
 
     // show cursor
-    ab_append(&ab, "\x1b[?25h", 6);
+    dbuf_append(&dbuf, "\x1b[?25h", 6);
 
-    write(STDOUT_FILENO, ab.b, ab.len);
-    ab_free(&ab);
+    write(STDOUT_FILENO, dbuf.b, dbuf.len);
+    dbuf_free(&dbuf);
 }
 
 // *** input ***

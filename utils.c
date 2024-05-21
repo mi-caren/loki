@@ -3,15 +3,15 @@
 
 #include "utils.h"
 
-void ab_append(struct DynamicBuffer *ab, const char *s, int len) {
-    char *new = realloc(ab->b, ab->len + len);
+void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) {
+    char *new = realloc(dbuf->b, dbuf->len + len);
 
     if (new == NULL) return;
-    memcpy(&new[ab->len], s, len);
-    ab->b = new;
-    ab->len += len;
+    memcpy(&new[dbuf->len], s, len);
+    dbuf->b = new;
+    dbuf->len += len;
 }
 
-void ab_free(struct DynamicBuffer *ab) {
-    free(ab->b);
+void dbuf_free(struct DynamicBuffer *dbuf) {
+    free(dbuf->b);
 }

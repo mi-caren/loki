@@ -7,11 +7,11 @@ struct DynamicBuffer {
     int len;
 };
 
-#define ABUF_INIT {NULL, 0};
+#define DBUF_INIT {NULL, 0};
 
 
-void ab_append(struct DynamicBuffer *ab, const char *s, int len);
-void ab_free(struct DynamicBuffer *ab);
+void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len);
+void dbuf_free(struct DynamicBuffer *dbuf);
 
 
 #endif
