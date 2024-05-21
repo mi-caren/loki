@@ -23,11 +23,10 @@
 #define UNWRAP_FUNC_SIGNATURE(TYPE)     TYPE UNWRAP_FUNC_NAME(TYPE)(RESULT(TYPE) result)
 
 #define UNWRAP_FUNC_DEF(TYPE)           UNWRAP_FUNC_SIGNATURE(TYPE) { \
-    if (!result.err.code) { \
-        return result.val; \
-    } else { \
+    if (result.err.code != 0) { \
         die(result.err); \
     } \
+    return result.val; \
 }
 
 #define UNWRAP_FUNC_DEF_VOID            UNWRAP_FUNC_SIGNATURE(void) { \
