@@ -18,7 +18,7 @@
 #define CTRL_KEY(k)    ((k) & 0x1f)
 
 
-extern struct editor_config e_conf;
+extern struct Editor editor;
 extern void die(const char *s);
 
 
@@ -93,11 +93,11 @@ void editor_open(char *filename) {
             linelen--;
         }
 
-        e_conf.row.size = linelen;
-        e_conf.row.chars = malloc(linelen + 1);
-        memcpy(e_conf.row.chars, line, linelen);
-        e_conf.row.chars[linelen] = '\0';
-        e_conf.numrows = 1;
+        editor.row.size = linelen;
+        editor.row.chars = malloc(linelen + 1);
+        memcpy(editor.row.chars, line, linelen);
+        editor.row.chars[linelen] = '\0';
+        editor.numrows = 1;
     }
 
     free(line);
@@ -108,16 +108,16 @@ void editor_open(char *filename) {
 
 void editor_draw_rows(struct abuf *ab) {
     int y;
-    for (y = 0; y < e_conf.screenrows; y++) {
-        if (y >= e_conf.numrows) {
-            if (y == e_conf.screenrows / 3) {
+    for (y = 0; y < editor.screenrows; y++) {
+        if (y >= editor.numrows) {
+            if (y == editor.screenrows / 3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
-                if (welcomelen > e_conf.screencols) {
-                    welcomelen = e_conf.screencols;
+                if (welcomelen > editor.screencols) {
+                    welcomelen = editor.screencols;
                 }
 
-                int padding = (e_conf.screencols - welcomelen) / 2;
+                int padding = (editor.screencols - welcomelen) / 2;
                 if (padding) {
                     ab_append(ab, "~", 1);
                     padding--;
@@ -130,15 +130,15 @@ void editor_draw_rows(struct abuf *ab) {
                 ab_append(ab, "~", 1);
             }
         } else {
-            int len = e_conf.row.size;
-            if (len > e_conf.screencols) len = e_conf.screencols;
-            ab_append(ab, e_conf.row.chars, len);
+            int len = editor.row.size;
+            if (len > editor.screencols) len = editor.screencols;
+            ab_append(ab, editor.row.chars, len);
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
         ab_append(ab, "\x1b[K", 3);
 
-        if (y < e_conf.screenrows -1) {
+        if (y < editor.screenrows -1) {
             ab_append(ab, "\r\n", 2);
         }
     }
@@ -156,7 +156,7 @@ void editor_refresh_screen() {
     editor_draw_rows(&ab);
 
     char buf[32];
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", e_conf.cy + 1, e_conf.cx + 1);
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.cy + 1, editor.cx + 1);
     ab_append(&ab, buf, strlen(buf));
 
     // show cursor
@@ -171,23 +171,23 @@ void editor_refresh_screen() {
 void editor_move_cursor(int key) {
     switch (key) {
         case ARROW_UP:
-            if (e_conf.cy != 0) {
-                e_conf.cy--;
+            if (editor.cy != 0) {
+                editor.cy--;
             }
             break;
         case ARROW_LEFT:
-            if (e_conf.cx != 0) {
-                e_conf.cx--;
+            if (editor.cx != 0) {
+                editor.cx--;
             }
             break;
         case ARROW_DOWN:
-            if (e_conf.cy < e_conf.screenrows - 1) {
-                e_conf.cy++;
+            if (editor.cy < editor.screenrows - 1) {
+                editor.cy++;
             }
             break;
         case ARROW_RIGHT:
-            if (e_conf.cx < e_conf.screencols - 1) {
-                e_conf.cx++;
+            if (editor.cx < editor.screencols - 1) {
+                editor.cx++;
             }
             break;
     }
@@ -204,16 +204,16 @@ void editor_process_keypress() {
             break;
 
         case HOME_KEY:
-            e_conf.cx = 0;
+            editor.cx = 0;
             break;
         case END_KEY:
-            e_conf.cx = e_conf.screencols - 1;
+            editor.cx = editor.screencols - 1;
             break;
 
         case PAGE_UP:
         case PAGE_DOWN:
             {
-                int times = e_conf.screenrows;
+                int times = editor.screenrows;
                 while (times--) {
                     editor_move_cursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
                 }
@@ -232,10 +232,10 @@ void editor_process_keypress() {
 // *** init ***
 
 void init_editor() {
-    e_conf.cx = 0;
-    e_conf.cy = 0;
-    e_conf.numrows = 0;
-    if (get_window_size(&e_conf.screenrows, &e_conf.screencols) == -1) {
+    editor.cx = 0;
+    editor.cy = 0;
+    editor.numrows = 0;
+    if (get_window_size(&editor.screenrows, &editor.screencols) == -1) {
         die("get_window_size");
     }
 }

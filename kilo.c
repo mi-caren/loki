@@ -7,7 +7,7 @@
 #include "utils.h"
 
 
-struct editor_config e_conf;
+struct Editor editor;
 
 
 /*

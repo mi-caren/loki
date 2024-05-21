@@ -4,7 +4,7 @@
 
 #include "editor.h"
 
-extern struct editor_config e_conf;
+extern struct Editor editor;
 extern void die(const char *s);
 
 
@@ -16,7 +16,7 @@ void disable_raw_mode() {
     // TCSAFLUSH, prima di uscire scarta tutti gli input non letti,
     // quindi non tutto ciò che c'è dopo il carattere 'q' non viene 
     // più passato al terminale ma viene scartato
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &e_conf.orig_termios) == -1) {
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &editor.orig_termios) == -1) {
         die("disable_raw_mode/tcsetattr");
     }
 }
@@ -27,14 +27,14 @@ void disable_raw_mode() {
  */
 void enable_raw_mode() {
     // Legge gli attributi del terminale nella struct raw
-    if (tcgetattr(STDIN_FILENO, &e_conf.orig_termios) == -1) {
+    if (tcgetattr(STDIN_FILENO, &editor.orig_termios) == -1) {
         die("enable_raw_mode/tcgetattr");
     }
     // Registriamo una funzione perchè sia chiamata quando
     // il programma termina, o perchè ritorna da main,
     // o perchè viene chiamato exit()
     atexit(disable_raw_mode);
-    struct termios raw = e_conf.orig_termios;
+    struct termios raw = editor.orig_termios;
     // disabilita l'echoing: ciò che si digita
     // non saràstampato a terminale
     // Flags:

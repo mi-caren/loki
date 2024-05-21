@@ -6,17 +6,17 @@
 #include "utils.h"
 
 
-struct erow {
+struct EditorRow {
     int size;
     char *chars;
 };
 
-struct editor_config {
+struct Editor {
     int cx, cy;
     int screenrows;
     int screencols;
     int numrows;
-    struct erow row;
+    struct EditorRow row;
     struct termios orig_termios;
 };
 
