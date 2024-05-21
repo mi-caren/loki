@@ -12,9 +12,6 @@ struct EditorRow {
 };
 
 struct Editor {
-    int cx, cy;
-    int screenrows;
-    int screencols;
     int numrows;
     struct EditorRow row;
     struct termios orig_termios;

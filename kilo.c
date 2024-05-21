@@ -8,6 +8,7 @@
 
 
 struct Editor editor;
+struct Terminal terminal;
 
 
 /*

@@ -19,6 +19,7 @@
 
 
 extern struct Editor editor;
+extern struct Terminal terminal;
 extern void die(const char *s);
 
 
@@ -108,16 +109,16 @@ void editor_open(char *filename) {
 
 void editor_draw_rows(struct DynamicBuffer *dbuf) {
     int y;
-    for (y = 0; y < editor.screenrows; y++) {
+    for (y = 0; y < terminal.screenrows; y++) {
         if (y >= editor.numrows) {
-            if (y == editor.screenrows / 3) {
+            if (y == terminal.screenrows / 3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
-                if (welcomelen > editor.screencols) {
-                    welcomelen = editor.screencols;
+                if (welcomelen > terminal.screencols) {
+                    welcomelen = terminal.screencols;
                 }
 
-                int padding = (editor.screencols - welcomelen) / 2;
+                int padding = (terminal.screencols - welcomelen) / 2;
                 if (padding) {
                     dbuf_append(dbuf, "~", 1);
                     padding--;
@@ -131,14 +132,14 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
             }
         } else {
             int len = editor.row.size;
-            if (len > editor.screencols) len = editor.screencols;
+            if (len > terminal.screencols) len = terminal.screencols;
             dbuf_append(dbuf, editor.row.chars, len);
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
         dbuf_append(dbuf, "\x1b[K", 3);
 
-        if (y < editor.screenrows -1) {
+        if (y < terminal.screenrows -1) {
             dbuf_append(dbuf, "\r\n", 2);
         }
     }
@@ -156,7 +157,7 @@ void editor_refresh_screen() {
     editor_draw_rows(&dbuf);
 
     char buf[32];
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.cy + 1, editor.cx + 1);
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal.cy + 1, terminal.cx + 1);
     dbuf_append(&dbuf, buf, strlen(buf));
 
     // show cursor
@@ -171,23 +172,23 @@ void editor_refresh_screen() {
 void editor_move_cursor(int key) {
     switch (key) {
         case ARROW_UP:
-            if (editor.cy != 0) {
-                editor.cy--;
+            if (terminal.cy != 0) {
+                terminal.cy--;
             }
             break;
         case ARROW_LEFT:
-            if (editor.cx != 0) {
-                editor.cx--;
+            if (terminal.cx != 0) {
+                terminal.cx--;
             }
             break;
         case ARROW_DOWN:
-            if (editor.cy < editor.screenrows - 1) {
-                editor.cy++;
+            if (terminal.cy < terminal.screenrows - 1) {
+                terminal.cy++;
             }
             break;
         case ARROW_RIGHT:
-            if (editor.cx < editor.screencols - 1) {
-                editor.cx++;
+            if (terminal.cx < terminal.screencols - 1) {
+                terminal.cx++;
             }
             break;
     }
@@ -204,16 +205,16 @@ void editor_process_keypress() {
             break;
 
         case HOME_KEY:
-            editor.cx = 0;
+            terminal.cx = 0;
             break;
         case END_KEY:
-            editor.cx = editor.screencols - 1;
+            terminal.cx = terminal.screencols - 1;
             break;
 
         case PAGE_UP:
         case PAGE_DOWN:
             {
-                int times = editor.screenrows;
+                int times = terminal.screenrows;
                 while (times--) {
                     editor_move_cursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
                 }
@@ -233,10 +234,10 @@ void editor_process_keypress() {
 
 void init_editor() {
     enable_raw_mode();
-    editor.cx = 0;
-    editor.cy = 0;
+    terminal.cx = 0;
+    terminal.cy = 0;
     editor.numrows = 0;
-    if (get_window_size(&editor.screenrows, &editor.screencols) == -1) {
+    if (get_window_size(&terminal.screenrows, &terminal.screencols) == -1) {
         die("get_window_size");
     }
 }

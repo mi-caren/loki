@@ -5,7 +5,9 @@
 #include "editor.h"
 
 extern struct Editor editor;
+extern struct Terminal terminal;
 extern void die(const char *s);
+
 
 
 /*
