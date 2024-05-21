@@ -2,6 +2,12 @@
 #define TERMINAL_H
 
 
+
+#define CLEAR_SCREEN_SEQ            "\x1b[2J"
+#define CLEAR_SCREEN_SEQ_SIZE       4
+
+
+
 struct Terminal {
     int cx, cy;
     int screenrows;
