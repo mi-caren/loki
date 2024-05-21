@@ -14,11 +14,11 @@ struct Terminal terminal;
 /*
  * Print error message and exit with 1
  */
-void die(const char *s) {
+void die(Error err) {
     write(STDOUT_FILENO, "\x1b[2J", 4);
     write(STDOUT_FILENO, "\x1b[H", 3);
 
-    perror(s);
+    printf("ERROR CODE %d, MSG: %s\n\r", err.code, err.message);
     exit(1);
 }
 

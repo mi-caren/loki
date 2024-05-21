@@ -103,7 +103,7 @@ RESULT(void) get_window_size(int *rows, int *cols) {
     if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12) {
         RESULT(void) res = INIT_RESULT_VOID;
         res.err.code = 1;
-        res.err.message = "ERROR terminal/get_window_size/move_cursor_to_mottom_right";
+        res.err.message = "ERROR terminal/get_window_size/move_cursor_to_bottom_right";
         return res;
     };
     return get_cursor_position(rows, cols);
