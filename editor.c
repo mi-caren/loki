@@ -232,10 +232,10 @@ void editor_process_keypress() {
 
 // *** init ***
 
-void init_editor() {
-    enable_raw_mode();
+RESULT(void) init_editor() {
+    UNWRAP(enable_raw_mode(), void);
     terminal.cx = 0;
     terminal.cy = 0;
     editor.numrows = 0;
-    UNWRAP(get_window_size(&terminal.screenrows, &terminal.screencols), void);
+    return get_window_size(&terminal.screenrows, &terminal.screencols);
 }

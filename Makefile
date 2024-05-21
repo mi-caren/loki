@@ -7,6 +7,9 @@ bin/kilo: $(SRCS)
 run: bin/kilo
 	./bin/kilo
 
+pre:
+	$(CC) $(CFLAGS) $(SRCS) -E
+
 clean:
 	rm -f bin/*
 

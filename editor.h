@@ -36,6 +36,6 @@ void editor_draw_rows(struct DynamicBuffer *dbuf);
 void editor_refresh_screen();
 void editor_move_cursor(int key);
 void editor_process_keypress();
-void init_editor();
+RESULT(void) init_editor() __attribute__((warn_unused_result));
 
 #endif

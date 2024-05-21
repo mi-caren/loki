@@ -24,7 +24,7 @@ void die(Error err) {
 
 
 int main(int argc, char *argv[]) {
-    init_editor();
+    UNWRAP(init_editor(), void);
     if (argc >= 2) {
         editor_open(argv[1]);
     }

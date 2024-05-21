@@ -39,6 +39,13 @@
 #define UNWRAP(RESULT, TYPE)            UNWRAP_FUNC_NAME(TYPE)(RESULT)
 
 
+
+#define ERROR(ERR, CODE, MSG) \
+    ERR.err.code = CODE; \
+    ERR.err.message = MSG; \
+    return ERR
+
+
 typedef struct Error {
     unsigned int code;
     char *message;

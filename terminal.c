@@ -27,10 +27,12 @@ void disable_raw_mode() {
  * Legge gli attributi del terminale,
  * ne modifica alcuni e riscrive gli attributi.
  */
-void enable_raw_mode() {
+RESULT(void) enable_raw_mode() {
+    RESULT(void) res = INIT_RESULT_VOID;
+
     // Legge gli attributi del terminale nella struct raw
     if (tcgetattr(STDIN_FILENO, &editor.orig_termios) == -1) {
-        die("enable_raw_mode/tcgetattr");
+        ERROR(res, 1, "terminal/enable_raw_mode/read_terminal_attributes");
     }
     // Registriamo una funzione perchè sia chiamata quando
     // il programma termina, o perchè ritorna da main,
@@ -62,8 +64,10 @@ void enable_raw_mode() {
     //    aspetta che tutti gli output siano stati scritti sul terminale
     //    e scarta tutti gli input non letti
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
-        die("enable_raw_mode/tcsetattr");
+        ERROR(res, 2, "terminal/enable_raw_mode/write_terminal_attributes");
     }
+
+    return res;
 }
 
 RESULT(void) get_cursor_position(int *rows, int *cols) {
@@ -73,9 +77,7 @@ RESULT(void) get_cursor_position(int *rows, int *cols) {
     RESULT(void) res = INIT_RESULT_VOID;
 
     if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) {
-        res.err.code = 1;
-        res.err.message = "ERROR terminal/get_cursor_position/request_position";
-        return res;
+        ERROR(res, 1, "terminal/get_cursor_position/request_position");
     };
 
     while (i < sizeof(buf) - 1) {
@@ -86,14 +88,10 @@ RESULT(void) get_cursor_position(int *rows, int *cols) {
     buf[i] = '\0';
 
     if (buf[0] != '\x1b' || buf[1] != '[') {
-        res.err.code = 2;
-        res.err.message = "ERROR terminal/get_cursor_position/read_escape_seq";
-        return res;
+        ERROR(res, 2, "terminal/get_cursor_position/read_escape_seq");
     };
     if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) {
-        res.err.code = 3;
-        res.err.message = "ERROR terminal/get_cursor_position/read_terminal_response";
-        return res;
+        ERROR(res, 3, "terminal/get_cursor_position/read_terminal_response");
     };
 
     return res;
@@ -102,9 +100,7 @@ RESULT(void) get_cursor_position(int *rows, int *cols) {
 RESULT(void) get_window_size(int *rows, int *cols) {
     if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12) {
         RESULT(void) res = INIT_RESULT_VOID;
-        res.err.code = 1;
-        res.err.message = "ERROR terminal/get_window_size/move_cursor_to_bottom_right";
-        return res;
+        ERROR(res, 1, "terminal/get_window_size/move_cursor_to_bottom_right");
     };
     return get_cursor_position(rows, cols);
 }
