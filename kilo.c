@@ -23,7 +23,6 @@ void die(const char *s) {
 
 
 int main(int argc, char *argv[]) {
-    enable_raw_mode();
     init_editor();
     if (argc >= 2) {
         editor_open(argv[1]);

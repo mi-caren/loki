@@ -232,6 +232,7 @@ void editor_process_keypress() {
 // *** init ***
 
 void init_editor() {
+    enable_raw_mode();
     editor.cx = 0;
     editor.cy = 0;
     editor.numrows = 0;
