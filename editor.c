@@ -93,6 +93,7 @@ RESULT(void) editor_open(char *filename) {
     linelen = getline(&line, &linecap, fp);
 
     if (linelen != -1) {
+        // strip off newline or carriage retur at the end of line
         while (linelen > 0 && (line[linelen - 1] == '\n' ||
                                line[linelen - 1] == '\r')) {
             linelen--;
@@ -117,7 +118,7 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
     int y;
     for (y = 0; y < terminal.screenrows; y++) {
         if (y >= editor.numrows) {
-            if (y == terminal.screenrows / 3) {
+            if (editor.numrows == 0 && y == terminal.screenrows / 3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
                 if (welcomelen > terminal.screencols) {
