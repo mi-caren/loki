@@ -3,8 +3,11 @@
 
 
 
-#define CLEAR_SCREEN_SEQ            "\x1b[2J"
-#define CLEAR_SCREEN_SEQ_SIZE       4
+#define CLEAR_SCREEN_SEQ                "\x1b[2J"
+#define CLEAR_SCREEN_SEQ_SIZE           4
+
+#define MOVE_CURSOR_TO_ORIG_SEQ         "\x1b[H"
+#define MOVE_CURSOR_TO_ORIG_SEQ_SIZE        3
 
 
 

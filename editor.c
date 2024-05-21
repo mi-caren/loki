@@ -158,7 +158,7 @@ void editor_refresh_screen() {
     UNWRAP(dbuf_append(&dbuf, "\x1b[?25l", 6), void);
 
     // ensure cursor is positioned top-left
-    UNWRAP(dbuf_append(&dbuf, "\x1b[H", 3), void);
+    UNWRAP(dbuf_append(&dbuf, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE), void);
 
     editor_draw_rows(&dbuf);
 
@@ -206,7 +206,7 @@ void editor_process_keypress() {
     switch (c) {
         case CTRL_KEY('q'):
             write(STDOUT_FILENO, CLEAR_SCREEN_SEQ, CLEAR_SCREEN_SEQ_SIZE);
-            write(STDOUT_FILENO, "\x1b[H", 3);
+            write(STDOUT_FILENO, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE);
             exit(0);
             break;
 

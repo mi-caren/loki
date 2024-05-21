@@ -16,7 +16,7 @@ struct Terminal terminal;
  */
 void die(Error err) {
     write(STDOUT_FILENO, CLEAR_SCREEN_SEQ, CLEAR_SCREEN_SEQ_SIZE);
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    write(STDOUT_FILENO, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE);
 
     printf("ERROR CODE %d, MSG: %s\n\r", err.code, err.message);
     exit(1);
