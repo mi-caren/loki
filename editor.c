@@ -20,7 +20,6 @@
 
 extern struct Editor editor;
 extern struct Terminal terminal;
-// extern void die(Error err);
 
 
 RESULT(int) editor_read_key() {
@@ -78,6 +77,25 @@ RESULT(int) editor_read_key() {
     }
 }
 
+// *** row operations ***
+
+RESULT(void) editor_append_row(char *line, size_t linelen) {
+    RESULT(void) res = INIT_RESULT_VOID;
+    char *new = realloc(editor.rows, sizeof(struct EditorRow) * (editor.numrows + 1));
+
+    if (new == NULL)
+        ERROR(res, 1, "editor/editor_append_row/realloc");
+
+    editor.rows = (struct EditorRow*)new;
+    editor.rows[editor.numrows].size = linelen;
+    editor.rows[editor.numrows].chars = malloc(linelen + 1);
+    memcpy(editor.rows[editor.numrows].chars, line, linelen);
+    editor.rows[editor.numrows].chars[linelen] = '\0';
+    editor.numrows += 1;
+
+    return res;
+}
+
 // *** file i/o ***
 
 RESULT(void) editor_open(char *filename) {
@@ -90,20 +108,14 @@ RESULT(void) editor_open(char *filename) {
     char *line = NULL;
     size_t linecap = 0;
     ssize_t linelen;
-    linelen = getline(&line, &linecap, fp);
-
-    if (linelen != -1) {
+    while((linelen = getline(&line, &linecap, fp)) != -1) {
         // strip off newline or carriage retur at the end of line
         while (linelen > 0 && (line[linelen - 1] == '\n' ||
                                line[linelen - 1] == '\r')) {
             linelen--;
         }
 
-        editor.row.size = linelen;
-        editor.row.chars = malloc(linelen + 1);
-        memcpy(editor.row.chars, line, linelen);
-        editor.row.chars[linelen] = '\0';
-        editor.numrows = 1;
+        UNWRAP(editor_append_row(line, linelen), void);
     }
 
     free(line);
@@ -138,9 +150,9 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
                 UNWRAP(dbuf_append(dbuf, "~", 1), void);
             }
         } else {
-            int len = editor.row.size;
+            int len = editor.rows[y].size;
             if (len > terminal.screencols) len = terminal.screencols;
-            UNWRAP(dbuf_append(dbuf, editor.row.chars, len), void);
+            UNWRAP(dbuf_append(dbuf, editor.rows[y].chars, len), void);
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
@@ -245,5 +257,6 @@ RESULT(void) init_editor() {
     terminal.cx = 0;
     terminal.cy = 0;
     editor.numrows = 0;
+    editor.rows = NULL;
     return get_window_size(&terminal.screenrows, &terminal.screencols);
 }

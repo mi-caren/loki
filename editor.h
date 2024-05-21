@@ -13,7 +13,7 @@ struct EditorRow {
 
 struct Editor {
     int numrows;
-    struct EditorRow row;
+    struct EditorRow *rows;
     struct termios orig_termios;
 };
 
@@ -32,6 +32,7 @@ enum EditorKey {
 
 RESULT(int) editor_read_key() __attribute__((warn_unused_result));
 RESULT(void) editor_open(char *filename) __attribute__((warn_unused_result));
+RESULT(void) editor_append_row(char *line, size_t linelen) __attribute__((warn_unused_result));
 void editor_draw_rows(struct DynamicBuffer *dbuf);
 void editor_refresh_screen();
 void editor_move_cursor(int key);
