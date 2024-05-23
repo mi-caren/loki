@@ -151,9 +151,8 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
                 UNWRAP(dbuf_append(dbuf, "~", 1), void);
             }
         } else {
-            int len = editor.rows[filerow].size - editor.coloff;
-            if (len < 0) len = 0;
-            if (len > (int)terminal.screencols) len = terminal.screencols;
+            unsigned int len = saturating_sub(editor.rows[filerow].size, editor.coloff);
+            if (len > terminal.screencols) len = terminal.screencols;
             UNWRAP(dbuf_append(dbuf, &editor.rows[filerow].chars[editor.coloff], len), void);
         }
         // erase the part of the line to the right of the cursor:
@@ -229,6 +228,11 @@ void editor_move_cursor(int key) {
                 }
             }
             break;
+    }
+
+    unsigned int curr_row_size = editor.rows[editor.rowoff + terminal.cy].size;
+    if (terminal.cx > curr_row_size - editor.coloff) {
+        terminal.cx = curr_row_size - editor.coloff;
     }
 }
 
