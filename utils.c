@@ -7,13 +7,14 @@
 extern void die(Error err);
 
 
-UNWRAP_FUNC_DEF_VOID
+UNWRAP_FUNC_DEF(void)
 UNWRAP_FUNC_DEF(int)
+UNWRAP_FUNC_DEF(unsigned int)
 
 
 
 RESULT(void) dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) {
-    RESULT(void) res = INIT_RESULT_VOID;
+    RESULT(void) res = INIT_RESULT;
     char *new = realloc(dbuf->b, dbuf->len + len);
 
     if (new == NULL) {

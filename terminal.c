@@ -29,7 +29,7 @@ void disable_raw_mode() {
  * ne modifica alcuni e riscrive gli attributi.
  */
 RESULT(void) enable_raw_mode() {
-    RESULT(void) res = INIT_RESULT_VOID;
+    RESULT(void) res = INIT_RESULT;
 
     // Legge gli attributi del terminale nella struct raw
     if (tcgetattr(STDIN_FILENO, &editor.orig_termios) == -1) {
@@ -75,7 +75,7 @@ RESULT(void) get_cursor_position(int *rows, int *cols) {
     char buf[32];
     unsigned int i = 0;
 
-    RESULT(void) res = INIT_RESULT_VOID;
+    RESULT(void) res = INIT_RESULT;
 
     if (WRITE_SEQ(REQUEST_CURSOR_POSITION) != 4) {
         ERROR(res, 1, "terminal/get_cursor_position/request_position");
@@ -100,7 +100,7 @@ RESULT(void) get_cursor_position(int *rows, int *cols) {
 
 RESULT(void) get_window_size(int *rows, int *cols) {
     if (WRITE_SEQ(MOVE_CURSOR_TO_BOTTOM_RIGHT) != 12) {
-        RESULT(void) res = INIT_RESULT_VOID;
+        RESULT(void) res = INIT_RESULT;
         ERROR(res, 1, "terminal/get_window_size/move_cursor_to_bottom_right");
     };
     return get_cursor_position(rows, cols);

@@ -25,7 +25,7 @@ extern struct Terminal terminal;
 RESULT(int) editor_read_key() {
     int nread;
     char c;
-    RESULT(int) res = INIT_RESULT(int);
+    RESULT(int) res = INIT_RESULT;
 
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
         if (nread == -1 && errno != EAGAIN)
@@ -80,7 +80,7 @@ RESULT(int) editor_read_key() {
 // *** row operations ***
 
 RESULT(void) editor_append_row(char *line, size_t linelen) {
-    RESULT(void) res = INIT_RESULT_VOID;
+    RESULT(void) res = INIT_RESULT;
     char *new = realloc(editor.rows, sizeof(struct EditorRow) * (editor.numrows + 1));
 
     if (new == NULL)
@@ -99,7 +99,7 @@ RESULT(void) editor_append_row(char *line, size_t linelen) {
 // *** file i/o ***
 
 RESULT(void) editor_open(char *filename) {
-    RESULT(void) res = INIT_RESULT_VOID;
+    RESULT(void) res = INIT_RESULT;
 
     FILE *fp = fopen(filename, "r");
     if (!fp)
