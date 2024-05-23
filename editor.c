@@ -129,7 +129,8 @@ RESULT(void) editor_open(char *filename) {
 void editor_draw_rows(struct DynamicBuffer *dbuf) {
     int y;
     for (y = 0; y < terminal.screenrows; y++) {
-        if (y >= editor.numrows) {
+        int filerow = y + editor.rowoff;
+        if (filerow >= editor.numrows) {
             if (editor.numrows == 0 && y == terminal.screenrows / 3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
@@ -150,9 +151,9 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
                 UNWRAP(dbuf_append(dbuf, "~", 1), void);
             }
         } else {
-            int len = editor.rows[y].size;
+            int len = editor.rows[filerow].size;
             if (len > terminal.screencols) len = terminal.screencols;
-            UNWRAP(dbuf_append(dbuf, editor.rows[y].chars, len), void);
+            UNWRAP(dbuf_append(dbuf, editor.rows[filerow].chars, len), void);
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
@@ -194,6 +195,10 @@ void editor_move_cursor(int key) {
         case ARROW_UP:
             if (terminal.cy != 0) {
                 terminal.cy--;
+            } else {
+                if (editor.rowoff > 0) {
+                    editor.rowoff--;
+                }
             }
             break;
         case ARROW_LEFT:
@@ -204,6 +209,10 @@ void editor_move_cursor(int key) {
         case ARROW_DOWN:
             if (terminal.cy < terminal.screenrows - 1) {
                 terminal.cy++;
+            } else {
+                if (editor.numrows - editor.rowoff > terminal.screenrows) {
+                    editor.rowoff++;
+                }
             }
             break;
         case ARROW_RIGHT:
@@ -258,5 +267,6 @@ RESULT(void) init_editor() {
     terminal.cy = 0;
     editor.numrows = 0;
     editor.rows = NULL;
+    editor.rowoff = 0;
     return get_window_size(&terminal.screenrows, &terminal.screencols);
 }

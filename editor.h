@@ -14,6 +14,7 @@ struct EditorRow {
 struct Editor {
     int numrows;
     struct EditorRow *rows;
+    int rowoff;
     struct termios orig_termios;
 };
 
