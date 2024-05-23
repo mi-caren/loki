@@ -24,7 +24,7 @@
 
 #define IF_UNSIGNED(TYPE)                   CAT(IF_, IS_UNSIGNED(TYPE))
 #define IF_STRUCT(TYPE)                     CAT(IF_, IS_STRUCT(TYPE))
-#define IF_VOID(TYPE)                   CAT(IF_, IS_VOID(TYPE))
+#define IF_VOID(TYPE)                       CAT(IF_, IS_VOID(TYPE))
 
 
 
