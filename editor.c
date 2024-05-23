@@ -178,7 +178,7 @@ void editor_refresh_screen() {
 
     char buf[32];
     // move cursor to terminal cursor position
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal.cy + 1, terminal.cx + 1);
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.editing_point.cy - editor.rowoff + 1, editor.editing_point.cx - editor.coloff + 1);
     UNWRAP(dbuf_append(&dbuf, buf, strlen(buf)), void);
 
     // show cursor
@@ -190,62 +190,54 @@ void editor_refresh_screen() {
 
 // *** input ***
 
-void editor_move_cursor(int key) {
+void editor_scroll() {
+    if (editor.editing_point.cx < editor.coloff) {
+        editor.coloff = editor.editing_point.cx;
+    } else if (editor.editing_point.cx > editor.coloff + terminal.screencols) {
+        editor.coloff = editor.editing_point.cx - terminal.screencols;
+    }
+    if (editor.editing_point.cy < editor.rowoff) {
+        editor.rowoff = editor.editing_point.cy;
+    } else if (editor.editing_point.cy > editor.rowoff + terminal.screenrows) {
+        editor.rowoff = editor.editing_point.cy - terminal.screenrows;
+    }
+}
+
+void editor_move_editing_point(int key) {
     switch (key) {
         case ARROW_UP:
-            if (terminal.cy != 0) {
-                terminal.cy--;
-            } else {
-                if (editor.rowoff > 0) {
-                    editor.rowoff--;
-                }
+            if (editor.editing_point.cy != 0) {
+                editor.editing_point.cy--;
             }
             break;
         case ARROW_LEFT:
-            if (terminal.cx != 0) {
-                terminal.cx--;
-            } else {
-                if (editor.coloff > 0) {
-                    editor.coloff--;
-                } else {
-                    if (CURR_ROW > 0) {
-                        editor_move_cursor(ARROW_UP);
-                        terminal.cx = editor.rows[CURR_ROW].size;
-                    }
-                }
+            if (editor.editing_point.cx != 0) {
+                editor.editing_point.cx--;
+            } else if (editor.editing_point.cy != 0) {
+                editor.editing_point.cy--;
+                editor.editing_point.cx = CURR_ROW.size;
             }
             break;
         case ARROW_DOWN:
-            if (terminal.cy < terminal.screenrows - 1) {
-                terminal.cy++;
-            } else {
-                if (editor.numrows - editor.rowoff > terminal.screenrows) {
-                    editor.rowoff++;
-                }
+            if (editor.editing_point.cy < editor.numrows) {
+                editor.editing_point.cy++;
             }
             break;
         case ARROW_RIGHT:
-            if (terminal.cx < saturating_sub(editor.rows[CURR_ROW].size, editor.coloff)) {
-                if (terminal.cx < terminal.screencols - 1) {
-                        terminal.cx++;
-                } else {
-                    editor.coloff++;
-                }
+            if (editor.editing_point.cx < CURR_ROW.size) {
+                editor.editing_point.cx++;
+            } else if (editor.editing_point.cy < editor.numrows) {
+                editor.editing_point.cy++;
+                editor.editing_point.cx = 0;
             }
             break;
     }
 
-    unsigned int curr_row_size = editor.rows[CURR_ROW].size;
-    unsigned int visible_row_size = saturating_sub(curr_row_size, editor.coloff);
-    if (terminal.cx > visible_row_size) {
-        terminal.cx = visible_row_size;
-        if (curr_row_size < editor.coloff) {
-            editor.coloff -= editor.coloff - curr_row_size;
-        }
-    } else if (terminal.cx > terminal.screencols) {
-        terminal.cx = terminal.screencols - 1;
-        editor.coloff += curr_row_size - terminal.screencols + 1;
+    if (editor.editing_point.cx > CURR_ROW.size) {
+        editor.editing_point.cx = CURR_ROW.size;
     }
+
+    editor_scroll();
 }
 
 void editor_process_keypress() {
@@ -259,10 +251,10 @@ void editor_process_keypress() {
             break;
 
         case HOME_KEY:
-            terminal.cx = 0;
+            editor.editing_point.cx = 0;
             break;
         case END_KEY:
-            terminal.cx = terminal.screencols - 1;
+            editor.editing_point.cx = CURR_ROW.size;
             break;
 
         case PAGE_UP:
@@ -270,7 +262,7 @@ void editor_process_keypress() {
             {
                 int times = terminal.screenrows;
                 while (times--) {
-                    editor_move_cursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+                    editor_move_editing_point(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
                 }
             }
             break;
@@ -279,7 +271,7 @@ void editor_process_keypress() {
         case ARROW_LEFT:
         case ARROW_DOWN:
         case ARROW_RIGHT:
-            editor_move_cursor(c);
+            editor_move_editing_point(c);
             break;
     }
 }
@@ -289,8 +281,10 @@ void editor_process_keypress() {
 
 RESULT(void) init_editor() {
     UNWRAP(enable_raw_mode(), void);
-    terminal.cx = 0;
-    terminal.cy = 0;
+    terminal.cursor_pos.cx = 0;
+    terminal.cursor_pos.cy = 0;
+    editor.editing_point.cx = 0;
+    editor.editing_point.cy = 0;
     editor.numrows = 0;
     editor.rows = NULL;
     editor.rowoff = 0;

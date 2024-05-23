@@ -27,12 +27,17 @@
 #define REQUEST_CURSOR_POSITION_SEQ_SIZE        4
 
 
+struct CursorPosition {
+    unsigned int cx;
+    unsigned int cy;
+};
 
 struct Terminal {
-    unsigned int cx, cy;
+    struct CursorPosition cursor_pos;
     unsigned int screenrows;
     unsigned int screencols;
 };
+
 
 
 void disable_raw_mode();
