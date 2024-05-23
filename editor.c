@@ -207,6 +207,11 @@ void editor_move_cursor(int key) {
             } else {
                 if (editor.coloff > 0) {
                     editor.coloff--;
+                } else {
+                    if (editor.rowoff + terminal.cy > 0) {
+                        editor_move_cursor(ARROW_UP);
+                        terminal.cx = editor.rows[editor.rowoff + terminal.cy].size;
+                    }
                 }
             }
             break;
