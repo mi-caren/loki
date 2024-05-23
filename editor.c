@@ -236,8 +236,12 @@ void editor_move_cursor(int key) {
     }
 
     unsigned int curr_row_size = editor.rows[editor.rowoff + terminal.cy].size;
-    if (terminal.cx > curr_row_size - editor.coloff) {
-        terminal.cx = curr_row_size - editor.coloff;
+    unsigned int visible_row_size = saturating_sub(curr_row_size, editor.coloff);
+    if (terminal.cx > visible_row_size) {
+        terminal.cx = visible_row_size;
+        if (curr_row_size < editor.coloff) {
+            editor.coloff -= editor.coloff - curr_row_size;
+        }
     }
 }
 
