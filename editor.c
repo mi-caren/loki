@@ -127,13 +127,13 @@ RESULT(void) editor_open(char *filename) {
 // *** output ***
 
 void editor_draw_rows(struct DynamicBuffer *dbuf) {
-    int y;
+    unsigned int y;
     for (y = 0; y < terminal.screenrows; y++) {
-        int filerow = y + editor.rowoff;
+        unsigned int filerow = y + editor.rowoff;
         if (filerow >= editor.numrows) {
             if (editor.numrows == 0 && y == terminal.screenrows / 3) {
                 char welcome[80];
-                int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
+                unsigned int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
                 if (welcomelen > terminal.screencols) {
                     welcomelen = terminal.screencols;
                 }
@@ -151,9 +151,10 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
                 UNWRAP(dbuf_append(dbuf, "~", 1), void);
             }
         } else {
-            int len = editor.rows[filerow].size;
-            if (len > terminal.screencols) len = terminal.screencols;
-            UNWRAP(dbuf_append(dbuf, editor.rows[filerow].chars, len), void);
+            int len = editor.rows[filerow].size - editor.coloff;
+            if (len < 0) len = 0;
+            if (len > (int)terminal.screencols) len = terminal.screencols;
+            UNWRAP(dbuf_append(dbuf, &editor.rows[filerow].chars[editor.coloff], len), void);
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
@@ -204,6 +205,10 @@ void editor_move_cursor(int key) {
         case ARROW_LEFT:
             if (terminal.cx != 0) {
                 terminal.cx--;
+            } else {
+                if (editor.coloff > 0) {
+                    editor.coloff--;
+                }
             }
             break;
         case ARROW_DOWN:
@@ -218,6 +223,8 @@ void editor_move_cursor(int key) {
         case ARROW_RIGHT:
             if (terminal.cx < terminal.screencols - 1) {
                 terminal.cx++;
+            } else {
+                editor.coloff++;
             }
             break;
     }
@@ -268,5 +275,6 @@ RESULT(void) init_editor() {
     editor.numrows = 0;
     editor.rows = NULL;
     editor.rowoff = 0;
+    editor.coloff = 0;
     return get_window_size(&terminal.screenrows, &terminal.screencols);
 }

@@ -71,7 +71,7 @@ RESULT(void) enable_raw_mode() {
     return res;
 }
 
-RESULT(void) get_cursor_position(int *rows, int *cols) {
+RESULT(void) get_cursor_position(unsigned int *rows, unsigned int *cols) {
     char buf[32];
     unsigned int i = 0;
 
@@ -91,14 +91,14 @@ RESULT(void) get_cursor_position(int *rows, int *cols) {
     if (buf[0] != '\x1b' || buf[1] != '[') {
         ERROR(res, 2, "terminal/get_cursor_position/read_escape_seq");
     };
-    if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) {
+    if (sscanf(&buf[2], "%u;%u", rows, cols) != 2) {
         ERROR(res, 3, "terminal/get_cursor_position/read_terminal_response");
     };
 
     return res;
 }
 
-RESULT(void) get_window_size(int *rows, int *cols) {
+RESULT(void) get_window_size(unsigned int *rows, unsigned int *cols) {
     if (WRITE_SEQ(MOVE_CURSOR_TO_BOTTOM_RIGHT) != 12) {
         RESULT(void) res = INIT_RESULT;
         ERROR(res, 1, "terminal/get_window_size/move_cursor_to_bottom_right");

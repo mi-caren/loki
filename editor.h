@@ -12,9 +12,10 @@ struct EditorRow {
 };
 
 struct Editor {
-    int numrows;
+    unsigned int numrows;
     struct EditorRow *rows;
-    int rowoff;
+    unsigned int rowoff;
+    unsigned int coloff;
     struct termios orig_termios;
 };
 
