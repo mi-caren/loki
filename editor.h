@@ -6,6 +6,9 @@
 #include "utils.h"
 
 
+#define CURR_ROW                editor.rowoff + terminal.cy
+
+
 struct EditorRow {
     unsigned int size;
     char *chars;

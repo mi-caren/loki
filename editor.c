@@ -208,9 +208,9 @@ void editor_move_cursor(int key) {
                 if (editor.coloff > 0) {
                     editor.coloff--;
                 } else {
-                    if (editor.rowoff + terminal.cy > 0) {
+                    if (CURR_ROW > 0) {
                         editor_move_cursor(ARROW_UP);
-                        terminal.cx = editor.rows[editor.rowoff + terminal.cy].size;
+                        terminal.cx = editor.rows[CURR_ROW].size;
                     }
                 }
             }
@@ -225,7 +225,7 @@ void editor_move_cursor(int key) {
             }
             break;
         case ARROW_RIGHT:
-            if (terminal.cx < saturating_sub(editor.rows[editor.rowoff + terminal.cy].size, editor.coloff)) {
+            if (terminal.cx < saturating_sub(editor.rows[CURR_ROW].size, editor.coloff)) {
                 if (terminal.cx < terminal.screencols - 1) {
                         terminal.cx++;
                 } else {
@@ -235,13 +235,16 @@ void editor_move_cursor(int key) {
             break;
     }
 
-    unsigned int curr_row_size = editor.rows[editor.rowoff + terminal.cy].size;
+    unsigned int curr_row_size = editor.rows[CURR_ROW].size;
     unsigned int visible_row_size = saturating_sub(curr_row_size, editor.coloff);
     if (terminal.cx > visible_row_size) {
         terminal.cx = visible_row_size;
         if (curr_row_size < editor.coloff) {
             editor.coloff -= editor.coloff - curr_row_size;
         }
+    } else if (terminal.cx > terminal.screencols) {
+        terminal.cx = terminal.screencols - 1;
+        editor.coloff += curr_row_size - terminal.screencols + 1;
     }
 }
 
@@ -280,6 +283,7 @@ void editor_process_keypress() {
             break;
     }
 }
+
 
 // *** init ***
 
