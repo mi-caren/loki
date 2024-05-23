@@ -7,7 +7,7 @@
 
 
 struct EditorRow {
-    int size;
+    unsigned int size;
     char *chars;
 };
 

@@ -221,10 +221,12 @@ void editor_move_cursor(int key) {
             }
             break;
         case ARROW_RIGHT:
-            if (terminal.cx < terminal.screencols - 1) {
-                terminal.cx++;
-            } else {
-                editor.coloff++;
+            if (terminal.cx < saturating_sub(editor.rows[editor.rowoff + terminal.cy].size, editor.coloff)) {
+                if (terminal.cx < terminal.screencols - 1) {
+                        terminal.cx++;
+                } else {
+                    editor.coloff++;
+                }
             }
             break;
     }
