@@ -169,10 +169,10 @@ RESULT(void) editor_open(char *filename) {
 // *** output ***
 
 void editor_scroll() {
-    if (editor.editing_point.cx < editor.coloff) {
-        editor.coloff = editor.editing_point.cx;
-    } else if (editor.editing_point.cx >= editor.coloff + terminal.screencols) {
-        editor.coloff = editor.editing_point.cx - terminal.screencols + 1;
+    if (editor.rx < editor.coloff) {
+        editor.coloff = editor.rx;
+    } else if (editor.rx >= editor.coloff + terminal.screencols) {
+        editor.coloff = editor.rx - terminal.screencols + 1;
     }
     if (editor.editing_point.cy < editor.rowoff) {
         editor.rowoff = editor.editing_point.cy;
@@ -233,7 +233,7 @@ void editor_refresh_screen() {
 
     char buf[32];
     // move cursor to terminal cursor position
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.editing_point.cy - editor.rowoff + 1, editor.editing_point.cx - editor.coloff + 1);
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.editing_point.cy - editor.rowoff + 1, editor.rx - editor.coloff + 1);
     UNWRAP(dbuf_append(&dbuf, buf, strlen(buf)), void);
 
     // show cursor
@@ -263,7 +263,7 @@ void editor_move_editing_point(int key) {
                 editor.editing_point.cx--;
             } else if (editor.editing_point.cy != 0) {
                 editor.editing_point.cy--;
-                editor.editing_point.cx = CURR_ROW.rsize;
+                editor.editing_point.cx = CURR_ROW.size;
             }
             break;
         case ARROW_DOWN:
@@ -272,7 +272,7 @@ void editor_move_editing_point(int key) {
             }
             break;
         case ARROW_RIGHT:
-            if (editor.editing_point.cx < CURR_ROW.rsize) {
+            if (editor.editing_point.cx < CURR_ROW.size) {
                 editor.editing_point.cx++;
             } else if (editor.editing_point.cy < saturating_sub(editor.numrows, 1)) {
                 editor.editing_point.cy++;
@@ -281,8 +281,19 @@ void editor_move_editing_point(int key) {
             break;
     }
 
-    if (editor.editing_point.cx > CURR_ROW.rsize) {
-        editor.editing_point.cx = CURR_ROW.rsize;
+    if (editor.editing_point.cx > CURR_ROW.size) {
+        editor.editing_point.cx = CURR_ROW.size;
+    }
+}
+
+void editor_cx_to_rx() {
+    editor.rx = 0;
+    unsigned int i;
+    for (i = 0; i < editor.editing_point.cx; i++) {
+        if (CURR_ROW.chars[i] == '\t') {
+            editor.rx += TAB_SPACE_NUM - 1;
+        }
+        editor.rx++;
     }
 }
 
@@ -300,7 +311,7 @@ void editor_process_keypress() {
             editor.editing_point.cx = 0;
             break;
         case END_KEY:
-            editor.editing_point.cx = CURR_ROW.rsize;
+            editor.editing_point.cx = CURR_ROW.size;
             break;
 
         case PAGE_UP:
@@ -321,6 +332,7 @@ void editor_process_keypress() {
             break;
     }
 
+    editor_cx_to_rx();
     editor_scroll();
 }
 
@@ -339,6 +351,7 @@ RESULT(void) init_editor() {
     terminal.cursor_pos.cy = 0;
     editor.editing_point.cx = 0;
     editor.editing_point.cy = 0;
+    editor.rx = 0;
     editor.numrows = 0;
     editor.rows = NULL;
     editor.rowoff = 0;

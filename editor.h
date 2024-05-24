@@ -23,6 +23,7 @@ struct EditingPoint {
 
 struct Editor {
     struct EditingPoint editing_point;
+    unsigned int rx;
     unsigned int numrows;
     struct EditorRow *rows;
     unsigned int rowoff;
