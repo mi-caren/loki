@@ -25,13 +25,12 @@ void die(Error err) {
 
 int main(int argc, char *argv[]) {
     UNWRAP(init_editor(), void);
+
     if (argc >= 2) {
         UNWRAP(editor_open(argv[1]), void);
     }
 
-    while (1) {
-        editor_refresh_screen();
-        editor_process_keypress();
-    }
+    editor_run();
+
     return 0;
 }

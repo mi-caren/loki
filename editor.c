@@ -179,7 +179,6 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
 }
 
 void editor_refresh_screen() {
-    editor_scroll();
     struct DynamicBuffer dbuf = DBUF_INIT;
 
     // hide cursor while drawing on screen
@@ -239,8 +238,6 @@ void editor_move_editing_point(int key) {
     if (editor.editing_point.cx > CURR_ROW.size) {
         editor.editing_point.cx = CURR_ROW.size;
     }
-
-    
 }
 
 void editor_process_keypress() {
@@ -277,8 +274,16 @@ void editor_process_keypress() {
             editor_move_editing_point(c);
             break;
     }
+
+    editor_scroll();
 }
 
+void editor_run() {
+    while (1) {
+        editor_refresh_screen();
+        editor_process_keypress();
+    }
+}
 
 // *** init ***
 
