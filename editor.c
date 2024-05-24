@@ -143,6 +143,12 @@ RESULT(void) editor_append_row(char *line, size_t linelen) {
 RESULT(void) editor_open(char *filename) {
     RESULT(void) res = INIT_RESULT;
 
+    free(editor.filename);
+    char *new = strdup(filename);
+    if (new == NULL)
+        ERROR(res, 2, "editor/editor_open/strdup");
+    editor.filename = new;
+
     FILE *fp = fopen(filename, "r");
     if (!fp)
         ERROR(res, 1, "editor/editor_open/open_file");
@@ -227,10 +233,25 @@ void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
     UNWRAP(dbuf_append(dbuf, buf, strlen(buf)), void);
 
     UNWRAP(dbuf_append(dbuf, INVERTED_COLOR_SEQ, INVERTED_COLOR_SEQ_SIZE), void);
-    unsigned int i;
-    for (i = 0; i < terminal.screencols; i++) {
+
+    char fmt_str[30];
+    int section_space = (terminal.screencols / 2) - 2;
+    snprintf(fmt_str, 30, "%%-%d.%ds    %%%dd lines", section_space, section_space, section_space - (int)sizeof(" lines"));
+
+    char status[terminal.screencols];
+    unsigned int len = snprintf(
+        status,
+        terminal.screencols,
+        fmt_str,
+        editor.filename ? editor.filename : "[New Buffer]",
+        editor.numrows
+    );
+    UNWRAP(dbuf_append(dbuf, status, len), void);
+    while (len < terminal.screencols) {
         UNWRAP(dbuf_append(dbuf, " ", 1), void);
+        len++;
     }
+
     UNWRAP(dbuf_append(dbuf, NORMAL_FORMATTING_SEQ, NORMAL_FORMATTING_SEQ_SIZE), void);
 }
 
@@ -378,6 +399,7 @@ RESULT(void) init_editor() {
     editor.rows = NULL;
     editor.rowoff = 0;
     editor.coloff = 0;
+    editor.filename = NULL;
     UNWRAP(get_window_size(&terminal.screenrows, &terminal.screencols), void);
     terminal.screenrows -= 1;
     RESULT(void) res = INIT_RESULT;

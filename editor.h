@@ -24,10 +24,15 @@ struct EditingPoint {
 struct Editor {
     struct EditingPoint editing_point;
     unsigned int rx;
+
     unsigned int numrows;
     struct EditorRow *rows;
+
     unsigned int rowoff;
     unsigned int coloff;
+
+    char *filename;
+
     struct termios orig_termios;
 };
 
