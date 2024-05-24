@@ -221,7 +221,7 @@ void editor_move_editing_point(int key) {
             }
             break;
         case ARROW_DOWN:
-            if (editor.editing_point.cy < editor.numrows) {
+            if (editor.editing_point.cy < saturating_sub(editor.numrows, 1)) {
                 editor.editing_point.cy++;
             }
             break;
