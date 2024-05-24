@@ -2,6 +2,7 @@
 #define EDITOR_H
 
 #include <termios.h>
+#include <time.h>
 
 #include "utils.h"
 
@@ -32,6 +33,9 @@ struct Editor {
     unsigned int coloff;
 
     char *filename;
+
+    char statusmsg[80];
+    time_t statusmsg_time;
 
     struct termios orig_termios;
 };

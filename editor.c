@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #include "editor.h"
 #include "terminal.h"
@@ -228,7 +229,7 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
 
 void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
     char buf[32];
-    // move cursor to beginning of last row
+    // move cursor to beginning status bar
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal.screenrows + 1, 0);
     UNWRAP(dbuf_append(dbuf, buf, strlen(buf)), void);
 
@@ -245,8 +246,19 @@ void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
         len++;
     }
     UNWRAP(dbuf_append(dbuf, status, len_s2), void);
-
     UNWRAP(dbuf_append(dbuf, NORMAL_FORMATTING_SEQ, NORMAL_FORMATTING_SEQ_SIZE), void);
+}
+
+void editor_draw_msg_bar(struct DynamicBuffer *dbuf) {
+    char buf[32];
+    // move cursor to beginning message bar
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal.screenrows + 2, 0);
+    UNWRAP(dbuf_append(dbuf, buf, strlen(buf)), void);
+    UNWRAP(dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE), void);
+    unsigned int msglen = strlen(editor.statusmsg);
+    if (msglen > terminal.screencols) msglen = terminal.screencols;
+    if (msglen && time(NULL) - editor.statusmsg_time < 5)
+        UNWRAP(dbuf_append(dbuf, editor.statusmsg, msglen), void);
 }
 
 void editor_refresh_screen() {
@@ -260,6 +272,7 @@ void editor_refresh_screen() {
 
     editor_draw_rows(&dbuf);
     editor_draw_status_bar(&dbuf);
+    editor_draw_msg_bar(&dbuf);
 
     char buf[32];
     // move cursor to terminal cursor position
@@ -271,6 +284,14 @@ void editor_refresh_screen() {
 
     write(STDOUT_FILENO, dbuf.b, dbuf.len);
     dbuf_free(&dbuf);
+}
+
+void editor_set_status_message(const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(editor.statusmsg, sizeof(editor.statusmsg), fmt, ap);
+    va_end(ap);
+    editor.statusmsg_time = time(NULL);
 }
 
 // *** input ***
@@ -374,6 +395,7 @@ void editor_process_keypress() {
 }
 
 void editor_run() {
+    editor_set_status_message("HELP: Ctrl-Q = quit");
     while (1) {
         editor_refresh_screen();
         editor_process_keypress();
@@ -394,8 +416,10 @@ RESULT(void) init_editor() {
     editor.rowoff = 0;
     editor.coloff = 0;
     editor.filename = NULL;
+    editor.statusmsg[0] = '\0';
+    editor.statusmsg_time = 0;
     UNWRAP(get_window_size(&terminal.screenrows, &terminal.screencols), void);
-    terminal.screenrows -= 1;
+    terminal.screenrows -= 2;
     RESULT(void) res = INIT_RESULT;
     return res;
 }
