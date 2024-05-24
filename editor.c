@@ -126,6 +126,19 @@ RESULT(void) editor_open(char *filename) {
 
 // *** output ***
 
+void editor_scroll() {
+    if (editor.editing_point.cx < editor.coloff) {
+        editor.coloff = editor.editing_point.cx;
+    } else if (editor.editing_point.cx > editor.coloff + terminal.screencols) {
+        editor.coloff = editor.editing_point.cx - terminal.screencols + 1;
+    }
+    if (editor.editing_point.cy < editor.rowoff) {
+        editor.rowoff = editor.editing_point.cy;
+    } else if (editor.editing_point.cy > editor.rowoff + terminal.screenrows) {
+        editor.rowoff = editor.editing_point.cy - terminal.screenrows + 1;
+    }
+}
+
 void editor_draw_rows(struct DynamicBuffer *dbuf) {
     unsigned int y;
     for (y = 0; y < terminal.screenrows; y++) {
@@ -166,6 +179,7 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
 }
 
 void editor_refresh_screen() {
+    editor_scroll();
     struct DynamicBuffer dbuf = DBUF_INIT;
 
     // hide cursor while drawing on screen
@@ -190,18 +204,7 @@ void editor_refresh_screen() {
 
 // *** input ***
 
-void editor_scroll() {
-    if (editor.editing_point.cx < editor.coloff) {
-        editor.coloff = editor.editing_point.cx;
-    } else if (editor.editing_point.cx > editor.coloff + terminal.screencols) {
-        editor.coloff = editor.editing_point.cx - terminal.screencols;
-    }
-    if (editor.editing_point.cy < editor.rowoff) {
-        editor.rowoff = editor.editing_point.cy;
-    } else if (editor.editing_point.cy > editor.rowoff + terminal.screenrows) {
-        editor.rowoff = editor.editing_point.cy - terminal.screenrows;
-    }
-}
+
 
 void editor_move_editing_point(int key) {
     switch (key) {
@@ -237,7 +240,7 @@ void editor_move_editing_point(int key) {
         editor.editing_point.cx = CURR_ROW.size;
     }
 
-    editor_scroll();
+    
 }
 
 void editor_process_keypress() {

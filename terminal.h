@@ -2,7 +2,7 @@
 #define TERMINAL_H
 
 
-#define WRITE_SEQ(SEQ)        write(STDOUT_FILENO, SEQ##_SEQ, SEQ##_SEQ_SIZE)
+#define WRITE_SEQ(SEQ)                          write(STDOUT_FILENO, SEQ##_SEQ, SEQ##_SEQ_SIZE)
 
 
 #define CLEAR_SCREEN_SEQ                        "\x1b[2J"
