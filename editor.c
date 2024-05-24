@@ -235,7 +235,7 @@ void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
     UNWRAP(dbuf_append(dbuf, INVERTED_COLOR_SEQ, INVERTED_COLOR_SEQ_SIZE), void);
 
     char numrows_status[32];
-    snprintf(numrows_status, 32, "%d/%d lines", editor.editing_point.cy + 1, editor.numrows);
+    snprintf(numrows_status, 32, "%d/%d lines", editor.editing_point.cy + (editor.numrows > 0 ? 1 : 0), editor.numrows);
 
     int section_space = (terminal.screencols / 2) - 1;
     char status[terminal.screencols];
