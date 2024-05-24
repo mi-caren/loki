@@ -317,6 +317,13 @@ void editor_process_keypress() {
         case PAGE_UP:
         case PAGE_DOWN:
             {
+                if (c == PAGE_UP) {
+                    editor.editing_point.cy = editor.rowoff;
+                } else {
+                    editor.editing_point.cy = editor.rowoff + terminal.screenrows - 1;
+                    if (editor.editing_point.cy > editor.numrows)
+                        editor.editing_point.cy = editor.numrows;
+                }
                 int times = terminal.screenrows;
                 while (times--) {
                     editor_move_editing_point(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
