@@ -206,6 +206,10 @@ void editor_refresh_screen() {
 
 
 void editor_move_editing_point(int key) {
+    if (editor.numrows == 0) {
+        return;
+    }
+
     switch (key) {
         case ARROW_UP:
             if (editor.editing_point.cy != 0) {
