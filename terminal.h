@@ -26,6 +26,12 @@
 #define REQUEST_CURSOR_POSITION_SEQ             "\x1b[6n"
 #define REQUEST_CURSOR_POSITION_SEQ_SIZE        4
 
+#define INVERTED_COLOR_SEQ                      "\x1b[7m"
+#define INVERTED_COLOR_SEQ_SIZE                 4
+
+#define NORMAL_FORMATTING_SEQ                   "\x1b[m"
+#define NORMAL_FORMATTING_SEQ_SIZE              3
+
 
 struct CursorPosition {
     unsigned int cx;

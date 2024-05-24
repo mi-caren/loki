@@ -220,6 +220,20 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
     }
 }
 
+void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
+    char buf[32];
+    // move cursor to beginning of last row
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal.screenrows + 1, 0);
+    UNWRAP(dbuf_append(dbuf, buf, strlen(buf)), void);
+
+    UNWRAP(dbuf_append(dbuf, INVERTED_COLOR_SEQ, INVERTED_COLOR_SEQ_SIZE), void);
+    unsigned int i;
+    for (i = 0; i < terminal.screencols; i++) {
+        UNWRAP(dbuf_append(dbuf, " ", 1), void);
+    }
+    UNWRAP(dbuf_append(dbuf, NORMAL_FORMATTING_SEQ, NORMAL_FORMATTING_SEQ_SIZE), void);
+}
+
 void editor_refresh_screen() {
     struct DynamicBuffer dbuf = DBUF_INIT;
 
@@ -230,6 +244,7 @@ void editor_refresh_screen() {
     UNWRAP(dbuf_append(&dbuf, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE), void);
 
     editor_draw_rows(&dbuf);
+    editor_draw_status_bar(&dbuf);
 
     char buf[32];
     // move cursor to terminal cursor position
@@ -363,5 +378,8 @@ RESULT(void) init_editor() {
     editor.rows = NULL;
     editor.rowoff = 0;
     editor.coloff = 0;
-    return get_window_size(&terminal.screenrows, &terminal.screencols);
+    UNWRAP(get_window_size(&terminal.screenrows, &terminal.screencols), void);
+    terminal.screenrows -= 1;
+    RESULT(void) res = INIT_RESULT;
+    return res;
 }
