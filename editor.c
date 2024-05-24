@@ -263,7 +263,7 @@ void editor_move_editing_point(int key) {
                 editor.editing_point.cx--;
             } else if (editor.editing_point.cy != 0) {
                 editor.editing_point.cy--;
-                editor.editing_point.cx = CURR_ROW.size;
+                editor.editing_point.cx = CURR_ROW.rsize;
             }
             break;
         case ARROW_DOWN:
@@ -272,7 +272,7 @@ void editor_move_editing_point(int key) {
             }
             break;
         case ARROW_RIGHT:
-            if (editor.editing_point.cx < CURR_ROW.size) {
+            if (editor.editing_point.cx < CURR_ROW.rsize) {
                 editor.editing_point.cx++;
             } else if (editor.editing_point.cy < saturating_sub(editor.numrows, 1)) {
                 editor.editing_point.cy++;
@@ -281,8 +281,8 @@ void editor_move_editing_point(int key) {
             break;
     }
 
-    if (editor.editing_point.cx > CURR_ROW.size) {
-        editor.editing_point.cx = CURR_ROW.size;
+    if (editor.editing_point.cx > CURR_ROW.rsize) {
+        editor.editing_point.cx = CURR_ROW.rsize;
     }
 }
 
@@ -300,7 +300,7 @@ void editor_process_keypress() {
             editor.editing_point.cx = 0;
             break;
         case END_KEY:
-            editor.editing_point.cx = CURR_ROW.size;
+            editor.editing_point.cx = CURR_ROW.rsize;
             break;
 
         case PAGE_UP:
