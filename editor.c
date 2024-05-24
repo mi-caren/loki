@@ -234,27 +234,17 @@ void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
 
     UNWRAP(dbuf_append(dbuf, INVERTED_COLOR_SEQ, INVERTED_COLOR_SEQ_SIZE), void);
 
-    char numrows_status[32];
-    snprintf(numrows_status, 32, "%d/%d lines", editor.editing_point.cy + (editor.numrows > 0 ? 1 : 0), editor.numrows);
-
-    int section_space = (terminal.screencols / 2) - 1;
     char status[terminal.screencols];
-    unsigned int len = snprintf(
-        status,
-        terminal.screencols,
-        "%-*.*s%*.*s",
-
-        section_space, section_space,
-        editor.filename ? editor.filename : "[New Buffer]",
-
-        section_space, section_space,
-        numrows_status
-    );
+    int len = snprintf(status, terminal.screencols / 4 * 3, "%s", editor.filename ? editor.filename : "[New Buffer]");
     UNWRAP(dbuf_append(dbuf, status, len), void);
-    while (len < terminal.screencols) {
+    int len_s2 = snprintf(status, terminal.screencols / 4, "%d/%d lines ", editor.editing_point.cy + (editor.numrows > 0 ? 1 : 0), editor.numrows);
+
+
+    while (len < (int)(terminal.screencols - len_s2)) {
         UNWRAP(dbuf_append(dbuf, " ", 1), void);
         len++;
     }
+    UNWRAP(dbuf_append(dbuf, status, len_s2), void);
 
     UNWRAP(dbuf_append(dbuf, NORMAL_FORMATTING_SEQ, NORMAL_FORMATTING_SEQ_SIZE), void);
 }
