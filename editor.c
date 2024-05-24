@@ -129,12 +129,12 @@ RESULT(void) editor_open(char *filename) {
 void editor_scroll() {
     if (editor.editing_point.cx < editor.coloff) {
         editor.coloff = editor.editing_point.cx;
-    } else if (editor.editing_point.cx > editor.coloff + terminal.screencols) {
+    } else if (editor.editing_point.cx >= editor.coloff + terminal.screencols) {
         editor.coloff = editor.editing_point.cx - terminal.screencols + 1;
     }
     if (editor.editing_point.cy < editor.rowoff) {
         editor.rowoff = editor.editing_point.cy;
-    } else if (editor.editing_point.cy > editor.rowoff + terminal.screenrows) {
+    } else if (editor.editing_point.cy >= editor.rowoff + terminal.screenrows) {
         editor.rowoff = editor.editing_point.cy - terminal.screenrows + 1;
     }
 }
