@@ -228,7 +228,7 @@ void editor_move_editing_point(int key) {
         case ARROW_RIGHT:
             if (editor.editing_point.cx < CURR_ROW.size) {
                 editor.editing_point.cx++;
-            } else if (editor.editing_point.cy < editor.numrows) {
+            } else if (editor.editing_point.cy < saturating_sub(editor.numrows, 1)) {
                 editor.editing_point.cy++;
                 editor.editing_point.cx = 0;
             }
