@@ -79,6 +79,30 @@ RESULT(int) editor_read_key() {
 
 // *** row operations ***
 
+RESULT(void) editor_render_row(struct EditorRow *row) {
+    // eventrully free render if it is not null
+    // this makes the munction more general because it can be called
+    // also to RE-rende a row
+    free(row->render);
+    char *new = malloc(row->size + 1);
+
+    RESULT(void) res = INIT_RESULT;
+    if (new == NULL)
+        ERROR(res, 1, "editor/editor_render_row/malloc");
+
+    row->render = new;
+
+    unsigned int i;
+    for (i = 0; i < row->size; i++) {
+        row->render[i] = row->chars[i];
+    }
+
+    row->render[i] = '\0';
+    row->rsize = i;
+
+    return res;
+}
+
 RESULT(void) editor_append_row(char *line, size_t linelen) {
     RESULT(void) res = INIT_RESULT;
     char *new = realloc(editor.rows, sizeof(struct EditorRow) * (editor.numrows + 1));
@@ -91,6 +115,10 @@ RESULT(void) editor_append_row(char *line, size_t linelen) {
     editor.rows[editor.numrows].chars = malloc(linelen + 1);
     memcpy(editor.rows[editor.numrows].chars, line, linelen);
     editor.rows[editor.numrows].chars[linelen] = '\0';
+
+    editor.rows[editor.numrows].rsize = 0;
+    editor.rows[editor.numrows].render = NULL;
+    editor_render_row(&editor.rows[editor.numrows]);
     editor.numrows += 1;
 
     return res;
@@ -164,9 +192,9 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
                 UNWRAP(dbuf_append(dbuf, "~", 1), void);
             }
         } else {
-            unsigned int len = saturating_sub(editor.rows[filerow].size, editor.coloff);
+            unsigned int len = saturating_sub(editor.rows[filerow].rsize, editor.coloff);
             if (len > terminal.screencols) len = terminal.screencols;
-            UNWRAP(dbuf_append(dbuf, &editor.rows[filerow].chars[editor.coloff], len), void);
+            UNWRAP(dbuf_append(dbuf, &editor.rows[filerow].render[editor.coloff], len), void);
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line

@@ -10,6 +10,9 @@ run: bin/kilo
 pre:
 	$(CC) $(CFLAGS) $(SRCS) -E
 
+bin/static-kilo: $(SRCS)
+	$(CC) $(CFLAGS) $(SRCS) -static -o $@
+
 clean:
 	rm -f bin/*
 

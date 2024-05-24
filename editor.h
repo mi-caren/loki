@@ -12,6 +12,8 @@
 struct EditorRow {
     unsigned int size;
     char *chars;
+    unsigned int rsize;
+    char *render;
 };
 
 struct EditingPoint {
