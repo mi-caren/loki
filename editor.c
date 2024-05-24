@@ -13,9 +13,10 @@
 #include "utils.h"
 
 
-#define KILO_VERSION    "0.0.1"
+#define KILO_VERSION     "0.0.1"
 
-#define CTRL_KEY(k)    ((k) & 0x1f)
+#define CTRL_KEY(k)      ((k) & 0x1f)
+#define TAB_SPACE_NUM    4
 
 
 extern struct Editor editor;
@@ -80,11 +81,18 @@ RESULT(int) editor_read_key() {
 // *** row operations ***
 
 RESULT(void) editor_render_row(struct EditorRow *row) {
+    unsigned int i;
+    unsigned int tabs = 0;
+    for (i = 0; i < row->size; i++) {
+        if (row->chars[i] == '\t')
+            tabs++;
+    }
+
     // eventrully free render if it is not null
     // this makes the munction more general because it can be called
     // also to RE-rende a row
     free(row->render);
-    char *new = malloc(row->size + 1);
+    char *new = malloc(row->size + 1 + tabs*(TAB_SPACE_NUM - 1));
 
     RESULT(void) res = INIT_RESULT;
     if (new == NULL)
@@ -92,13 +100,19 @@ RESULT(void) editor_render_row(struct EditorRow *row) {
 
     row->render = new;
 
-    unsigned int i;
+    unsigned int j = 0;
     for (i = 0; i < row->size; i++) {
-        row->render[i] = row->chars[i];
+        if (row->chars[i] == '\t') {
+            unsigned int tab_i;
+            for (tab_i = 0; tab_i < TAB_SPACE_NUM; tab_i++)
+                row->render[j++] = ' ';
+        } else {
+            row->render[j++] = row->chars[i];
+        }
     }
 
-    row->render[i] = '\0';
-    row->rsize = i;
+    row->render[j] = '\0';
+    row->rsize = j;
 
     return res;
 }
