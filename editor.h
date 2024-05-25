@@ -61,6 +61,6 @@ void editor_refresh_screen();
 void editor_move_editing_point(int key);
 void editor_process_keypress();
 void editor_run();
-RESULT(void) init_editor() __attribute__((warn_unused_result));
+void init_editor();
 
 #endif

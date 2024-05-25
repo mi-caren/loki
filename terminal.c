@@ -12,49 +12,18 @@ extern void die(const char *s);
 
 
 /*
- * Reimposta gli attributi del terminale allo stato
- * in cui erano
- */
-void disable_raw_mode() {
-    // TCSAFLUSH, prima di uscire scarta tutti gli input non letti,
-    // quindi non tutto ciò che c'è dopo il carattere 'q' non viene 
-    // più passato al terminale ma viene scartato
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &editor.orig_termios) == -1) {
-        die("disable_raw_mode/tcsetattr");
-    }
-}
-
-/*
  * Legge gli attributi del terminale,
  * ne modifica alcuni e riscrive gli attributi.
  */
-RESULT(void) enable_raw_mode() {
-    RESULT(void) res = INIT_RESULT;
-
-    // Legge gli attributi del terminale nella struct raw
-    if (tcgetattr(STDIN_FILENO, &editor.orig_termios) == -1) {
-        ERROR(res, 1, "terminal/enable_raw_mode/read_terminal_attributes");
+int enable_raw_mode(struct termios *orig_termios) {
+    if (orig_termios != NULL) {
+        // Legge gli attributi del terminale
+        if (tcgetattr(STDIN_FILENO, orig_termios) == -1)
+            return -1;
     }
-    // Registriamo una funzione perchè sia chiamata quando
-    // il programma termina, o perchè ritorna da main,
-    // o perchè viene chiamato exit()
-    atexit(disable_raw_mode);
-    struct termios raw = editor.orig_termios;
-    // disabilita l'echoing: ciò che si digita
-    // non saràstampato a terminale
-    // Flags:
-    //    c_lflag -> local flags
-    //    c_iflag -> input flags
-    //    c_oflag -> output flags
-    //    c_cflag -> control flags
-    // In canonical mode, the terminal passes the input to the program
-    // only when a ENTER is pressed. If we disable it, we read input byte-by-byte
-    // disable ICRNL to avoid translating \r to \n
-    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-    // disable output translation of \n to \n\r
-    raw.c_oflag &= ~(OPOST);
-    raw.c_cflag &= ~(CS8);
-    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+
+    struct termios raw = *orig_termios;
+    cfmakeraw(&raw);
     // Impostiamo il numero minimo di carrateri
     // per il read noncanonical, in modo che read non ritorni
     // subito ma aspetti che un carattere venga passato
@@ -64,11 +33,10 @@ RESULT(void) enable_raw_mode() {
     // TCSAFLUSH specifica quindo devono essere applicate le modifich:
     //    aspetta che tutti gli output siano stati scritti sul terminale
     //    e scarta tutti gli input non letti
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
-        ERROR(res, 2, "terminal/enable_raw_mode/write_terminal_attributes");
-    }
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1)
+        return -2;
 
-    return res;
+    return 0;
 }
 
 RESULT(void) get_cursor_position(unsigned int *rows, unsigned int *cols) {

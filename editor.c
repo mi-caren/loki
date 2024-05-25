@@ -23,6 +23,17 @@
 extern struct Editor editor;
 extern struct Terminal terminal;
 
+/*
+ * Print error message and exit with 1
+ */
+void die(Error err) {
+    WRITE_SEQ(CLEAR_SCREEN);
+    WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
+
+    printf("ERROR CODE %d, MSG: %s\r\n", err.code, err.message);
+    exit(1);
+}
+
 
 RESULT(int) editor_read_key() {
     int nread;
@@ -404,8 +415,7 @@ void editor_run() {
 
 // *** init ***
 
-RESULT(void) init_editor() {
-    UNWRAP(enable_raw_mode(), void);
+void init_editor() {
     terminal.cursor_pos.cx = 0;
     terminal.cursor_pos.cy = 0;
     editor.editing_point.cx = 0;
@@ -420,6 +430,4 @@ RESULT(void) init_editor() {
     editor.statusmsg_time = 0;
     UNWRAP(get_window_size(&terminal.screenrows, &terminal.screencols), void);
     terminal.screenrows -= 2;
-    RESULT(void) res = INIT_RESULT;
-    return res;
 }

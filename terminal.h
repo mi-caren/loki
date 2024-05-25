@@ -47,7 +47,7 @@ struct Terminal {
 
 
 void disable_raw_mode();
-RESULT(void) enable_raw_mode() __attribute__((warn_unused_result));
+int enable_raw_mode(struct termios *orig_termios);
 RESULT(void) get_cursor_position(unsigned int *rows, unsigned int *cols) __attribute__((warn_unused_result));
 RESULT(void) get_window_size(unsigned int *rows, unsigned int *cols) __attribute__((warn_unused_result));
 
