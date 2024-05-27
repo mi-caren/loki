@@ -1,8 +1,8 @@
 CFLAGS = -Wall -Wextra -pedantic
 SRCS = kilo.c terminal.c utils.c editor.c
 
-bin/kilo: $(SRCS)
-	$(CC) $(CFLAGS) $(SRCS) -o bin/kilo
+kilo: $(SRCS)
+	$(CC) $(CFLAGS) $(SRCS) -o kilo
 
 run: bin/kilo
 	./bin/kilo
@@ -14,5 +14,5 @@ bin/static-kilo: $(SRCS)
 	$(CC) $(CFLAGS) $(SRCS) -static -o $@
 
 clean:
-	rm -f bin/*
+	rm -f kilo
 
