@@ -13,18 +13,15 @@ UNWRAP_FUNC_DEF(unsigned int)
 
 
 
-RESULT(void) dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) {
-    RESULT(void) res = INIT_RESULT;
+void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) {
     char *new = realloc(dbuf->b, dbuf->len + len);
 
     if (new == NULL) {
-        ERROR(res, 1, "utils/dbuf_append/realloc");
+        die("dbuf_append/realloc");
     }
     memcpy(&new[dbuf->len], s, len);
     dbuf->b = new;
     dbuf->len += len;
-
-    return res;
 }
 
 void dbuf_free(struct DynamicBuffer *dbuf) {

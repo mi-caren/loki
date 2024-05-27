@@ -115,6 +115,8 @@ UNWRAP_FUNC_SIGNATURE(unsigned int);
 
 /* *********** DYNAMIC BUFFER *********** */
 
+extern void die(const char *s);
+
 struct DynamicBuffer {
     char *b;
     int len;
@@ -124,7 +126,7 @@ struct DynamicBuffer {
 
 
 
-RESULT(void) dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) __attribute__((warn_unused_result));
+void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len);
 void dbuf_free(struct DynamicBuffer *dbuf);
 
 unsigned int saturating_sub(unsigned int n1, unsigned int n2);

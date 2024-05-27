@@ -214,27 +214,27 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
 
                 int padding = (terminal.screencols - welcomelen) / 2;
                 if (padding) {
-                    UNWRAP(dbuf_append(dbuf, "~", 1), void);
+                    dbuf_append(dbuf, "~", 1);
                     padding--;
                 }
                 while (padding--) {
-                    UNWRAP(dbuf_append(dbuf, " ", 1), void);
+                    dbuf_append(dbuf, " ", 1);
                 }
-                UNWRAP(dbuf_append(dbuf, welcome, welcomelen), void);
+                dbuf_append(dbuf, welcome, welcomelen);
             } else {
-                UNWRAP(dbuf_append(dbuf, "~", 1), void);
+                dbuf_append(dbuf, "~", 1);
             }
         } else {
             int len = saturating_sub(editor.rows[filerow].rsize, editor.coloff);
             if (len > terminal.screencols) len = terminal.screencols;
-            UNWRAP(dbuf_append(dbuf, &editor.rows[filerow].render[editor.coloff], len), void);
+            dbuf_append(dbuf, &editor.rows[filerow].render[editor.coloff], len);
         }
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
-        UNWRAP(dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE), void);
+        dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE);
 
         if (y < editor.view_rows -1) {
-            UNWRAP(dbuf_append(dbuf, "\r\n", 2), void);
+            dbuf_append(dbuf, "\r\n", 2);
         }
     }
 }
@@ -243,44 +243,44 @@ void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
     char buf[32];
     // move cursor to beginning status bar
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.view_rows + 1, 0);
-    UNWRAP(dbuf_append(dbuf, buf, strlen(buf)), void);
+    dbuf_append(dbuf, buf, strlen(buf));
 
-    UNWRAP(dbuf_append(dbuf, INVERTED_COLOR_SEQ, INVERTED_COLOR_SEQ_SIZE), void);
+    dbuf_append(dbuf, INVERTED_COLOR_SEQ, INVERTED_COLOR_SEQ_SIZE);
 
     char status[terminal.screencols];
     int len = snprintf(status, terminal.screencols / 4 * 3, "%s", editor.filename ? editor.filename : "[New Buffer]");
-    UNWRAP(dbuf_append(dbuf, status, len), void);
+    dbuf_append(dbuf, status, len);
     int len_s2 = snprintf(status, terminal.screencols / 4, "%d/%d lines ", editor.editing_point.cy + (editor.numrows > 0 ? 1 : 0), editor.numrows);
 
 
     while (len < (int)(terminal.screencols - len_s2)) {
-        UNWRAP(dbuf_append(dbuf, " ", 1), void);
+        dbuf_append(dbuf, " ", 1);
         len++;
     }
-    UNWRAP(dbuf_append(dbuf, status, len_s2), void);
-    UNWRAP(dbuf_append(dbuf, NORMAL_FORMATTING_SEQ, NORMAL_FORMATTING_SEQ_SIZE), void);
+    dbuf_append(dbuf, status, len_s2);
+    dbuf_append(dbuf, NORMAL_FORMATTING_SEQ, NORMAL_FORMATTING_SEQ_SIZE);
 }
 
 void editor_draw_msg_bar(struct DynamicBuffer *dbuf) {
     char buf[32];
     // move cursor to beginning message bar
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.view_rows + 2, 0);
-    UNWRAP(dbuf_append(dbuf, buf, strlen(buf)), void);
-    UNWRAP(dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE), void);
+    dbuf_append(dbuf, buf, strlen(buf));
+    dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE);
     int msglen = strlen(editor.statusmsg);
     if (msglen > terminal.screencols) msglen = terminal.screencols;
     if (msglen && time(NULL) - editor.statusmsg_time < 5)
-        UNWRAP(dbuf_append(dbuf, editor.statusmsg, msglen), void);
+        dbuf_append(dbuf, editor.statusmsg, msglen);
 }
 
 void editor_refresh_screen() {
     struct DynamicBuffer dbuf = DBUF_INIT;
 
     // hide cursor while drawing on screen
-    UNWRAP(dbuf_append(&dbuf, HIDE_CURSOR_SEQ, HIDE_CURSOR_SEQ_SIZE), void);
+    dbuf_append(&dbuf, HIDE_CURSOR_SEQ, HIDE_CURSOR_SEQ_SIZE);
 
     // ensure cursor is positioned top-left
-    UNWRAP(dbuf_append(&dbuf, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE), void);
+    dbuf_append(&dbuf, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE);
 
     editor_draw_rows(&dbuf);
     editor_draw_status_bar(&dbuf);
@@ -289,10 +289,10 @@ void editor_refresh_screen() {
     char buf[32];
     // move cursor to terminal cursor position
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.editing_point.cy - editor.rowoff + 1, editor.rx - editor.coloff + 1);
-    UNWRAP(dbuf_append(&dbuf, buf, strlen(buf)), void);
+    dbuf_append(&dbuf, buf, strlen(buf));
 
     // show cursor
-    UNWRAP(dbuf_append(&dbuf, SHOW_CURSOR_SEQ, SHOW_CURSOR_SEQ_SIZE), void);
+    dbuf_append(&dbuf, SHOW_CURSOR_SEQ, SHOW_CURSOR_SEQ_SIZE);
 
     write(STDOUT_FILENO, dbuf.b, dbuf.len);
     dbuf_free(&dbuf);
