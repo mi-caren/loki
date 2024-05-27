@@ -92,7 +92,7 @@ RESULT(int) editor_read_key() {
 
 // *** row operations ***
 
-RESULT(void) editor_render_row(struct EditorRow *row) {
+int editor_render_row(struct EditorRow *row) {
     unsigned int i;
     unsigned int tabs = 0;
     for (i = 0; i < row->size; i++) {
@@ -106,9 +106,8 @@ RESULT(void) editor_render_row(struct EditorRow *row) {
     free(row->render);
     char *new = malloc(row->size + 1 + tabs*(TAB_SPACE_NUM - 1));
 
-    RESULT(void) res = INIT_RESULT;
     if (new == NULL)
-        ERROR(res, 1, "editor/editor_render_row/malloc");
+        return -1;
 
     row->render = new;
 
@@ -126,15 +125,14 @@ RESULT(void) editor_render_row(struct EditorRow *row) {
     row->render[j] = '\0';
     row->rsize = j;
 
-    return res;
+    return 0;
 }
 
-RESULT(void) editor_append_row(char *line, size_t linelen) {
-    RESULT(void) res = INIT_RESULT;
+int editor_append_row(char *line, size_t linelen) {
     char *new = realloc(editor.rows, sizeof(struct EditorRow) * (editor.numrows + 1));
 
     if (new == NULL)
-        ERROR(res, 1, "editor/editor_append_row/realloc");
+        return -1;
 
     editor.rows = (struct EditorRow*)new;
     editor.rows[editor.numrows].size = linelen;
@@ -144,30 +142,30 @@ RESULT(void) editor_append_row(char *line, size_t linelen) {
 
     editor.rows[editor.numrows].rsize = 0;
     editor.rows[editor.numrows].render = NULL;
-    editor_render_row(&editor.rows[editor.numrows]);
+    if (editor_render_row(&editor.rows[editor.numrows]) != 0)
+        return -1;
     editor.numrows += 1;
 
-    return res;
+    return 0;
 }
 
 // *** file i/o ***
 
-RESULT(void) editor_open(char *filename) {
-    RESULT(void) res = INIT_RESULT;
-
+int editor_open(char *filename) {
     free(editor.filename);
     char *new = strdup(filename);
     if (new == NULL)
-        ERROR(res, 2, "editor/editor_open/strdup");
+        return -1;
     editor.filename = new;
 
     FILE *fp = fopen(filename, "r");
     if (!fp)
-        ERROR(res, 1, "editor/editor_open/open_file");
+        return -1;
 
     char *line = NULL;
     size_t linecap = 0;
     ssize_t linelen;
+    int retval = 0;
     while((linelen = getline(&line, &linecap, fp)) != -1) {
         // strip off newline or carriage retur at the end of line
         while (linelen > 0 && (line[linelen - 1] == '\n' ||
@@ -175,13 +173,16 @@ RESULT(void) editor_open(char *filename) {
             linelen--;
         }
 
-        UNWRAP(editor_append_row(line, linelen), void);
+        if (editor_append_row(line, linelen) != 0) {
+            retval = -1;
+            goto cleanup;
+        }
     }
 
+cleanup:
     free(line);
     fclose(fp);
-
-    return res;
+    return retval;
 }
 
 // *** output ***

@@ -29,7 +29,9 @@ int main(int argc, char *argv[]) {
     init_editor(terminal.screenrows);
 
     if (argc >= 2) {
-        UNWRAP(editor_open(argv[1]), void);
+        if (editor_open(argv[1]) != 0) {
+            die("Error while opening file");
+        };
     }
 
     editor_run();
