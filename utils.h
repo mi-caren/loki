@@ -70,7 +70,7 @@
 #define UNWRAP_FUNC_DEF(TYPE)\
     UNWRAP_FUNC_SIGNATURE(TYPE) {\
         if (result.err.code != 0) {\
-            die(result.err);\
+            die_error(result.err);\
         }\
         IF_VOID(TYPE)(\
             ,\

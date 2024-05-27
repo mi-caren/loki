@@ -15,9 +15,9 @@ extern void die(const char *s);
  * Legge gli attributi del terminale,
  * ne modifica alcuni e riscrive gli attributi.
  */
-int enable_raw_mode() {
+void enable_raw_mode() {
     if (tcgetattr(STDIN_FILENO, &terminal.orig_termios) == -1)
-        return -1;
+        die("Cannot retrieve terminal attributes\r\n");
 
     struct termios raw = terminal.orig_termios;
     cfmakeraw(&raw);
@@ -31,24 +31,20 @@ int enable_raw_mode() {
     //    aspetta che tutti gli output siano stati scritti sul terminale
     //    e scarta tutti gli input non letti
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1)
-        return -2;
-
-    return 0;
+        die("Cannot set raw mode\r\n");
 }
 
 /*
  * Reimposta gli attributi del terminale allo stato
  * in cui erano
  */
-int terminal_disable_raw_mode() {
+void disable_raw_mode() {
     // TCSAFLUSH, prima di uscire scarta tutti gli input non letti,
     // quindi non tutto ciò che c'è dopo il carattere 'q' non viene
     // più passato al terminale ma viene scartato
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &terminal.orig_termios) == -1) {
-        return -1;
+        die("Cannot disable raw mode\r\n");
     }
-
-    return 0;
 }
 
 int get_cursor_position(int *rows, int *cols) {
@@ -84,9 +80,11 @@ int terminal_get_window_size(int *rows, int *cols) {
     return get_cursor_position(rows, cols);
 }
 
-int init_terminal() {
+void init_terminal() {
     terminal.cursor_pos.cx = 0;
     terminal.cursor_pos.cy = 0;
-    return terminal_get_window_size(&terminal.screenrows, &terminal.screencols);
+    if(terminal_get_window_size(&terminal.screenrows, &terminal.screencols) != 0) {
+        die("Unable to retrieve window size\r\n");
+    }
 }
 

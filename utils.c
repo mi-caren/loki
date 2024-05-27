@@ -4,7 +4,7 @@
 #include "utils.h"
 
 
-extern void die(Error err);
+extern void die_error(Error err);
 
 
 UNWRAP_FUNC_DEF(void)

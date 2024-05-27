@@ -27,7 +27,7 @@ extern struct Terminal terminal;
 /*
  * Print error message and exit with 1
  */
-void die(Error err) {
+void die_error(Error err) {
     WRITE_SEQ(CLEAR_SCREEN);
     WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
 
