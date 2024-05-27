@@ -2,6 +2,7 @@
 #define _BSD_SOURCE
 #define _GNU_SOURCE
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -194,19 +195,19 @@ void editor_scroll() {
     }
     if (editor.editing_point.cy < editor.rowoff) {
         editor.rowoff = editor.editing_point.cy;
-    } else if (editor.editing_point.cy >= editor.rowoff + terminal.screenrows) {
-        editor.rowoff = editor.editing_point.cy - terminal.screenrows + 1;
+    } else if (editor.editing_point.cy >= editor.rowoff + editor.view_rows) {
+        editor.rowoff = editor.editing_point.cy - editor.view_rows + 1;
     }
 }
 
 void editor_draw_rows(struct DynamicBuffer *dbuf) {
-    unsigned int y;
-    for (y = 0; y < terminal.screenrows; y++) {
+    int y;
+    for (y = 0; y < editor.view_rows; y++) {
         unsigned int filerow = y + editor.rowoff;
         if (filerow >= editor.numrows) {
-            if (editor.numrows == 0 && y == terminal.screenrows / 3) {
+            if (editor.numrows == 0 && y == editor.view_rows / 3) {
                 char welcome[80];
-                unsigned int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
+                int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
                 if (welcomelen > terminal.screencols) {
                     welcomelen = terminal.screencols;
                 }
@@ -224,7 +225,7 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
                 UNWRAP(dbuf_append(dbuf, "~", 1), void);
             }
         } else {
-            unsigned int len = saturating_sub(editor.rows[filerow].rsize, editor.coloff);
+            int len = saturating_sub(editor.rows[filerow].rsize, editor.coloff);
             if (len > terminal.screencols) len = terminal.screencols;
             UNWRAP(dbuf_append(dbuf, &editor.rows[filerow].render[editor.coloff], len), void);
         }
@@ -232,7 +233,7 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
         // we erase all that is remained after drawing the line
         UNWRAP(dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE), void);
 
-        if (y < terminal.screenrows -1) {
+        if (y < editor.view_rows -1) {
             UNWRAP(dbuf_append(dbuf, "\r\n", 2), void);
         }
     }
@@ -241,7 +242,7 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
 void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
     char buf[32];
     // move cursor to beginning status bar
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal.screenrows + 1, 0);
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.view_rows + 1, 0);
     UNWRAP(dbuf_append(dbuf, buf, strlen(buf)), void);
 
     UNWRAP(dbuf_append(dbuf, INVERTED_COLOR_SEQ, INVERTED_COLOR_SEQ_SIZE), void);
@@ -263,10 +264,10 @@ void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
 void editor_draw_msg_bar(struct DynamicBuffer *dbuf) {
     char buf[32];
     // move cursor to beginning message bar
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal.screenrows + 2, 0);
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.view_rows + 2, 0);
     UNWRAP(dbuf_append(dbuf, buf, strlen(buf)), void);
     UNWRAP(dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE), void);
-    unsigned int msglen = strlen(editor.statusmsg);
+    int msglen = strlen(editor.statusmsg);
     if (msglen > terminal.screencols) msglen = terminal.screencols;
     if (msglen && time(NULL) - editor.statusmsg_time < 5)
         UNWRAP(dbuf_append(dbuf, editor.statusmsg, msglen), void);
@@ -382,11 +383,11 @@ void editor_process_keypress() {
                 if (c == PAGE_UP) {
                     editor.editing_point.cy = editor.rowoff;
                 } else {
-                    editor.editing_point.cy = editor.rowoff + terminal.screenrows - 1;
+                    editor.editing_point.cy = editor.rowoff + editor.view_rows - 1;
                     if (editor.editing_point.cy > editor.numrows)
                         editor.editing_point.cy = editor.numrows;
                 }
-                int times = terminal.screenrows;
+                int times = editor.view_rows;
                 while (times--) {
                     editor_move_editing_point(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
                 }
@@ -415,9 +416,9 @@ void editor_run() {
 
 // *** init ***
 
-void init_editor() {
-    terminal.cursor_pos.cx = 0;
-    terminal.cursor_pos.cy = 0;
+void init_editor(int height) {
+    assert(height >= 0);
+
     editor.editing_point.cx = 0;
     editor.editing_point.cy = 0;
     editor.rx = 0;
@@ -428,6 +429,10 @@ void init_editor() {
     editor.filename = NULL;
     editor.statusmsg[0] = '\0';
     editor.statusmsg_time = 0;
-    UNWRAP(get_window_size(&terminal.screenrows, &terminal.screencols), void);
-    terminal.screenrows -= 2;
+
+    if (height >= 2) {
+        editor.view_rows = height - 2;
+    } else {
+        editor.view_rows = height;
+    }
 }

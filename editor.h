@@ -22,7 +22,10 @@ struct EditingPoint {
     unsigned int cy;
 };
 
+
 struct Editor {
+    int view_rows;
+
     struct EditingPoint editing_point;
     unsigned int rx;
 
@@ -36,8 +39,6 @@ struct Editor {
 
     char statusmsg[80];
     time_t statusmsg_time;
-
-    struct termios orig_termios;
 };
 
 enum EditorKey {
@@ -61,6 +62,6 @@ void editor_refresh_screen();
 void editor_move_editing_point(int key);
 void editor_process_keypress();
 void editor_run();
-void init_editor();
+void init_editor(int height);
 
 #endif

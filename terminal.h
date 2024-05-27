@@ -40,16 +40,18 @@ struct CursorPosition {
 
 struct Terminal {
     struct CursorPosition cursor_pos;
-    unsigned int screenrows;
-    unsigned int screencols;
+    int screenrows;
+    int screencols;
+
+    struct termios orig_termios;
 };
 
 
 
-void disable_raw_mode();
-int enable_raw_mode(struct termios *orig_termios);
-RESULT(void) get_cursor_position(unsigned int *rows, unsigned int *cols) __attribute__((warn_unused_result));
+int terminal_disable_raw_mode();
+int enable_raw_mode();
+int get_cursor_position(int *rows, int *cols);
 RESULT(void) get_window_size(unsigned int *rows, unsigned int *cols) __attribute__((warn_unused_result));
-
+int init_terminal();
 
 #endif

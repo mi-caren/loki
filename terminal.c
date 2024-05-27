@@ -15,14 +15,11 @@ extern void die(const char *s);
  * Legge gli attributi del terminale,
  * ne modifica alcuni e riscrive gli attributi.
  */
-int enable_raw_mode(struct termios *orig_termios) {
-    if (orig_termios != NULL) {
-        // Legge gli attributi del terminale
-        if (tcgetattr(STDIN_FILENO, orig_termios) == -1)
-            return -1;
-    }
+int enable_raw_mode() {
+    if (tcgetattr(STDIN_FILENO, &terminal.orig_termios) == -1)
+        return -1;
 
-    struct termios raw = *orig_termios;
+    struct termios raw = terminal.orig_termios;
     cfmakeraw(&raw);
     // Impostiamo il numero minimo di carrateri
     // per il read noncanonical, in modo che read non ritorni
@@ -39,14 +36,27 @@ int enable_raw_mode(struct termios *orig_termios) {
     return 0;
 }
 
-RESULT(void) get_cursor_position(unsigned int *rows, unsigned int *cols) {
+/*
+ * Reimposta gli attributi del terminale allo stato
+ * in cui erano
+ */
+int terminal_disable_raw_mode() {
+    // TCSAFLUSH, prima di uscire scarta tutti gli input non letti,
+    // quindi non tutto ciò che c'è dopo il carattere 'q' non viene
+    // più passato al terminale ma viene scartato
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &terminal.orig_termios) == -1) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int get_cursor_position(int *rows, int *cols) {
     char buf[32];
     unsigned int i = 0;
 
-    RESULT(void) res = INIT_RESULT;
-
     if (WRITE_SEQ(REQUEST_CURSOR_POSITION) != 4) {
-        ERROR(res, 1, "terminal/get_cursor_position/request_position");
+        return -1;
     };
 
     while (i < sizeof(buf) - 1) {
@@ -57,19 +67,26 @@ RESULT(void) get_cursor_position(unsigned int *rows, unsigned int *cols) {
     buf[i] = '\0';
 
     if (buf[0] != '\x1b' || buf[1] != '[') {
-        ERROR(res, 2, "terminal/get_cursor_position/read_escape_seq");
+        return -1;
     };
-    if (sscanf(&buf[2], "%u;%u", rows, cols) != 2) {
-        ERROR(res, 3, "terminal/get_cursor_position/read_terminal_response");
+    if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) {
+        return -1;
     };
 
-    return res;
+    return 0;
 }
 
-RESULT(void) get_window_size(unsigned int *rows, unsigned int *cols) {
+int terminal_get_window_size(int *rows, int *cols) {
     if (WRITE_SEQ(MOVE_CURSOR_TO_BOTTOM_RIGHT) != 12) {
-        RESULT(void) res = INIT_RESULT;
-        ERROR(res, 1, "terminal/get_window_size/move_cursor_to_bottom_right");
+        return -1;
     };
+
     return get_cursor_position(rows, cols);
 }
+
+int init_terminal() {
+    terminal.cursor_pos.cx = 0;
+    terminal.cursor_pos.cy = 0;
+    return terminal_get_window_size(&terminal.screenrows, &terminal.screencols);
+}
+
