@@ -2,7 +2,6 @@
 #define _BSD_SOURCE
 #define _GNU_SOURCE
 
-#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -417,8 +416,6 @@ void editor_run() {
 // *** init ***
 
 void init_editor(int height) {
-    assert(height >= 0);
-
     editor.editing_point.cx = 0;
     editor.editing_point.cy = 0;
     editor.rx = 0;
@@ -430,9 +427,10 @@ void init_editor(int height) {
     editor.statusmsg[0] = '\0';
     editor.statusmsg_time = 0;
 
-    if (height >= 2) {
-        editor.view_rows = height - 2;
-    } else {
+    if (height < 0) {
+        editor.view_rows = 0;
+    } else if (height <= 2) {
         editor.view_rows = height;
     }
+    editor.view_rows = height - 2;
 }
