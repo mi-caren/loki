@@ -54,7 +54,6 @@ enum EditorKey {
 };
 
 
-RESULT(int) editor_read_key() __attribute__((warn_unused_result));
 int editor_open(char *filename);
 int editor_append_row(char *line, size_t linelen);
 void editor_draw_rows(struct DynamicBuffer *dbuf);

@@ -51,7 +51,6 @@ struct Terminal {
 void enable_raw_mode();
 void disable_raw_mode();
 int get_cursor_position(int *rows, int *cols);
-RESULT(void) get_window_size(unsigned int *rows, unsigned int *cols) __attribute__((warn_unused_result));
 void init_terminal();
 
 #endif
