@@ -149,6 +149,16 @@ int editor_append_row(char *line, size_t linelen) {
     return 0;
 }
 
+static void editorRowInsertChar(struct EditorRow* row, int pos, char c) {
+    if (pos < 0 || pos > row->size)
+        pos = row->size;
+    row->chars = realloc(&row->chars, row->size + 2);
+    memmove(&row->chars[pos + 1], &row->chars[pos], row->size - pos + 1);
+    row->size++;
+    row->chars[pos] = c;
+    editor_render_row(row);
+}
+
 // *** file i/o ***
 
 int editor_open(char *filename) {
