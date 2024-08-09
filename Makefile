@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -pedantic
+CFLAGS = -Wall -Wextra -pedantic -g
 SRCS = kilo.c terminal.c utils.c editor.c
 
 kilo: $(SRCS)

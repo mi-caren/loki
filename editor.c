@@ -186,7 +186,7 @@ char* editorRowsToString(int* buflen) {
 
     char* p = buf;
     for (unsigned int i = 0; i < editor.numrows; i++) {
-        memcpy(p, &editor.rows[i].chars, editor.rows[i].size);
+        memcpy(p, editor.rows[i].chars, editor.rows[i].size);
         p += editor.rows[i].size;
         *p = '\n';
         p++;
