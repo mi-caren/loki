@@ -149,14 +149,24 @@ int editor_append_row(char *line, size_t linelen) {
     return 0;
 }
 
-static void editorRowInsertChar(struct EditorRow* row, int pos, char c) {
-    if (pos < 0 || pos > row->size)
+static void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c) {
+    if (pos > row->size)
         pos = row->size;
-    row->chars = realloc(&row->chars, row->size + 2);
+    row->chars = realloc(row->chars, row->size + 2);
     memmove(&row->chars[pos + 1], &row->chars[pos], row->size - pos + 1);
     row->size++;
     row->chars[pos] = c;
     editor_render_row(row);
+}
+
+// *** editor operations ***
+
+void editorInsertChar(char c) {
+    if (editor.numrows == 0) {
+        editor_append_row("", 0);
+    }
+    editorRowInsertChar(&CURR_ROW, editor.editing_point.cx, c);
+    editor.editing_point.cx++;
 }
 
 // *** file i/o ***
@@ -409,6 +419,10 @@ void editor_process_keypress() {
         case ARROW_DOWN:
         case ARROW_RIGHT:
             editor_move_editing_point(c);
+            break;
+
+        default:
+            editorInsertChar(c);
             break;
     }
 
