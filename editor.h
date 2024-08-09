@@ -42,6 +42,7 @@ struct Editor {
 };
 
 enum EditorKey {
+    BACKSPACE = 127,
     ARROW_LEFT = 1000,    // avoid conflicts with regular chars
     ARROW_RIGHT,
     ARROW_UP,

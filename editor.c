@@ -384,10 +384,25 @@ void editor_process_keypress() {
     int c = editor_read_key();
 
     switch (c) {
+        case BACKSPACE:
+        case DEL_KEY:
+        case '\r':
+        case '\x1b':
+        // We ignore the Escape key because there are many key escape sequences
+        // that we aren’t handling (such as the F1–F12 keys),
+        // and the way we wrote editorReadKey(), pressing those keys
+        // will be equivalent to pressing the Escape key
+            /* TODO */
+            break;
+
         case CTRL_KEY('q'):
             WRITE_SEQ(CLEAR_SCREEN);
             WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
             exit(0);
+            break;
+        case CTRL_KEY('h'):
+        case CTRL_KEY('l'):
+            /* TODO */
             break;
 
         case HOME_KEY:
