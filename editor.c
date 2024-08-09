@@ -247,6 +247,9 @@ void editorSave() {
 
     int len;
     char* buf = editorRowsToString(&len);
+    if (buf == NULL) {
+        editor_set_status_message("Unable to save buffer");
+    }
 
     int fd = open(editor.filename, O_RDWR | O_CREAT, 0644);
     ftruncate(fd, len);

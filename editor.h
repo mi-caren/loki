@@ -63,5 +63,6 @@ void editor_move_editing_point(int key);
 void editor_process_keypress();
 void editor_run();
 void init_editor(int height);
+void editor_set_status_message(const char *fmt, ...);
 
 #endif
