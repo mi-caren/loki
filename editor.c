@@ -242,23 +242,28 @@ cleanup:
 // More advanced editors will write to a new, temporary file,
 // and then rename that file to the actual file the user wants to overwrite,
 // and they’ll carefully check for errors through the whole process.
-void editorSave() {
-    if (editor.filename == NULL) return;
+int editorSave() {
+    if (editor.filename == NULL)
+        return -1;
 
     int len;
     char* buf = editorRowsToString(&len);
     if (buf == NULL) {
-        editor_set_status_message("Unable to save buffer");
+        return -1;
     }
 
+    int ret = -1;
     int fd = open(editor.filename, O_RDWR | O_CREAT, 0644);
-    ftruncate(fd, len);
-    write(fd, buf, len);
+    if (fd == -1) goto clean_buf;
+    if (ftruncate(fd, len) == -1) goto clean_fd;
+    if (write(fd, buf, len) != len) goto clean_fd;
+    ret = len;
 
+clean_fd:
     close(fd);
+clean_buf:
     free(buf);
-
-    editor_set_status_message("Buffer saved");
+    return ret;
 }
 
 // *** output ***
@@ -449,9 +454,15 @@ void editor_process_keypress() {
         case CTRL_KEY('l'):
             /* TODO */
             break;
-        case CTRL_KEY('s'):
-            editorSave();
+        case CTRL_KEY('s'): {
+            int bytes;
+            if ((bytes = editorSave()) != -1) {
+                editor_set_status_message("%d bytes written", bytes);
+            } else {
+                editor_set_status_message("Unable to save buffer! I/O error: %s", strerror(errno));
+            }
             break;
+        }
 
         case HOME_KEY:
             editor.editing_point.cx = 0;
