@@ -3,11 +3,11 @@
 #define _GNU_SOURCE
 
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdarg.h>
 
 #include "editor.h"
 #include "terminal.h"

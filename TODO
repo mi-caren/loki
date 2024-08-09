@@ -1,0 +1,31 @@
+
+* dbuf_free -> check se buf != NULL
+
+
+* Creare struct String
+    struct FileLine {
+        char* chars;
+        int len;
+    }
+
+    Specifica per le linee di testo nel file aperto
+
+
+* Creare struct EditorFile
+
+    struct EditorFile {
+        String lines;
+        int numlines;
+    }
+
+
+* enum EditorError
+
+    Far ritornare i valori alla funzione e poi avere una
+    funzione che mappi questi status code in una stringa
+
+    if (status = func() != OK)
+        return status;
+
+
+
