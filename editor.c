@@ -257,6 +257,8 @@ void editorSave() {
 
     close(fd);
     free(buf);
+
+    editor_set_status_message("Buffer saved");
 }
 
 // *** output ***
