@@ -3,6 +3,7 @@
 #define _GNU_SOURCE
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -171,6 +172,29 @@ void editorInsertChar(char c) {
 
 // *** file i/o ***
 
+char* editorRowsToString(int* buflen) {
+    *buflen = 0;
+    for (unsigned int i = 0; i < editor.numrows; i++) {
+        *buflen += editor.rows[i].size + 1;
+    }
+
+    char* buf = malloc(*buflen);
+    if (buf == NULL) {
+        *buflen = 0;
+        return NULL;
+    }
+
+    char* p = buf;
+    for (unsigned int i = 0; i < editor.numrows; i++) {
+        memcpy(p, &editor.rows[i].chars, editor.rows[i].size);
+        p += editor.rows[i].size;
+        *p = '\n';
+        p++;
+    }
+
+    return buf;
+}
+
 int editor_open(char *filename) {
     free(editor.filename);
     char *new = strdup(filename);
@@ -203,6 +227,33 @@ cleanup:
     free(line);
     fclose(fp);
     return retval;
+}
+
+
+// The normal way to overwrite a file is to pass the O_TRUNC flag to open(),
+// which truncates the file completely, making it an empty file,
+// before writing the new data into it.
+// By truncating the file ourselves to the same length as the data we are planning to write into it,
+// we are making the whole overwriting operation a little bit safer in case
+// the ftruncate() call succeeds but the write() call fails.
+// In that case, the file would still contain most of the data it had before.
+// But if the file was truncated completely by the open() call and then the write() failed, you’d end up with all of your data lost.
+
+// More advanced editors will write to a new, temporary file,
+// and then rename that file to the actual file the user wants to overwrite,
+// and they’ll carefully check for errors through the whole process.
+void editorSave() {
+    if (editor.filename == NULL) return;
+
+    int len;
+    char* buf = editorRowsToString(&len);
+
+    int fd = open(editor.filename, O_RDWR | O_CREAT, 0644);
+    ftruncate(fd, len);
+    write(fd, buf, len);
+
+    close(fd);
+    free(buf);
 }
 
 // *** output ***
@@ -384,17 +435,6 @@ void editor_process_keypress() {
     int c = editor_read_key();
 
     switch (c) {
-        case BACKSPACE:
-        case DEL_KEY:
-        case '\r':
-        case '\x1b':
-        // We ignore the Escape key because there are many key escape sequences
-        // that we aren’t handling (such as the F1–F12 keys),
-        // and the way we wrote editorReadKey(), pressing those keys
-        // will be equivalent to pressing the Escape key
-            /* TODO */
-            break;
-
         case CTRL_KEY('q'):
             WRITE_SEQ(CLEAR_SCREEN);
             WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
@@ -403,6 +443,9 @@ void editor_process_keypress() {
         case CTRL_KEY('h'):
         case CTRL_KEY('l'):
             /* TODO */
+            break;
+        case CTRL_KEY('s'):
+            editorSave();
             break;
 
         case HOME_KEY:
@@ -434,6 +477,17 @@ void editor_process_keypress() {
         case ARROW_DOWN:
         case ARROW_RIGHT:
             editor_move_editing_point(c);
+            break;
+
+        case BACKSPACE:
+        case DEL_KEY:
+        case '\r':
+        case '\x1b':
+        // We ignore the Escape key because there are many key escape sequences
+        // that we aren’t handling (such as the F1–F12 keys),
+        // and the way we wrote editorReadKey(), pressing those keys
+        // will be equivalent to pressing the Escape key
+            /* TODO */
             break;
 
         default:
