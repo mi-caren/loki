@@ -463,10 +463,45 @@ void editor_cx_to_rx() {
 }
 
 void editor_process_keypress() {
+    static bool quitting = false;
+    static unsigned int prev_rx = 0;
+    static unsigned int prev_cy = 0;
+
     int c = editor_read_key();
+
+    if (quitting) {
+        switch (c) {
+            case 'y':
+            case 'Y':
+                /* Exit without saving */
+                WRITE_SEQ(CLEAR_SCREEN);
+                WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
+                exit(0);
+                break;
+            case 'n':
+            case 'N':
+                editor.rx = prev_rx;
+                editor.editing_point.cy = prev_cy;
+                quitting = false;
+                break;
+        }
+
+        return;
+    }
 
     switch (c) {
         case CTRL_KEY('q'):
+            if (editor.dirty) {
+                char* unsaved_msg = "File has unsaved changes. Do you want to quit without saving? [y/n]";
+                editor_set_status_message(unsaved_msg);
+                /* move cursor to end of message */
+                prev_rx = editor.rx;
+                prev_cy = editor.editing_point.cy;
+                editor.rx = strlen(unsaved_msg) + 1;
+                editor.editing_point.cy = STATUS_BAR_ROW;
+                quitting = true;
+                return;
+            }
             WRITE_SEQ(CLEAR_SCREEN);
             WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
             exit(0);

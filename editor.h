@@ -9,6 +9,7 @@
 
 
 #define CURR_ROW                editor.rows[editor.editing_point.cy]
+#define STATUS_BAR_ROW          ( editor.view_rows + 1 )
 
 
 struct EditorRow {
