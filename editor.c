@@ -48,7 +48,7 @@ int editor_read_key() {
     }
 
     if (c == '\x1b') {
-        char seq[3];
+        char seq[5];
 
         // if we read an escape charcater we immediatly read two more bytes
         // if either of this two reads times out we assume the user
@@ -68,6 +68,18 @@ int editor_read_key() {
                         case '6': return PAGE_DOWN;
                         case '7': return HOME_KEY;
                         case '8': return END_KEY;
+                    }
+                } else if (seq[2] == ';') {
+                    if (read(STDOUT_FILENO, &seq[3], 1) != 1) return '\x1b';
+                    if (read(STDOUT_FILENO, &seq[4], 1) != 1) return '\x1b';
+
+                    if (seq[3] == '5') {
+                        switch (seq[4]) {
+                            case 'A': return CTRL_ARROW_UP;
+                            case 'B': return CTRL_ARROW_DOWN;
+                            case 'C': return CTRL_ARROW_RIGHT;
+                            case 'D': return CTRL_ARROW_LEFT;
+                        }
                     }
                 }
             } else {
@@ -502,6 +514,13 @@ void editor_process_keypress() {
         case ARROW_DOWN:
         case ARROW_RIGHT:
             editor_move_editing_point(c);
+            break;
+
+        case CTRL_ARROW_UP:
+        case CTRL_ARROW_DOWN:
+        case CTRL_ARROW_RIGHT:
+        case CTRL_ARROW_LEFT:
+            /* TODO */
             break;
 
         case BACKSPACE:

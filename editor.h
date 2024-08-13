@@ -55,6 +55,11 @@ enum EditorKey {
     END_KEY,
     PAGE_UP,
     PAGE_DOWN,
+
+    CTRL_ARROW_UP,
+    CTRL_ARROW_DOWN,
+    CTRL_ARROW_RIGHT,
+    CTRL_ARROW_LEFT,
 };
 
 
