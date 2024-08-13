@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #define _GNU_SOURCE
@@ -168,6 +169,7 @@ void editorInsertChar(char c) {
     }
     editorRowInsertChar(&CURR_ROW, editor.editing_point.cx, c);
     editor.editing_point.cx++;
+    editor.dirty = true;
 }
 
 // *** file i/o ***
@@ -258,6 +260,7 @@ int editorSave() {
     if (ftruncate(fd, len) == -1) goto clean_fd;
     if (write(fd, buf, len) != len) goto clean_fd;
     ret = len;
+    editor.dirty = false;
 
 clean_fd:
     close(fd);
@@ -329,7 +332,13 @@ void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
     dbuf_append(dbuf, INVERTED_COLOR_SEQ, INVERTED_COLOR_SEQ_SIZE);
 
     char status[terminal.screencols];
-    int len = snprintf(status, terminal.screencols / 4 * 3, "%s", editor.filename ? editor.filename : "[New Buffer]");
+    int len = snprintf(
+        status,
+        terminal.screencols / 4 * 3,
+        "%s %s",
+        editor.filename ? editor.filename : "[New Buffer]",
+        editor.dirty ? "(modified)" : ""
+    );
     dbuf_append(dbuf, status, len);
     int len_s2 = snprintf(status, terminal.screencols / 4, "%d/%d lines ", editor.editing_point.cy + (editor.numrows > 0 ? 1 : 0), editor.numrows);
 
@@ -536,6 +545,7 @@ void init_editor(int height) {
     editor.filename = NULL;
     editor.statusmsg[0] = '\0';
     editor.statusmsg_time = 0;
+    editor.dirty = false;
 
     if (height < 0) {
         editor.view_rows = 0;

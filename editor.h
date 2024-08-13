@@ -3,6 +3,7 @@
 
 #include <termios.h>
 #include <time.h>
+#include <stdbool.h>
 
 #include "utils.h"
 
@@ -39,6 +40,8 @@ struct Editor {
 
     char statusmsg[80];
     time_t statusmsg_time;
+
+    bool dirty;
 };
 
 enum EditorKey {
