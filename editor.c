@@ -170,6 +170,16 @@ static void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c)
     memmove(&row->chars[pos + 1], &row->chars[pos], row->size - pos + 1);
     row->size++;
     row->chars[pos] = c;
+    editor.dirty = true;
+    editor_render_row(row);
+}
+
+void editorRowDeleteChar(struct EditorRow* row, unsigned int pos)
+{
+    if (pos >= row->size) return;
+    memmove(&row->chars[pos], &row->chars[pos + 1], row->size - pos);
+    row->size--;
+    editor.dirty = true;
     editor_render_row(row);
 }
 
@@ -181,7 +191,14 @@ void editorInsertChar(char c) {
     }
     editorRowInsertChar(&CURR_ROW, editor.editing_point.cx, c);
     editor.editing_point.cx++;
-    editor.dirty = true;
+}
+
+void editorDeleteChar() {
+    if (editor.numrows == 0) return;
+    if (editor.editing_point.cx > 0) {
+        editorRowDeleteChar(&CURR_ROW, editor.editing_point.cx - 1);
+        editor.editing_point.cx--;
+    }
 }
 
 // *** file i/o ***
@@ -506,7 +523,6 @@ void editor_process_keypress() {
         case CTRL_KEY('q'):
             editorQuit();
             break;
-        case CTRL_KEY('h'):
         case CTRL_KEY('l'):
             /* TODO */
             break;
@@ -560,6 +576,10 @@ void editor_process_keypress() {
 
         case BACKSPACE:
         case DEL_KEY:
+            if (c == DEL_KEY) editor_move_editing_point(ARROW_RIGHT);
+            editorDeleteChar();
+            break;
+
         case '\r':
         case '\x1b':
         // We ignore the Escape key because there are many key escape sequences
