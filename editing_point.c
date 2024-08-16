@@ -71,8 +71,6 @@ void editingPointMove(Direction dir) {
 
 void editingPointMoveToWord(Direction dir) {
     if (dir != Left && dir != Right) return;
-
-    struct EditingPoint prev_editing_point = editor.editing_point;
     bool (*stopCondition)() = dir == Left ? editingPointIsBOF : editingPointIsEOF;
 
     while (!stopCondition()) {
@@ -84,6 +82,4 @@ void editingPointMoveToWord(Direction dir) {
             || (CHAR_IS_STOPCHAR(editingPointPrevChar()) && !CHAR_IS_STOPCHAR(CURR_CHAR)) // stops if prev char if a stop char
         ) return;
     }
-
-    editor.editing_point = prev_editing_point;
 }
