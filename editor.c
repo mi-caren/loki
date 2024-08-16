@@ -464,9 +464,16 @@ static char editingPointPrevChar() {
     return CURR_ROW.chars[editor.editing_point.cx - 1];
 }
 
+/* Checks if editing point is at the End Of File */
 static inline bool editingPointIsEOF() {
     return editor.editing_point.cy == saturating_sub(editor.numrows, 1)
         && editor.editing_point.cx == CURR_ROW.size;
+}
+
+/* Checks if editing point is at Beginning Of File */
+static inline bool editingPointIsBOF() {
+    return editor.editing_point.cy == 0
+        && editor.editing_point.cx == 0;
 }
 
 /*
@@ -483,7 +490,19 @@ void editorMoveToNextWord() {
     while (!editingPointIsEOF()) {
         editor_move_editing_point(ARROW_RIGHT);
 
-        if (charIsStopChar(editingPointPrevChar())) return;
+        if (editor.editing_point.cx == CURR_ROW.size || charIsStopChar(editingPointPrevChar())) return;
+    }
+
+    editor.editing_point = prev_editing_point;
+}
+
+void editorMoveToPrevWord() {
+    struct EditingPoint prev_editing_point = editor.editing_point;
+
+    while (!editingPointIsBOF()) {
+        editor_move_editing_point(ARROW_LEFT);
+
+        if (editor.editing_point.cx == CURR_ROW.size || charIsStopChar(editingPointPrevChar())) return;
     }
 
     editor.editing_point = prev_editing_point;
@@ -596,9 +615,7 @@ void editor_process_keypress() {
             editorMoveToNextWord();
             break;
         case CTRL_ARROW_LEFT:
-            // while (editor.editing_point.cx != 0 && CURR_CHAR != ' ') {
-            //     editor_move_editing_point(ARROW_LEFT);
-            // }
+            editorMoveToPrevWord();
             break;
 
         case BACKSPACE:
