@@ -12,6 +12,8 @@
 #define NEXT_ROW                editor.rows[editor.editing_point.cy + 1]
 #define PREV_ROW                editor.rows[editor.editing_point.cy - 1]
 
+#define CURR_CHAR               CURR_ROW.chars[editor.editing_point.cx]
+
 #define STATUS_BAR_ROW          ( editor.view_rows + 1 )
 
 

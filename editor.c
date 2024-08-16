@@ -484,25 +484,20 @@ static inline bool charIsStopChar(char c) {
     return c == ' ' || c == '\0';
 }
 
-void editorMoveToNextWord() {
+void editorMoveToWord(enum EditorKey direction) {
+    if (direction != ARROW_LEFT && direction != ARROW_RIGHT) return;
+
     struct EditingPoint prev_editing_point = editor.editing_point;
+    bool (*stopCondition)() = direction == ARROW_LEFT ? editingPointIsBOF : editingPointIsEOF;
 
-    while (!editingPointIsEOF()) {
-        editor_move_editing_point(ARROW_RIGHT);
+    while (!stopCondition()) {
+        editor_move_editing_point(direction);
 
-        if (editor.editing_point.cx == CURR_ROW.size || charIsStopChar(editingPointPrevChar())) return;
-    }
-
-    editor.editing_point = prev_editing_point;
-}
-
-void editorMoveToPrevWord() {
-    struct EditingPoint prev_editing_point = editor.editing_point;
-
-    while (!editingPointIsBOF()) {
-        editor_move_editing_point(ARROW_LEFT);
-
-        if (editor.editing_point.cx == CURR_ROW.size || charIsStopChar(editingPointPrevChar())) return;
+        if (
+            (editor.editing_point.cx == CURR_ROW.size) // stops at the end of the line
+            || (charIsStopChar(CURR_CHAR) && editor.editing_point.cx == 0) // stops at the beginning at the line even if first char is a stop char
+            || (charIsStopChar(editingPointPrevChar()) && !charIsStopChar(CURR_CHAR)) // stops if prev char if a stop char
+        ) return;
     }
 
     editor.editing_point = prev_editing_point;
@@ -612,10 +607,10 @@ void editor_process_keypress() {
             /* TODO */
             break;
         case CTRL_ARROW_RIGHT:
-            editorMoveToNextWord();
+            editorMoveToWord(ARROW_RIGHT);
             break;
         case CTRL_ARROW_LEFT:
-            editorMoveToPrevWord();
+            editorMoveToWord(ARROW_LEFT);
             break;
 
         case BACKSPACE:
