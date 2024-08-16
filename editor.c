@@ -178,7 +178,7 @@ void editorDeleteChar() {
         editorRowDeleteChar(&CURR_ROW, editor.editing_point.cx - 1);
         editor.editing_point.cx--;
     } else {
-        editingPointMoveToChar(Left);
+        editingPointMove(ARROW_LEFT);
         if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
             editor_set_status_message("Unable to delete char at %d, %d", editor.editing_point.cx - 1, editor.editing_point.cy);
         }
@@ -498,7 +498,7 @@ void editor_process_keypress() {
 
         case BACKSPACE:
         case DEL_KEY:
-            if (c == DEL_KEY) editingPointMoveToChar(Right);
+            if (c == DEL_KEY) editingPointMove(ARROW_RIGHT);
             editorDeleteChar();
             break;
 

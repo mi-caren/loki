@@ -42,7 +42,7 @@ static struct EditorRow* editingPointPrevRow() {
 }
 
 
-void editingPointMoveToChar(Direction dir) {
+static void editingPointMoveToChar(Direction dir) {
     if (editor.numrows == 0) {
         return;
     }
@@ -81,7 +81,7 @@ void editingPointMoveToChar(Direction dir) {
     }
 }
 
-void editingPointMoveToWord(Direction dir) {
+static void editingPointMoveToWord(Direction dir) {
     if (dir != Left && dir != Right) return;
     bool (*stopCondition)() = dir == Left ? editingPointIsBOF : editingPointIsEOF;
 
@@ -96,7 +96,7 @@ void editingPointMoveToWord(Direction dir) {
     }
 }
 
-void editingPointMoveToParagraph(Direction dir) {
+static void editingPointMoveToParagraph(Direction dir) {
     if (dir != Up && dir != Down) return;
     bool (*stopCondition)() = dir == Up ? currentRowIsFirstRow : currentRowIsLastRow;
 
@@ -110,6 +110,19 @@ void editingPointMoveToParagraph(Direction dir) {
     }
 }
 
+/*
+    Takes an EditorKey as parameter and moves the editing point accordingly:
+
+    - HOME_KEY moves the editing point to the beginning of the line
+    - END_KEY moves the editing point the the end of the line
+    - PAGE_UP and PAGE_DOWN move the editing point up and down by as many row as the screen rows
+    - ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT move the editing point up, down, left and right by one character
+      ensuring the cursor does not exit the rows boundaries
+    - CTRL_ARROW_UP and CTRL_ARROW_DOWN move the editing point up and down by one paragraph
+    - CTRL_ARROW_LEFT and CTRL_ARROW_RIGHT move the editing point left and right by one word
+
+    Dies if a wrong key is passed.
+*/
 void editingPointMove(enum EditorKey key) {
     switch (key) {
         case HOME_KEY:
