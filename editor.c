@@ -109,21 +109,26 @@ int editor_read_key() {
 
 
 
-int editor_append_row(char *line, size_t linelen) {
+static int editorInsertRow(unsigned int pos, char *s, size_t len)
+{
+    if (pos > editor.numrows) return -1;
+
     char *new = realloc(editor.rows, sizeof(struct EditorRow) * (editor.numrows + 1));
 
     if (new == NULL)
         return -1;
 
     editor.rows = (struct EditorRow*)new;
-    editor.rows[editor.numrows].size = linelen;
-    editor.rows[editor.numrows].chars = malloc(linelen + 1);
-    memcpy(editor.rows[editor.numrows].chars, line, linelen);
-    editor.rows[editor.numrows].chars[linelen] = '\0';
+    memmove(&editor.rows[pos + 1], &editor.rows[pos], sizeof(struct EditorRow) * (editor.numrows - pos));
 
-    editor.rows[editor.numrows].rsize = 0;
-    editor.rows[editor.numrows].render = NULL;
-    if (editorRowRender(&editor.rows[editor.numrows]) != 0)
+    editor.rows[pos].size = len;
+    editor.rows[pos].chars = malloc(len + 1);
+    memcpy(editor.rows[pos].chars, s, len);
+    editor.rows[pos].chars[len] = '\0';
+
+    editor.rows[pos].rsize = 0;
+    editor.rows[pos].render = NULL;
+    if (editorRowRender(&editor.rows[pos]) != 0)
         return -1;
     editor.numrows += 1;
 
@@ -145,7 +150,7 @@ void editorDeleteRow(unsigned int pos)
 
 void editorInsertChar(char c) {
     if (editor.numrows == 0) {
-        editor_append_row("", 0);
+        editorInsertRow(editor.numrows, "", 0);
     }
     editorRowInsertChar(&CURR_ROW, editor.editing_point.cx, c);
     editor.editing_point.cx++;
@@ -160,7 +165,9 @@ void editorDeleteChar() {
         editor.editing_point.cx--;
     } else {
         editor_move_editing_point(ARROW_LEFT);
-        editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size);
+        if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
+            editor_set_status_message("Unable to delete char at %d, %d", editor.editing_point.cx - 1, editor.editing_point.cy);
+        }
         editorDeleteRow(editor.editing_point.cy + 1);
     }
 }
@@ -212,7 +219,7 @@ int editor_open(char *filename) {
             linelen--;
         }
 
-        if (editor_append_row(line, linelen) != 0) {
+        if (editorInsertRow(editor.numrows, line, linelen) != 0) {
             retval = -1;
             goto cleanup;
         }

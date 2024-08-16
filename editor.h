@@ -59,7 +59,6 @@ enum EditorKey {
 
 
 int editor_open(char *filename);
-int editor_append_row(char *line, size_t linelen);
 void editor_draw_rows(struct DynamicBuffer *dbuf);
 void editor_refresh_screen();
 void editor_move_editing_point(int key);
