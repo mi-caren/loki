@@ -34,3 +34,23 @@ unsigned int saturating_sub(unsigned int n1, unsigned int n2) {
     if (sub < 0) return 0;
     return (unsigned int)sub;
 }
+
+Direction editorKeyToDirection(enum EditorKey key) {
+    switch (key) {
+        case CTRL_ARROW_UP:
+        case ARROW_UP:
+            return Up;
+        case CTRL_ARROW_DOWN:
+        case ARROW_DOWN:
+            return Down;
+        case CTRL_ARROW_LEFT:
+        case ARROW_LEFT:
+            return Left;
+        case CTRL_ARROW_RIGHT:
+        case ARROW_RIGHT:
+            return Right;
+        default:
+            die("editor/editorKeyToDirection");
+            return 0;    // UNREACHABLE
+    }
+}

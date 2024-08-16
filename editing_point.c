@@ -42,7 +42,7 @@ static struct EditorRow* editingPointPrevRow() {
 }
 
 
-void editingPointMove(Direction dir) {
+void editingPointMoveToChar(Direction dir) {
     if (editor.numrows == 0) {
         return;
     }
@@ -86,7 +86,7 @@ void editingPointMoveToWord(Direction dir) {
     bool (*stopCondition)() = dir == Left ? editingPointIsBOF : editingPointIsEOF;
 
     while (!stopCondition()) {
-        editingPointMove(dir);
+        editingPointMoveToChar(dir);
 
         if (
             (editor.editing_point.cx == CURR_ROW.size) // stops at the end of the line
@@ -101,11 +101,58 @@ void editingPointMoveToParagraph(Direction dir) {
     bool (*stopCondition)() = dir == Up ? currentRowIsFirstRow : currentRowIsLastRow;
 
     while (!stopCondition()) {
-        editingPointMove(dir);
+        editingPointMoveToChar(dir);
 
         if (
             editingPointPrevRow()->size == 0
             && !(CURR_ROW.size == 0)
         ) return;
+    }
+}
+
+void editingPointMove(enum EditorKey key) {
+    switch (key) {
+        case HOME_KEY:
+            editor.editing_point.cx = 0;
+            break;
+        case END_KEY:
+            editor.editing_point.cx = CURR_ROW.size;
+            break;
+
+        case PAGE_UP:
+        case PAGE_DOWN:
+            {
+                if (key == PAGE_UP) {
+                    editor.editing_point.cy = editor.rowoff;
+                } else {
+                    editor.editing_point.cy = editor.rowoff + editor.view_rows - 1;
+                    if (editor.editing_point.cy > editor.numrows)
+                        editor.editing_point.cy = editor.numrows;
+                }
+                int times = editor.view_rows;
+                while (times--) {
+                    editingPointMoveToChar(key == PAGE_UP ? Up : Down);
+                }
+            }
+            break;
+
+        case ARROW_UP:
+        case ARROW_LEFT:
+        case ARROW_DOWN:
+        case ARROW_RIGHT:
+            editingPointMoveToChar(editorKeyToDirection(key));
+            break;
+
+        case CTRL_ARROW_UP:
+        case CTRL_ARROW_DOWN:
+            editingPointMoveToParagraph(editorKeyToDirection(key));
+            break;
+        case CTRL_ARROW_RIGHT:
+        case CTRL_ARROW_LEFT:
+            editingPointMoveToWord(editorKeyToDirection(key));
+            break;
+        default:
+            die("editing_point/editingPointMove");
+            break;
     }
 }

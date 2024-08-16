@@ -141,10 +141,30 @@ typedef enum {
     Right,
 }  Direction;
 
+enum EditorKey {
+    BACKSPACE = 127,
+    ARROW_LEFT = 1000,    // avoid conflicts with regular chars
+    ARROW_RIGHT,
+    ARROW_UP,
+    ARROW_DOWN,
+    DEL_KEY,
+    HOME_KEY,
+    END_KEY,
+    PAGE_UP,
+    PAGE_DOWN,
+
+    CTRL_ARROW_UP,
+    CTRL_ARROW_DOWN,
+    CTRL_ARROW_RIGHT,
+    CTRL_ARROW_LEFT,
+};
+
 void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len);
 void dbuf_free(struct DynamicBuffer *dbuf);
 
 unsigned int saturating_sub(unsigned int n1, unsigned int n2);
+
+Direction editorKeyToDirection(enum EditorKey key);
 
 
 #endif

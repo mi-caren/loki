@@ -178,7 +178,7 @@ void editorDeleteChar() {
         editorRowDeleteChar(&CURR_ROW, editor.editing_point.cx - 1);
         editor.editing_point.cx--;
     } else {
-        editingPointMove(Left);
+        editingPointMoveToChar(Left);
         if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
             editor_set_status_message("Unable to delete char at %d, %d", editor.editing_point.cx - 1, editor.editing_point.cy);
         }
@@ -461,18 +461,6 @@ static void editorQuit()
     }
 }
 
-static Direction editorKeyToDirection(enum EditorKey key) {
-    switch (key) {
-        case ARROW_UP: return Up;
-        case ARROW_DOWN: return Down;
-        case ARROW_LEFT: return Left;
-        case ARROW_RIGHT: return Right;
-        default:
-            die("editor/editorKeyToDirection");
-            return 0;    // UNREACHABLE
-    }
-}
-
 void editor_process_keypress() {
     int c = editor_read_key();
 
@@ -494,52 +482,23 @@ void editor_process_keypress() {
         }
 
         case HOME_KEY:
-            editor.editing_point.cx = 0;
-            break;
         case END_KEY:
-            editor.editing_point.cx = CURR_ROW.size;
-            break;
-
         case PAGE_UP:
         case PAGE_DOWN:
-            {
-                if (c == PAGE_UP) {
-                    editor.editing_point.cy = editor.rowoff;
-                } else {
-                    editor.editing_point.cy = editor.rowoff + editor.view_rows - 1;
-                    if (editor.editing_point.cy > editor.numrows)
-                        editor.editing_point.cy = editor.numrows;
-                }
-                int times = editor.view_rows;
-                while (times--) {
-                    editingPointMove(c == PAGE_UP ? Up : Down);
-                }
-            }
-            break;
-
         case ARROW_UP:
-        case ARROW_LEFT:
         case ARROW_DOWN:
+        case ARROW_LEFT:
         case ARROW_RIGHT:
-            editingPointMove(editorKeyToDirection(c));
-            break;
-
         case CTRL_ARROW_UP:
-            editingPointMoveToParagraph(Up);
-            break;
         case CTRL_ARROW_DOWN:
-            editingPointMoveToParagraph(Down);
-            break;
-        case CTRL_ARROW_RIGHT:
-            editingPointMoveToWord(Right);
-            break;
         case CTRL_ARROW_LEFT:
-            editingPointMoveToWord(Left);
+        case CTRL_ARROW_RIGHT:
+            editingPointMove(c);
             break;
 
         case BACKSPACE:
         case DEL_KEY:
-            if (c == DEL_KEY) editingPointMove(Right);
+            if (c == DEL_KEY) editingPointMoveToChar(Right);
             editorDeleteChar();
             break;
 

@@ -3,8 +3,9 @@
 
 #include "utils.h"
 
-void editingPointMove(Direction dir);
+void editingPointMoveToChar(Direction dir);
 void editingPointMoveToWord(Direction dir);
 void editingPointMoveToParagraph(Direction dir);
+void editingPointMove(enum EditorKey key);
 
 #endif
