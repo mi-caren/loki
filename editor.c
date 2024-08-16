@@ -11,7 +11,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "defines.h"
 #include "editor.h"
+#include "editor_row.h"
 #include "terminal.h"
 #include "utils.h"
 
@@ -19,7 +21,6 @@
 #define KILO_VERSION     "0.0.1"
 
 #define CTRL_KEY(k)      ((k) & 0x1f)
-#define TAB_SPACE_NUM    4
 
 
 extern struct Editor editor;
@@ -106,41 +107,7 @@ int editor_read_key() {
 
 // *** row operations ***
 
-int editor_render_row(struct EditorRow *row) {
-    unsigned int i;
-    unsigned int tabs = 0;
-    for (i = 0; i < row->size; i++) {
-        if (row->chars[i] == '\t')
-            tabs++;
-    }
 
-    // eventrully free render if it is not null
-    // this makes the munction more general because it can be called
-    // also to RE-rende a row
-    free(row->render);
-    char *new = malloc(row->size + 1 + tabs*(TAB_SPACE_NUM - 1));
-
-    if (new == NULL)
-        return -1;
-
-    row->render = new;
-
-    unsigned int j = 0;
-    for (i = 0; i < row->size; i++) {
-        if (row->chars[i] == '\t') {
-            unsigned int tab_i;
-            for (tab_i = 0; tab_i < TAB_SPACE_NUM; tab_i++)
-                row->render[j++] = ' ';
-        } else {
-            row->render[j++] = row->chars[i];
-        }
-    }
-
-    row->render[j] = '\0';
-    row->rsize = j;
-
-    return 0;
-}
 
 int editor_append_row(char *line, size_t linelen) {
     char *new = realloc(editor.rows, sizeof(struct EditorRow) * (editor.numrows + 1));
@@ -156,63 +123,22 @@ int editor_append_row(char *line, size_t linelen) {
 
     editor.rows[editor.numrows].rsize = 0;
     editor.rows[editor.numrows].render = NULL;
-    if (editor_render_row(&editor.rows[editor.numrows]) != 0)
+    if (editorRowRender(&editor.rows[editor.numrows]) != 0)
         return -1;
     editor.numrows += 1;
 
     return 0;
 }
 
-static void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c) {
-    if (pos > row->size)
-        pos = row->size;
-    row->chars = realloc(row->chars, row->size + 2);
-    memmove(&row->chars[pos + 1], &row->chars[pos], row->size - pos + 1);
-    row->size++;
-    row->chars[pos] = c;
-    editor.dirty = true;
-    editor_render_row(row);
-}
-
-void editorRowDeleteChar(struct EditorRow* row, unsigned int pos)
-{
-    if (pos >= row->size) return;
-    memmove(&row->chars[pos], &row->chars[pos + 1], row->size - pos);
-    row->size--;
-    editor.dirty = true;
-    editor_render_row(row);
-}
-
-void editorFreeRow(struct EditorRow* row)
-{
-    free(row->chars);
-    free(row->render);
-}
-
 void editorDeleteRow(unsigned int pos)
 {
     if (pos > editor.numrows) return;
-    editorFreeRow(&editor.rows[pos]);
+    editorRowFree(&editor.rows[pos]);
     if (pos != editor.numrows) {
         memmove(&editor.rows[pos], &editor.rows[pos + 1], sizeof(struct EditorRow) * (editor.numrows - pos - 1));
     }
     editor.numrows--;
     editor.dirty = true;
-}
-
-struct EditorRow* editorRowAppendString(struct EditorRow* row, char* s, size_t len) {
-    char* new = realloc(row->chars, row->size + len + 1);
-    if (new == NULL) {
-        return NULL; // error
-    }
-    memcpy(&new[row->size], s, len);
-    row->chars = new;
-    row->size += len;
-    row->chars[row->size] = '\0';
-    editor_render_row(row);
-    editor.dirty = true;
-
-    return row;
 }
 
 // *** editor operations ***

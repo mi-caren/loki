@@ -13,13 +13,6 @@
 #define STATUS_BAR_ROW          ( editor.view_rows + 1 )
 
 
-struct EditorRow {
-    unsigned int size;
-    char *chars;
-    unsigned int rsize;
-    char *render;
-};
-
 struct EditingPoint {
     unsigned int cx;
     unsigned int cy;

@@ -1,5 +1,5 @@
 CFLAGS = -Wall -Wextra -pedantic -g
-SRCS = kilo.c terminal.c utils.c editor.c
+SRCS = kilo.c terminal.c utils.c editor.c editor_row.c
 
 kilo: $(SRCS)
 	$(CC) $(CFLAGS) $(SRCS) -o kilo
