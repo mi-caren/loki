@@ -156,6 +156,20 @@ void editorInsertChar(char c) {
     editor.editing_point.cx++;
 }
 
+void editorInsertNewline() {
+    if (editor.numrows == 0) {
+        editorInsertRow(0, "", 0);
+    }
+
+    editorInsertRow(editor.editing_point.cy + 1, &CURR_ROW.chars[editor.editing_point.cx], CURR_ROW.size - editor.editing_point.cx);
+    CURR_ROW.chars[editor.editing_point.cx] = '\0';
+    CURR_ROW.size = editor.editing_point.cx;
+    editorRowRender(&CURR_ROW);
+
+    editor.editing_point.cy++;
+    editor.editing_point.cx = 0;
+}
+
 void editorDeleteChar() {
     if (editor.numrows == 0) return;
     if (editor.editing_point.cx == 0 && editor.editing_point.cy == 0) return;
@@ -552,6 +566,8 @@ void editor_process_keypress() {
             break;
 
         case '\r':
+            editorInsertNewline();
+            break;
         case '\x1b':
         // We ignore the Escape key because there are many key escape sequences
         // that we aren’t handling (such as the F1–F12 keys),
