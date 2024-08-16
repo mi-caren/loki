@@ -65,7 +65,6 @@ enum EditorKey {
 int editor_open(char *filename);
 void editor_draw_rows(struct DynamicBuffer *dbuf);
 void editor_refresh_screen();
-void editor_move_editing_point(int key);
 void editor_process_keypress();
 void editor_run();
 void init_editor(int height);

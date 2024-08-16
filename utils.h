@@ -123,8 +123,23 @@ struct DynamicBuffer {
 };
 
 #define DBUF_INIT {NULL, 0};
+#define TAB_SPACE_NUM    4
+/*
+    Stop Chars are those characters that delimits words:
+    spaces, null chars.
+*/
+#define CHAR_IS_STOPCHAR(C)        ( C == ' ' || C == '\0' )
+// static inline bool charIsStopChar(char c) {
+//     return c == ' ' || c == '\0';
+// }
 
 
+typedef enum {
+    Up,
+    Down,
+    Left,
+    Right,
+}  Direction;
 
 void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len);
 void dbuf_free(struct DynamicBuffer *dbuf);

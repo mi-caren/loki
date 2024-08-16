@@ -3,7 +3,6 @@
 
 #include "editor.h"
 #include "editor_row.h"
-#include "defines.h"
 
 
 

@@ -11,7 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "defines.h"
+#include "editing_point.h"
 #include "editor.h"
 #include "editor_row.h"
 #include "terminal.h"
@@ -178,7 +178,7 @@ void editorDeleteChar() {
         editorRowDeleteChar(&CURR_ROW, editor.editing_point.cx - 1);
         editor.editing_point.cx--;
     } else {
-        editor_move_editing_point(ARROW_LEFT);
+        editingPointMove(Left);
         if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
             editor_set_status_message("Unable to delete char at %d, %d", editor.editing_point.cx - 1, editor.editing_point.cy);
         }
@@ -413,96 +413,6 @@ void editor_set_status_message(const char *fmt, ...) {
 // *** input ***
 
 
-
-void editor_move_editing_point(int key) {
-    if (editor.numrows == 0) {
-        return;
-    }
-
-    switch (key) {
-        case ARROW_UP:
-            if (editor.editing_point.cy != 0) {
-                editor.editing_point.cy--;
-            }
-            break;
-        case ARROW_LEFT:
-            if (editor.editing_point.cx != 0) {
-                editor.editing_point.cx--;
-            } else if (editor.editing_point.cy != 0) {
-                editor.editing_point.cy--;
-                editor.editing_point.cx = CURR_ROW.size;
-            }
-            break;
-        case ARROW_DOWN:
-            if (editor.editing_point.cy < saturating_sub(editor.numrows, 1)) {
-                editor.editing_point.cy++;
-            }
-            break;
-        case ARROW_RIGHT:
-            if (editor.editing_point.cx < CURR_ROW.size) {
-                editor.editing_point.cx++;
-            } else if (editor.editing_point.cy < saturating_sub(editor.numrows, 1)) {
-                editor.editing_point.cy++;
-                editor.editing_point.cx = 0;
-            }
-            break;
-    }
-
-    if (editor.editing_point.cx > CURR_ROW.size) {
-        editor.editing_point.cx = CURR_ROW.size;
-    }
-}
-
-static char editingPointPrevChar() {
-    if (editor.editing_point.cx == 0) {
-        if (editor.editing_point.cy == 0) {
-            return '\0';
-        }
-        return PREV_ROW.chars[PREV_ROW.size]; // if prev_row is empty it will return the string terminator \0
-    }
-
-    return CURR_ROW.chars[editor.editing_point.cx - 1];
-}
-
-/* Checks if editing point is at the End Of File */
-static inline bool editingPointIsEOF() {
-    return editor.editing_point.cy == saturating_sub(editor.numrows, 1)
-        && editor.editing_point.cx == CURR_ROW.size;
-}
-
-/* Checks if editing point is at Beginning Of File */
-static inline bool editingPointIsBOF() {
-    return editor.editing_point.cy == 0
-        && editor.editing_point.cx == 0;
-}
-
-/*
-    Stop Chars are those characters that delimits words:
-    spaces, null chars.
-*/
-static inline bool charIsStopChar(char c) {
-    return c == ' ' || c == '\0';
-}
-
-void editorMoveToWord(enum EditorKey direction) {
-    if (direction != ARROW_LEFT && direction != ARROW_RIGHT) return;
-
-    struct EditingPoint prev_editing_point = editor.editing_point;
-    bool (*stopCondition)() = direction == ARROW_LEFT ? editingPointIsBOF : editingPointIsEOF;
-
-    while (!stopCondition()) {
-        editor_move_editing_point(direction);
-
-        if (
-            (editor.editing_point.cx == CURR_ROW.size) // stops at the end of the line
-            || (editor.editing_point.cx == 0) // stops at the beginning of the line
-            || (charIsStopChar(editingPointPrevChar()) && !charIsStopChar(CURR_CHAR)) // stops if prev char if a stop char
-        ) return;
-    }
-
-    editor.editing_point = prev_editing_point;
-}
-
 void editor_cx_to_rx() {
     editor.rx = 0;
     unsigned int i;
@@ -551,6 +461,18 @@ static void editorQuit()
     }
 }
 
+static Direction editorKeyToDirection(enum EditorKey key) {
+    switch (key) {
+        case ARROW_UP: return Up;
+        case ARROW_DOWN: return Down;
+        case ARROW_LEFT: return Left;
+        case ARROW_RIGHT: return Right;
+        default:
+            die("editor/editorKeyToDirection");
+            return 0;    // UNREACHABLE
+    }
+}
+
 void editor_process_keypress() {
     int c = editor_read_key();
 
@@ -590,7 +512,7 @@ void editor_process_keypress() {
                 }
                 int times = editor.view_rows;
                 while (times--) {
-                    editor_move_editing_point(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+                    editingPointMove(c == PAGE_UP ? Up : Down);
                 }
             }
             break;
@@ -599,7 +521,7 @@ void editor_process_keypress() {
         case ARROW_LEFT:
         case ARROW_DOWN:
         case ARROW_RIGHT:
-            editor_move_editing_point(c);
+            editingPointMove(editorKeyToDirection(c));
             break;
 
         case CTRL_ARROW_UP:
@@ -607,15 +529,15 @@ void editor_process_keypress() {
             /* TODO */
             break;
         case CTRL_ARROW_RIGHT:
-            editorMoveToWord(ARROW_RIGHT);
+            editingPointMoveToWord(Right);
             break;
         case CTRL_ARROW_LEFT:
-            editorMoveToWord(ARROW_LEFT);
+            editingPointMoveToWord(Left);
             break;
 
         case BACKSPACE:
         case DEL_KEY:
-            if (c == DEL_KEY) editor_move_editing_point(ARROW_RIGHT);
+            if (c == DEL_KEY) editingPointMove(Right);
             editorDeleteChar();
             break;
 
