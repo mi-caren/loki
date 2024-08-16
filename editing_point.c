@@ -28,6 +28,18 @@ static char editingPointPrevChar() {
     return CURR_ROW.chars[editor.editing_point.cx - 1];
 }
 
+static inline bool currentRowIsFirstRow() {
+    return editor.editing_point.cy == 0;
+}
+
+static inline bool currentRowIsLastRow() {
+    return editor.editing_point.cy == editor.numrows - 1;
+}
+
+static struct EditorRow* editingPointPrevRow() {
+    if (currentRowIsFirstRow()) return &CURR_ROW;
+    return &PREV_ROW;
+}
 
 
 void editingPointMove(Direction dir) {
@@ -80,6 +92,20 @@ void editingPointMoveToWord(Direction dir) {
             (editor.editing_point.cx == CURR_ROW.size) // stops at the end of the line
             || (editor.editing_point.cx == 0) // stops at the beginning of the line
             || (CHAR_IS_STOPCHAR(editingPointPrevChar()) && !CHAR_IS_STOPCHAR(CURR_CHAR)) // stops if prev char if a stop char
+        ) return;
+    }
+}
+
+void editingPointMoveToParagraph(Direction dir) {
+    if (dir != Up && dir != Down) return;
+    bool (*stopCondition)() = dir == Up ? currentRowIsFirstRow : currentRowIsLastRow;
+
+    while (!stopCondition()) {
+        editingPointMove(dir);
+
+        if (
+            editingPointPrevRow()->size == 0
+            && !(CURR_ROW.size == 0)
         ) return;
     }
 }

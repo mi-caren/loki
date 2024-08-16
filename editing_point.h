@@ -5,5 +5,6 @@
 
 void editingPointMove(Direction dir);
 void editingPointMoveToWord(Direction dir);
+void editingPointMoveToParagraph(Direction dir);
 
 #endif

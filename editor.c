@@ -525,8 +525,10 @@ void editor_process_keypress() {
             break;
 
         case CTRL_ARROW_UP:
+            editingPointMoveToParagraph(Up);
+            break;
         case CTRL_ARROW_DOWN:
-            /* TODO */
+            editingPointMoveToParagraph(Down);
             break;
         case CTRL_ARROW_RIGHT:
             editingPointMoveToWord(Right);

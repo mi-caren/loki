@@ -128,7 +128,7 @@ struct DynamicBuffer {
     Stop Chars are those characters that delimits words:
     spaces, null chars.
 */
-#define CHAR_IS_STOPCHAR(C)        ( C == ' ' || C == '\0' )
+#define CHAR_IS_STOPCHAR(C)        ( C == ' ' || C == '.' || C == '"' || C == '\'' || C == '(' || C == '[' || C == '{' )
 // static inline bool charIsStopChar(char c) {
 //     return c == ' ' || c == '\0';
 // }
