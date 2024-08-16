@@ -453,6 +453,42 @@ void editor_move_editing_point(int key) {
     }
 }
 
+static char editingPointPrevChar() {
+    if (editor.editing_point.cx == 0) {
+        if (editor.editing_point.cy == 0) {
+            return '\0';
+        }
+        return PREV_ROW.chars[PREV_ROW.size]; // if prev_row is empty it will return the string terminator \0
+    }
+
+    return CURR_ROW.chars[editor.editing_point.cx - 1];
+}
+
+static inline bool editingPointIsEOF() {
+    return editor.editing_point.cy == saturating_sub(editor.numrows, 1)
+        && editor.editing_point.cx == CURR_ROW.size;
+}
+
+/*
+    Stop Chars are those characters that delimits words:
+    spaces, null chars.
+*/
+static inline bool charIsStopChar(char c) {
+    return c == ' ' || c == '\0';
+}
+
+void editorMoveToNextWord() {
+    struct EditingPoint prev_editing_point = editor.editing_point;
+
+    while (!editingPointIsEOF()) {
+        editor_move_editing_point(ARROW_RIGHT);
+
+        if (charIsStopChar(editingPointPrevChar())) return;
+    }
+
+    editor.editing_point = prev_editing_point;
+}
+
 void editor_cx_to_rx() {
     editor.rx = 0;
     unsigned int i;
@@ -499,26 +535,6 @@ static void editorQuit()
         }
 
     }
-}
-
-static char editingPointPrevChar() {
-    if (editor.editing_point.cx == 0) {
-        if (editor.editing_point.cy == 0) {
-            return '\0';
-        }
-        return PREV_ROW.chars[PREV_ROW.size]; // if prev_row is empty it will return the string terminator \0
-    }
-
-    return CURR_ROW.chars[editor.editing_point.cx - 1];
-}
-
-static inline bool editingPointIsEOF() {
-    return editor.editing_point.cy == saturating_sub(editor.numrows, 1)
-        && editor.editing_point.cx == CURR_ROW.size;
-}
-
-static inline bool charIsStopChar(char c) {
-    return c == ' ' || c == '\0';
 }
 
 void editor_process_keypress() {
@@ -576,17 +592,8 @@ void editor_process_keypress() {
         case CTRL_ARROW_DOWN:
             /* TODO */
             break;
-        case CTRL_ARROW_RIGHT: {
-                struct EditingPoint prev_editing_point = editor.editing_point;
-                char prev_char;
-
-                do {
-                    editor_move_editing_point(ARROW_RIGHT);
-                    prev_char = editingPointPrevChar();
-                } while (!charIsStopChar(prev_char) && !editingPointIsEOF());
-
-                if (!charIsStopChar(prev_char)) editor.editing_point = prev_editing_point;
-            }
+        case CTRL_ARROW_RIGHT:
+            editorMoveToNextWord();
             break;
         case CTRL_ARROW_LEFT:
             // while (editor.editing_point.cx != 0 && CURR_CHAR != ' ') {
