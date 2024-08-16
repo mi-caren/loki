@@ -495,7 +495,7 @@ void editorMoveToWord(enum EditorKey direction) {
 
         if (
             (editor.editing_point.cx == CURR_ROW.size) // stops at the end of the line
-            || (charIsStopChar(CURR_CHAR) && editor.editing_point.cx == 0) // stops at the beginning at the line even if first char is a stop char
+            || (editor.editing_point.cx == 0) // stops at the beginning of the line
             || (charIsStopChar(editingPointPrevChar()) && !charIsStopChar(CURR_CHAR)) // stops if prev char if a stop char
         ) return;
     }
