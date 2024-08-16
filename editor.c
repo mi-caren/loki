@@ -183,6 +183,38 @@ void editorRowDeleteChar(struct EditorRow* row, unsigned int pos)
     editor_render_row(row);
 }
 
+void editorFreeRow(struct EditorRow* row)
+{
+    free(row->chars);
+    free(row->render);
+}
+
+void editorDeleteRow(unsigned int pos)
+{
+    if (pos > editor.numrows) return;
+    editorFreeRow(&editor.rows[pos]);
+    if (pos != editor.numrows) {
+        memmove(&editor.rows[pos], &editor.rows[pos + 1], sizeof(struct EditorRow) * (editor.numrows - pos - 1));
+    }
+    editor.numrows--;
+    editor.dirty = true;
+}
+
+struct EditorRow* editorRowAppendString(struct EditorRow* row, char* s, size_t len) {
+    char* new = realloc(row->chars, row->size + len + 1);
+    if (new == NULL) {
+        return NULL; // error
+    }
+    memcpy(&new[row->size], s, len);
+    row->chars = new;
+    row->size += len;
+    row->chars[row->size] = '\0';
+    editor_render_row(row);
+    editor.dirty = true;
+
+    return row;
+}
+
 // *** editor operations ***
 
 void editorInsertChar(char c) {
@@ -195,9 +227,15 @@ void editorInsertChar(char c) {
 
 void editorDeleteChar() {
     if (editor.numrows == 0) return;
+    if (editor.editing_point.cx == 0 && editor.editing_point.cy == 0) return;
+
     if (editor.editing_point.cx > 0) {
         editorRowDeleteChar(&CURR_ROW, editor.editing_point.cx - 1);
         editor.editing_point.cx--;
+    } else {
+        editor_move_editing_point(ARROW_LEFT);
+        editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size);
+        editorDeleteRow(editor.editing_point.cy + 1);
     }
 }
 
