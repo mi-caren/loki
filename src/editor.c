@@ -16,6 +16,8 @@
 #include "editor_row.h"
 #include "terminal.h"
 #include "utils.h"
+#include "status_bar.h"
+
 
 
 #define KILO_VERSION     "0.0.1"
@@ -39,7 +41,7 @@ void die_error(Error err) {
 }
 
 
-int editor_read_key() {
+static int editor_read_key() {
     int nread;
     char c;
 
@@ -180,7 +182,7 @@ void editorDeleteChar() {
     } else {
         editingPointMove(ARROW_LEFT);
         if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
-            editor_set_status_message("Unable to delete char at %d, %d", editor.editing_point.cx - 1, editor.editing_point.cy);
+            messageBarSet("Unable to delete char at %d, %d", editor.editing_point.cx - 1, editor.editing_point.cy);
         }
         editorDeleteRow(editor.editing_point.cy + 1);
     }
@@ -337,45 +339,6 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
     }
 }
 
-void editor_draw_status_bar(struct DynamicBuffer *dbuf) {
-    char buf[32];
-    // move cursor to beginning status bar
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.view_rows + 1, 0);
-    dbuf_append(dbuf, buf, strlen(buf));
-
-    dbuf_append(dbuf, INVERTED_COLOR_SEQ, INVERTED_COLOR_SEQ_SIZE);
-
-    char status[terminal.screencols];
-    int len = snprintf(
-        status,
-        terminal.screencols / 4 * 3,
-        "%s %s",
-        editor.filename ? editor.filename : "[New Buffer]",
-        editor.dirty ? "(modified)" : ""
-    );
-    dbuf_append(dbuf, status, len);
-    int len_s2 = snprintf(status, terminal.screencols / 4, "%d/%d lines ", editor.editing_point.cy + (editor.numrows > 0 ? 1 : 0), editor.numrows);
-
-
-    while (len < (int)(terminal.screencols - len_s2)) {
-        dbuf_append(dbuf, " ", 1);
-        len++;
-    }
-    dbuf_append(dbuf, status, len_s2);
-    dbuf_append(dbuf, NORMAL_FORMATTING_SEQ, NORMAL_FORMATTING_SEQ_SIZE);
-}
-
-void editor_draw_msg_bar(struct DynamicBuffer *dbuf) {
-    char buf[32];
-    // move cursor to beginning message bar
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.view_rows + 2, 0);
-    dbuf_append(dbuf, buf, strlen(buf));
-    dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE);
-    int msglen = strlen(editor.statusmsg);
-    if (msglen > terminal.screencols) msglen = terminal.screencols;
-    if (msglen && time(NULL) - editor.statusmsg_time < 5)
-        dbuf_append(dbuf, editor.statusmsg, msglen);
-}
 
 void editor_refresh_screen() {
     struct DynamicBuffer dbuf = DBUF_INIT;
@@ -387,8 +350,8 @@ void editor_refresh_screen() {
     dbuf_append(&dbuf, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE);
 
     editor_draw_rows(&dbuf);
-    editor_draw_status_bar(&dbuf);
-    editor_draw_msg_bar(&dbuf);
+    infoBarDraw(&dbuf);
+    messageBarDraw(&dbuf);
 
     char buf[32];
     // move cursor to terminal cursor position
@@ -400,14 +363,6 @@ void editor_refresh_screen() {
 
     write(STDOUT_FILENO, dbuf.b, dbuf.len);
     dbuf_free(&dbuf);
-}
-
-void editor_set_status_message(const char *fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(editor.statusmsg, sizeof(editor.statusmsg), fmt, ap);
-    va_end(ap);
-    editor.statusmsg_time = time(NULL);
 }
 
 // *** input ***
@@ -444,7 +399,7 @@ static void editorQuit()
     editor.editing_point.cy = STATUS_BAR_ROW;
 
     while (1) {
-        editor_set_status_message(unsaved_msg);
+        messageBarSet(unsaved_msg);
         editor_refresh_screen();
 
         int c = editor_read_key();
@@ -454,7 +409,7 @@ static void editorQuit()
         } else if (c == 'n' || c == 'N') {
             editor.rx = prev_rx;
             editor.editing_point.cy = prev_cy;
-            editor_set_status_message("");
+            messageBarSet("");
             break;
         }
 
@@ -474,9 +429,9 @@ void editor_process_keypress() {
         case CTRL_KEY('s'): {
             int bytes;
             if ((bytes = editorSave()) != -1) {
-                editor_set_status_message("%d bytes written", bytes);
+                messageBarSet("%d bytes written", bytes);
             } else {
-                editor_set_status_message("Unable to save buffer! I/O error: %s", strerror(errno));
+                messageBarSet("Unable to save buffer! I/O error: %s", strerror(errno));
             }
             break;
         }
@@ -523,7 +478,7 @@ void editor_process_keypress() {
 }
 
 void editor_run() {
-    editor_set_status_message("HELP: Ctrl-Q = quit");
+    messageBarSet("HELP: Ctrl-Q = quit");
     while (1) {
         editor_refresh_screen();
         editor_process_keypress();
@@ -541,8 +496,8 @@ void init_editor(int height) {
     editor.rowoff = 0;
     editor.coloff = 0;
     editor.filename = NULL;
-    editor.statusmsg[0] = '\0';
-    editor.statusmsg_time = 0;
+    editor.message_bar_buf[0] = '\0';
+    editor.message_bar_time = 0;
     editor.dirty = false;
 
     if (height < 0) {

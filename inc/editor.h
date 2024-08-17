@@ -37,8 +37,8 @@ struct Editor {
 
     char *filename;
 
-    char statusmsg[80];
-    time_t statusmsg_time;
+    char message_bar_buf[80];
+    time_t message_bar_time;
 
     bool dirty;
 };
@@ -50,6 +50,5 @@ void editor_refresh_screen();
 void editor_process_keypress();
 void editor_run();
 void init_editor(int height);
-void editor_set_status_message(const char *fmt, ...);
 
 #endif
