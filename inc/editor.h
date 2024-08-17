@@ -50,5 +50,6 @@ void editor_refresh_screen();
 void editor_process_keypress();
 void editor_run();
 void init_editor(int height);
+int editor_read_key();
 
 #endif

@@ -22,8 +22,6 @@
 
 #define KILO_VERSION     "0.0.1"
 
-#define CTRL_KEY(k)      ((k) & 0x1f)
-
 
 extern struct Editor editor;
 extern struct Terminal terminal;
@@ -41,7 +39,7 @@ void die_error(Error err) {
 }
 
 
-static int editor_read_key() {
+int editor_read_key() {
     int nread;
     char c;
 
@@ -260,29 +258,36 @@ cleanup:
 // More advanced editors will write to a new, temporary file,
 // and then rename that file to the actual file the user wants to overwrite,
 // and they’ll carefully check for errors through the whole process.
-int editorSave() {
-    if (editor.filename == NULL)
-        return -1;
+void editorSave() {
+    if (editor.filename == NULL) {
+        char* filename = messageBarPrompt("Save as");
+        if (filename == NULL) return;    // the printing of the error message is handled by messageBarPrompt
+        editor.filename = filename;
+    }
+
+    bool err = true;
 
     int len;
     char* buf = editorRowsToString(&len);
-    if (buf == NULL) {
-        return -1;
-    }
+    if (buf == NULL) goto end;
 
-    int ret = -1;
     int fd = open(editor.filename, O_RDWR | O_CREAT, 0644);
     if (fd == -1) goto clean_buf;
     if (ftruncate(fd, len) == -1) goto clean_fd;
     if (write(fd, buf, len) != len) goto clean_fd;
-    ret = len;
+    err = false;
     editor.dirty = false;
 
 clean_fd:
     close(fd);
 clean_buf:
     free(buf);
-    return ret;
+end:
+    if (!err) {
+        messageBarSet("%d bytes written", len);
+    } else {
+        messageBarSet("Unable to save buffer! I/O error: %s", strerror(errno));
+    }
 }
 
 // *** output ***
@@ -426,15 +431,9 @@ void editor_process_keypress() {
         case CTRL_KEY('l'):
             /* TODO */
             break;
-        case CTRL_KEY('s'): {
-            int bytes;
-            if ((bytes = editorSave()) != -1) {
-                messageBarSet("%d bytes written", bytes);
-            } else {
-                messageBarSet("Unable to save buffer! I/O error: %s", strerror(errno));
-            }
+        case CTRL_KEY('s'):
+            editorSave();
             break;
-        }
 
         case HOME_KEY:
         case END_KEY:

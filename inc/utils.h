@@ -130,6 +130,8 @@ struct DynamicBuffer {
 */
 #define CHAR_IS_STOPCHAR(C)        ( C == ' ' || C == '.' || C == '"' || C == '\'' || C == '(' || C == '[' || C == '{' )
 
+#define CTRL_KEY(k)      ((k) & 0x1f)
+
 
 typedef enum {
     Up,

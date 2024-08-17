@@ -1,10 +1,13 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #include "editor.h"
 #include "utils.h"
 #include "terminal.h"
+#include "editor.h"
 
 extern struct Editor editor;
 extern struct Terminal terminal;
@@ -32,6 +35,50 @@ void messageBarSet(const char *fmt, ...) {
     editor.message_bar_time = time(NULL);
 }
 
+char* messageBarPrompt(char* prompt) {
+    size_t bufsize = 128;
+    char* buf = malloc(bufsize);
+
+    if (buf == NULL) {
+        messageBarSet("Unable malloc prompt buf");
+        return NULL;
+    }
+
+    size_t buflen = 0;
+    buf[0] = '\0';
+
+    while (1) {
+        messageBarSet("(Ctrl-C to cancel) %s: %s", prompt, buf);
+        editor_refresh_screen();
+
+        int c = editor_read_key();
+
+        if (c == CTRL_KEY('c')) {
+            messageBarSet("Canceled");
+            free(buf);
+            return NULL;
+        } else if (c == '\r') {
+            if (buflen != 0) {
+                messageBarSet("");
+                return buf;
+            }
+        } else if (!iscntrl(c) && c < 128) { // if c is printable
+            if (buflen == bufsize - 1) {
+                bufsize *= 2;
+                char* new = realloc(buf, bufsize);
+                if (new == NULL) {
+                    messageBarSet("Unable to realloc prompt buf");
+                    free(buf);
+                    return NULL;
+                }
+                buf = new;
+            }
+
+            buf[buflen++] = c;
+            buf[buflen] = '\0';
+        }
+    }
+}
 
 /* INFO BAR */
 
