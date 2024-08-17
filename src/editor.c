@@ -393,32 +393,13 @@ static void editorCleanExit()
 
 static void editorQuit()
 {
-    if (!editor.dirty) {
-        editorCleanExit();
-    }
-
-    unsigned int prev_rx = editor.rx;
-    unsigned int prev_cy = editor.editing_point.cy;
-    char* unsaved_msg = "File has unsaved changes. Do you want to quit without saving? [y/n] ";
-    editor.rx = strlen(unsaved_msg);
-    editor.editing_point.cy = STATUS_BAR_ROW;
-
-    while (1) {
-        messageBarSet(unsaved_msg);
-        editor_refresh_screen();
-
-        int c = editor_read_key();
-
-        if (c == 'y' || c == 'Y') {
-            editorCleanExit();
-        } else if (c == 'n' || c == 'N') {
-            editor.rx = prev_rx;
-            editor.editing_point.cy = prev_cy;
-            messageBarSet("");
-            break;
+    if (editor.dirty) {
+        if (messageBarPromptYesNo("File has unsaved changes. Do you want to save before exiting?")) {
+            editorSave();
         }
-
     }
+
+    editorCleanExit();
 }
 
 void editor_process_keypress() {

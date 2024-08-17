@@ -60,11 +60,12 @@ char* messageBarPrompt(char* prompt) {
         if (c == '\x1b') {
             messageBarSet("Canceled");
             free(buf);
-            return NULL;
+            buf = NULL;
+            break;
         } else if (c == '\r') {
             if (buflen != 0) {
                 messageBarSet("");
-                return buf;
+                break;
             }
         } else if (!iscntrl(c) && c < 128) { // if c is printable
             if (buflen == bufsize - 1) {
@@ -73,7 +74,8 @@ char* messageBarPrompt(char* prompt) {
                 if (new == NULL) {
                     messageBarSet("Unable to realloc prompt buf");
                     free(buf);
-                    return NULL;
+                    buf = NULL;
+                    break;
                 }
                 buf = new;
             }
@@ -82,6 +84,39 @@ char* messageBarPrompt(char* prompt) {
             buf[buflen] = '\0';
         }
     }
+
+    // ensure cursor is visible before exiting.
+    // if the call to messageBarPrompt is the last before
+    // exiting the editor and no other calls to editor_refresh_screen are performed
+    // the user will end up with a terminal with no visible cursor
+    write(STDOUT_FILENO, SHOW_CURSOR_SEQ, SHOW_CURSOR_SEQ_SIZE);
+    return buf;
+}
+
+bool messageBarPromptYesNo(char* prompt) {
+    bool answer = false;
+    while (1) {
+        messageBarSet("%s [y/n] "PROMPT_CURSOR, prompt);
+        editor_refresh_screen();
+        write(STDOUT_FILENO, HIDE_CURSOR_SEQ, HIDE_CURSOR_SEQ_SIZE);
+
+        int c = editor_read_key();
+
+        if (c == 'y' || c == 'Y') {
+            answer = true;
+            break;
+        } else if (c == 'n' || c == 'N') {
+            messageBarSet("");
+            break;
+        }
+    }
+
+    // ensure cursor is visible before exiting.
+    // if the call to messageBarPromptYesNo is the last before
+    // exiting the editor and no other calls to editor_refresh_screen are performed
+    // the user will end up with a terminal with no visible cursor
+    write(STDOUT_FILENO, SHOW_CURSOR_SEQ, SHOW_CURSOR_SEQ_SIZE);
+    return answer;
 }
 
 /* INFO BAR */
