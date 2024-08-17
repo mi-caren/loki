@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdarg.h>
 #include <ctype.h>
 
@@ -8,6 +9,8 @@
 #include "utils.h"
 #include "terminal.h"
 #include "editor.h"
+
+#define PROMPT_CURSOR    "\033[5m_\033[0m"
 
 extern struct Editor editor;
 extern struct Terminal terminal;
@@ -48,12 +51,13 @@ char* messageBarPrompt(char* prompt) {
     buf[0] = '\0';
 
     while (1) {
-        messageBarSet("(Ctrl-C to cancel) %s: %s", prompt, buf);
+        messageBarSet("(ESC to cancel) %s: %s"PROMPT_CURSOR, prompt, buf);
         editor_refresh_screen();
+        write(STDOUT_FILENO, HIDE_CURSOR_SEQ, HIDE_CURSOR_SEQ_SIZE);
 
         int c = editor_read_key();
 
-        if (c == CTRL_KEY('c')) {
+        if (c == '\x1b') {
             messageBarSet("Canceled");
             free(buf);
             return NULL;
