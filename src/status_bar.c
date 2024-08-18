@@ -59,7 +59,7 @@ char* messageBarPrompt(char* prompt) {
     buf[0] = '\0';
 
     while (1) {
-        messageBarSet("(ESC to cancel) %s: %s"PROMPT_CURSOR, prompt, buf);
+        messageBarSet("%s (ESC to cancel): %s"PROMPT_CURSOR, prompt, buf);
         editor_refresh_screen();
         write(STDOUT_FILENO, HIDE_CURSOR_SEQ, HIDE_CURSOR_SEQ_SIZE);
 

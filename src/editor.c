@@ -27,6 +27,9 @@ extern struct Editor editor;
 extern struct Terminal terminal;
 extern void die(const char *s);
 
+
+// static void editorRxToCx();
+
 /*
  * Print error message and exit with 1
  */
@@ -295,6 +298,34 @@ end:
     return ok;
 }
 
+/***** find *****/
+
+
+void editorFind() {
+    char* query = messageBarPrompt("Search");
+    if (query == NULL) return;
+
+    // the tutorials searched into render string but i don't
+    // understand why: render string can contain information
+    // about syntax highlight so it is not the correct place to search into.
+    // the tutorial the converts rx to cx.
+    // I just search into chars array and then set cx
+    for (unsigned int i = 0; i < editor.numrows; i++) {
+        // char* match = strstr(editor.rows[i].render, query);
+        char* match = strstr(editor.rows[i].chars, query);
+        if (match) {
+            editor.editing_point.cy = i;
+            editor.editing_point.cx = match - editor.rows[i].chars;
+            // editor.rx = match - editor.rows[i].render;
+            // editorRxToCx();
+            // editor.rowoff = editor.numrows;
+            break;
+        }
+    }
+
+    free(query);
+}
+
 // *** output ***
 
 void editor_scroll() {
@@ -389,6 +420,22 @@ void editor_cx_to_rx() {
     }
 }
 
+// static void editorRxToCx() {
+//     unsigned int rx = 0;
+
+//     for (unsigned int i = 0; i < CURR_ROW.size; i++) {
+//         if (CURR_ROW.chars[i] == '\t') {
+//             rx += TAB_SPACE_NUM - 1;
+//         }
+//         rx++;
+
+//         if (rx > editor.rx) {
+//             editor.editing_point.cx = i;
+//             break;
+//         }
+//     }
+// }
+
 static void editorCleanExit()
 {
     WRITE_SEQ(CLEAR_SCREEN);
@@ -418,11 +465,14 @@ void editor_process_keypress() {
         case CTRL_KEY('q'):
             editorQuit();
             break;
-        case CTRL_KEY('l'):
-            /* TODO */
-            break;
         case CTRL_KEY('s'):
             editorSave();
+            break;
+        case CTRL_KEY('f'):
+            editorFind();
+            break;
+        case CTRL_KEY('l'):
+            /* TODO */
             break;
 
         case HOME_KEY:
@@ -467,7 +517,7 @@ void editor_process_keypress() {
 }
 
 void editor_run() {
-    messageBarSet("HELP: Ctrl-Q = quit");
+    messageBarSet("HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find");
     while (1) {
         editor_refresh_screen();
         editor_process_keypress();
