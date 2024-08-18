@@ -258,14 +258,17 @@ cleanup:
 // More advanced editors will write to a new, temporary file,
 // and then rename that file to the actual file the user wants to overwrite,
 // and they’ll carefully check for errors through the whole process.
-void editorSave() {
+/*
+    Returns a bool indicating if saving of file has been successfull.
+*/
+bool editorSave() {
+    bool ok = false;
+
     if (editor.filename == NULL) {
         char* filename = messageBarPrompt("Save as");
-        if (filename == NULL) return;    // the printing of the error message is handled by messageBarPrompt
+        if (filename == NULL) return false;    // the printing of the error message is handled by messageBarPrompt
         editor.filename = filename;
     }
-
-    bool err = true;
 
     int len;
     char* buf = editorRowsToString(&len);
@@ -275,7 +278,7 @@ void editorSave() {
     if (fd == -1) goto clean_buf;
     if (ftruncate(fd, len) == -1) goto clean_fd;
     if (write(fd, buf, len) != len) goto clean_fd;
-    err = false;
+    ok = true;
     editor.dirty = false;
 
 clean_fd:
@@ -283,11 +286,13 @@ clean_fd:
 clean_buf:
     free(buf);
 end:
-    if (!err) {
+    if (ok) {
         messageBarSet("%d bytes written", len);
     } else {
         messageBarSet("Unable to save buffer! I/O error: %s", strerror(errno));
     }
+
+    return ok;
 }
 
 // *** output ***
@@ -393,13 +398,17 @@ static void editorCleanExit()
 
 static void editorQuit()
 {
+    bool quit = true;
+
     if (editor.dirty) {
         if (messageBarPromptYesNo("File has unsaved changes. Do you want to save before exiting?")) {
-            editorSave();
+            if (!editorSave()) {
+                quit = false;
+            }
         }
     }
 
-    editorCleanExit();
+    if (quit) editorCleanExit();
 }
 
 void editor_process_keypress() {
