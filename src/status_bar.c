@@ -70,6 +70,8 @@ char* messageBarPrompt(char* prompt) {
             free(buf);
             buf = NULL;
             break;
+        } else if (c == BACKSPACE) {
+            if (buflen != 0) buf[--buflen] = '\0';
         } else if (c == '\r') {
             if (buflen != 0) {
                 messageBarSet("");
