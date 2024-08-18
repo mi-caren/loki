@@ -29,6 +29,7 @@ extern void die(const char *s);
 
 
 // static void editorRxToCx();
+void editor_cx_to_rx();
 
 /*
  * Print error message and exit with 1
@@ -268,7 +269,7 @@ bool editorSave() {
     bool ok = false;
 
     if (editor.filename == NULL) {
-        char* filename = messageBarPrompt("Save as");
+        char* filename = messageBarPrompt("Save as", NULL);
         if (filename == NULL) return false;    // the printing of the error message is handled by messageBarPrompt
         editor.filename = filename;
     }
@@ -300,11 +301,7 @@ end:
 
 /***** find *****/
 
-
-void editorFind() {
-    char* query = messageBarPrompt("Search");
-    if (query == NULL) return;
-
+void editorFindCallback(char* query) {
     // the tutorials searched into render string but i don't
     // understand why: render string can contain information
     // about syntax highlight so it is not the correct place to search into.
@@ -316,14 +313,21 @@ void editorFind() {
         if (match) {
             editor.editing_point.cy = i;
             editor.editing_point.cx = match - editor.rows[i].chars;
+            editor_cx_to_rx();
             // editor.rx = match - editor.rows[i].render;
             // editorRxToCx();
             // editor.rowoff = editor.numrows;
             break;
         }
     }
+}
 
-    free(query);
+void editorFind() {
+    char* query = messageBarPrompt("Search", editorFindCallback);
+
+    if (query) {
+        free(query);
+    }
 }
 
 // *** output ***

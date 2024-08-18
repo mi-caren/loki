@@ -46,7 +46,7 @@ void messageBarSet(const char *fmt, ...) {
     If some error occurs or if the operation is canceled, the buffer is freed by the function and NULL is returned.
     Printing of error informations to the message bar is done by this function.
 */
-char* messageBarPrompt(char* prompt) {
+char* messageBarPrompt(char* prompt, void (*callback)(char*)) {
     size_t bufsize = 128;
     char* buf = malloc(bufsize);
 
@@ -61,7 +61,6 @@ char* messageBarPrompt(char* prompt) {
     while (1) {
         messageBarSet("%s (ESC to cancel): %s"PROMPT_CURSOR, prompt, buf);
         editor_refresh_screen();
-        write(STDOUT_FILENO, HIDE_CURSOR_SEQ, HIDE_CURSOR_SEQ_SIZE);
 
         int c = editor_read_key();
 
@@ -93,13 +92,10 @@ char* messageBarPrompt(char* prompt) {
             buf[buflen++] = c;
             buf[buflen] = '\0';
         }
+
+        if (callback) callback(buf);
     }
 
-    // ensure cursor is visible before exiting.
-    // if the call to messageBarPrompt is the last before
-    // exiting the editor and no other calls to editor_refresh_screen are performed
-    // the user will end up with a terminal with no visible cursor
-    write(STDOUT_FILENO, SHOW_CURSOR_SEQ, SHOW_CURSOR_SEQ_SIZE);
     return buf;
 }
 
