@@ -323,10 +323,18 @@ void editorFindCallback(char* query) {
 }
 
 void editorFind() {
+    struct EditingPoint prev_editing_point = editor.editing_point;
+    unsigned int prev_coloff = editor.coloff;
+    unsigned int prev_rowoff = editor.rowoff;
+
     char* query = messageBarPrompt("Search", editorFindCallback);
 
     if (query) {
         free(query);
+    } else {
+        editor.editing_point = prev_editing_point;
+        editor.coloff = prev_coloff;
+        editor.rowoff = prev_rowoff;
     }
 }
 
