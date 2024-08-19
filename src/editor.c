@@ -313,7 +313,7 @@ void editorFindCallback(char* query) {
         if (match) {
             editor.editing_point.cy = i;
             editor.editing_point.cx = match - editor.rows[i].chars;
-            editor_cx_to_rx();
+            // editor_cx_to_rx();
             // editor.rx = match - editor.rows[i].render;
             // editorRxToCx();
             // editor.rowoff = editor.numrows;
@@ -386,6 +386,9 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
 
 
 void editor_refresh_screen() {
+    editor_cx_to_rx();
+    editor_scroll();
+
     struct DynamicBuffer dbuf = DBUF_INIT;
 
     // hide cursor while drawing on screen
@@ -515,9 +518,6 @@ void editor_process_keypress() {
             editorInsertChar(c);
             break;
     }
-
-    editor_cx_to_rx();
-    editor_scroll();
 }
 
 void editor_run() {
