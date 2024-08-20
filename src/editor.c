@@ -303,43 +303,60 @@ end:
 }
 
 /***** find *****/
+static void searchResultNext() {
+    if (editor.search_result.len == 0 || editor.search_result.editing_points == NULL) return;
 
-int editorFindCallback(char* query, int key) {
-    static struct EditingPoint* match_editing_points = NULL;
-    static size_t match_editing_point_size = 128;
-    static size_t match_len = 0;
-    static size_t current_match = 0;
+    size_t next_match = editor.search_result.curr == editor.search_result.len - 1 ? 0 : editor.search_result.curr + 1;
+    editor.editing_point = editor.search_result.editing_points[next_match];
+    editor.search_result.curr = next_match;
+}
 
-    if (match_editing_points == NULL) {
-        struct EditingPoint* new = malloc(sizeof(struct EditingPoint) * match_editing_point_size);
+static void searchResultPrev() {
+    if (editor.search_result.len == 0 || editor.search_result.editing_points == NULL) return;
+
+    size_t prev_match = editor.search_result.curr == 0 ? editor.search_result.len - 1 : editor.search_result.curr - 1;
+    editor.editing_point =editor.search_result.editing_points[prev_match];
+    editor.search_result.curr = prev_match;
+}
+
+static int editingPointPush(struct EditingPoint editing_point) {
+    if (editor.search_result.editing_points == NULL) {
+        struct EditingPoint* new = malloc(sizeof(struct EditingPoint) * editor.search_result.size);
         if (new == NULL) {
-            messageBarSet("Unable to malloc editorFind");
             return -1;
         }
-        match_editing_points = new;
+        editor.search_result.editing_points = new;
     }
 
-    if (key == ARROW_RIGHT || key == ARROW_DOWN) {
-        // editorNextMatch();
-        if (match_len == 0) return 0;
-        size_t next_match = current_match == match_len - 1 ? 0 : current_match + 1;
-        editor.editing_point = match_editing_points[next_match];
-        current_match = next_match;
+    if (editor.search_result.len == editor.search_result.size - 1) {
+        editor.search_result.size *= 2;
+        struct EditingPoint* new = realloc(editor.search_result.editing_points, sizeof(struct EditingPoint) * editor.search_result.size);
+        if (new == NULL) {
+            return -1;
+        }
+        editor.search_result.editing_points = new;
+    }
+
+    editor.search_result.editing_points[editor.search_result.len] = editing_point;
+    editor.search_result.len++;
+
+    return 0;
+}
+
+int editorFindCallback(char* query, int key) {
+    if (key == ARROW_RIGHT || key == ARROW_DOWN || key == CTRL_KEY('n')) {
+        searchResultNext();
         return 0;
-    } else if (key == ARROW_LEFT || key == ARROW_UP) {
-        // editorPrevMatch();
-        if (match_len == 0) return 0;
-        size_t prev_match = current_match == 0 ? match_len - 1 : current_match - 1;
-        editor.editing_point = match_editing_points[prev_match];
-        current_match = prev_match;
+    } else if (key == ARROW_LEFT || key == ARROW_UP || key == CTRL_KEY('p')) {
+        searchResultPrev();
         return 0;
     } else if (key == '\x1b' || key == '\r' || iscntrl(key) || key > 127) {
         return 0;
     }
 
     // c is a character so i need to perform another search
-    match_len = 0;
-    current_match = 0;
+    editor.search_result.len = 0;
+    editor.search_result.curr = 0;
     int match_index_after_editing_point = -1;
 
     for (unsigned int i = 0; i < editor.numrows; i++) {
@@ -347,43 +364,36 @@ int editorFindCallback(char* query, int key) {
         int last_pos = 0;
         while ((match = strstr(&editor.rows[i].chars[last_pos], query)) != NULL) {
             // editorPushMatch();
-            if (match_len == match_editing_point_size - 1) {
-                match_editing_point_size *= 2;
-                struct EditingPoint* new = realloc(match_editing_points, sizeof(struct EditingPoint) * match_editing_point_size);
-                if (new == NULL) {
-                    messageBarSet("Unable to realloc editorFind");
-                    return -1;
-                }
-                match_editing_points = new;
-            }
-            match_editing_points[match_len] = (struct EditingPoint){
+            struct EditingPoint editing_point = (struct EditingPoint){
                 .cx =  match - editor.rows[i].chars,
                 .cy = i,
             };
+            if (editingPointPush(editing_point) == -1) {
+                messageBarSet("Unable to push match result");
+                return -1;
+            }
 
-            last_pos = match_editing_points[match_len].cx + 1;
+            last_pos = LAST_SEARCH_RESULT.cx + 1;
 
             if (
                 match_index_after_editing_point == -1
                 && (
                     (
-                        match_editing_points[match_len].cy == editor.editing_point.cy
-                        && match_editing_points[match_len].cx >= editor.editing_point.cx
-                    ) || match_editing_points[match_len].cy > editor.editing_point.cy
+                        LAST_SEARCH_RESULT.cy == editor.editing_point.cy
+                        && LAST_SEARCH_RESULT.cx >= editor.editing_point.cx
+                    ) || LAST_SEARCH_RESULT.cy > editor.editing_point.cy
                 )
             ) {
-                match_index_after_editing_point = match_len;
+                match_index_after_editing_point = editor.search_result.len - 1;
             }
-
-            match_len++;
         }
     }
 
     // nextNearestMatch
     if (match_index_after_editing_point != -1) {
-        editor.editing_point = match_editing_points[match_index_after_editing_point];
-    } else if (match_len > 0) {
-        editor.editing_point = match_editing_points[0];
+        editor.editing_point = editor.search_result.editing_points[match_index_after_editing_point];
+    } else if (editor.search_result.len > 0) {
+        editor.editing_point = editor.search_result.editing_points[0];
     }
 
     return 0;
@@ -502,21 +512,6 @@ void editor_cx_to_rx() {
     }
 }
 
-// static void editorRxToCx() {
-//     unsigned int rx = 0;
-
-//     for (unsigned int i = 0; i < CURR_ROW.size; i++) {
-//         if (CURR_ROW.chars[i] == '\t') {
-//             rx += TAB_SPACE_NUM - 1;
-//         }
-//         rx++;
-
-//         if (rx > editor.rx) {
-//             editor.editing_point.cx = i;
-//             break;
-//         }
-//     }
-// }
 
 static void editorCleanExit()
 {
@@ -552,6 +547,12 @@ void editor_process_keypress() {
             break;
         case CTRL_KEY('f'):
             editorFind();
+            break;
+        case CTRL_KEY('n'):
+            searchResultNext();
+            break;
+        case CTRL_KEY('p'):
+            searchResultPrev();
             break;
         case CTRL_KEY('l'):
             /* TODO */
@@ -617,6 +618,13 @@ void init_editor(int height) {
     editor.message_bar_buf[0] = '\0';
     editor.message_bar_time = 0;
     editor.dirty = false;
+
+    editor.search_result = (SearchResult){
+        .editing_points = NULL,
+        .size = DEFAULT_EDITING_POINTS_SIZE,
+        .len = 0,
+        .curr = 0,
+    };
 
     if (height < 0) {
         editor.view_rows = 0;

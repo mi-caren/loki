@@ -16,12 +16,21 @@
 
 #define STATUS_BAR_ROW          ( editor.view_rows + 1 )
 
+#define DEFAULT_EDITING_POINTS_SIZE    128
+#define LAST_SEARCH_RESULT             ( editor.search_result.editing_points[editor.search_result.len - 1] )
+
 
 struct EditingPoint {
     unsigned int cx;
     unsigned int cy;
 };
 
+typedef struct {
+    struct EditingPoint* editing_points;
+    size_t size;
+    size_t len;
+    size_t curr;
+} SearchResult;
 
 struct Editor {
     int view_rows;
@@ -41,6 +50,8 @@ struct Editor {
     time_t message_bar_time;
 
     bool dirty;
+
+    SearchResult search_result;
 };
 
 
