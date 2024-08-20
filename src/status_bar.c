@@ -46,7 +46,7 @@ void messageBarSet(const char *fmt, ...) {
     If some error occurs or if the operation is canceled, the buffer is freed by the function and NULL is returned.
     Printing of error informations to the message bar is done by this function.
 */
-char* messageBarPrompt(char* prompt, void (*callback)(char*)) {
+char* messageBarPrompt(char* prompt, int (*callback)(char*, int)) {
     size_t bufsize = 128;
     char* buf = malloc(bufsize);
 
@@ -93,7 +93,13 @@ char* messageBarPrompt(char* prompt, void (*callback)(char*)) {
             buf[buflen] = '\0';
         }
 
-        if (callback) callback(buf);
+        if (callback) {
+            if (callback(buf, c) == -1) {
+                free(buf);
+                buf = NULL;
+                break;
+            }
+        }
     }
 
     return buf;

@@ -1,8 +1,11 @@
-#include <stdbool.h>
+#include <bits/types/struct_iovec.h>
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #define _GNU_SOURCE
 
+
+#include <stdbool.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -301,25 +304,89 @@ end:
 
 /***** find *****/
 
-void editorFindCallback(char* query) {
-    // the tutorials searched into render string but i don't
-    // understand why: render string can contain information
-    // about syntax highlight so it is not the correct place to search into.
-    // the tutorial the converts rx to cx.
-    // I just search into chars array and then set cx
+int editorFindCallback(char* query, int key) {
+    static struct EditingPoint* match_editing_points = NULL;
+    static size_t match_editing_point_size = 128;
+    static size_t match_len = 0;
+    static size_t current_match = 0;
+
+    if (match_editing_points == NULL) {
+        struct EditingPoint* new = malloc(sizeof(struct EditingPoint) * match_editing_point_size);
+        if (new == NULL) {
+            messageBarSet("Unable to malloc editorFind");
+            return -1;
+        }
+        match_editing_points = new;
+    }
+
+    if (key == ARROW_RIGHT || key == ARROW_DOWN) {
+        // editorNextMatch();
+        if (match_len == 0) return 0;
+        size_t next_match = current_match == match_len - 1 ? 0 : current_match + 1;
+        editor.editing_point = match_editing_points[next_match];
+        current_match = next_match;
+        return 0;
+    } else if (key == ARROW_LEFT || key == ARROW_UP) {
+        // editorPrevMatch();
+        if (match_len == 0) return 0;
+        size_t prev_match = current_match == 0 ? match_len - 1 : current_match - 1;
+        editor.editing_point = match_editing_points[prev_match];
+        current_match = prev_match;
+        return 0;
+    } else if (key == '\x1b' || key == '\r' || iscntrl(key) || key > 127) {
+        return 0;
+    }
+
+    // c is a character so i need to perform another search
+    match_len = 0;
+    current_match = 0;
+    int match_index_after_editing_point = -1;
+
     for (unsigned int i = 0; i < editor.numrows; i++) {
-        // char* match = strstr(editor.rows[i].render, query);
-        char* match = strstr(editor.rows[i].chars, query);
-        if (match) {
-            editor.editing_point.cy = i;
-            editor.editing_point.cx = match - editor.rows[i].chars;
-            // editor_cx_to_rx();
-            // editor.rx = match - editor.rows[i].render;
-            // editorRxToCx();
-            // editor.rowoff = editor.numrows;
-            break;
+        char* match = NULL;
+        int last_pos = 0;
+        while ((match = strstr(&editor.rows[i].chars[last_pos], query)) != NULL) {
+            // editorPushMatch();
+            if (match_len == match_editing_point_size - 1) {
+                match_editing_point_size *= 2;
+                struct EditingPoint* new = realloc(match_editing_points, sizeof(struct EditingPoint) * match_editing_point_size);
+                if (new == NULL) {
+                    messageBarSet("Unable to realloc editorFind");
+                    return -1;
+                }
+                match_editing_points = new;
+            }
+            match_editing_points[match_len] = (struct EditingPoint){
+                .cx =  match - editor.rows[i].chars,
+                .cy = i,
+            };
+
+            last_pos = match_editing_points[match_len].cx + 1;
+
+            if (
+                match_index_after_editing_point == -1
+                && (
+                    (
+                        match_editing_points[match_len].cy == editor.editing_point.cy
+                        && match_editing_points[match_len].cx >= editor.editing_point.cx
+                    ) || match_editing_points[match_len].cy > editor.editing_point.cy
+                )
+            ) {
+                match_index_after_editing_point = match_len;
+            }
+
+            match_len++;
         }
     }
+
+    // nextNearestMatch
+    if (match_index_after_editing_point != -1) {
+        editor.editing_point = match_editing_points[match_index_after_editing_point];
+    } else if (match_len > 0) {
+        editor.editing_point = match_editing_points[0];
+    }
+
+    return 0;
 }
 
 void editorFind() {

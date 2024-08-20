@@ -8,7 +8,7 @@
 
 void messageBarDraw(struct DynamicBuffer *dbuf);
 void messageBarSet(const char *fmt, ...);
-char* messageBarPrompt(char* prompt, void (*callback)(char*));
+char* messageBarPrompt(char* prompt, int (*callback)(char*, int));
 bool messageBarPromptYesNo(char* prompt);
 
 void infoBarDraw(struct DynamicBuffer *dbuf);
