@@ -140,6 +140,7 @@ static int editorInsertRow(unsigned int pos, char *s, size_t len)
 
     editor.rows[pos].rsize = 0;
     editor.rows[pos].render = NULL;
+    editor.rows[pos].hl = NULL;
     if (editorRowRender(&editor.rows[pos]) != 0)
         return -1;
     editor.numrows += 1;

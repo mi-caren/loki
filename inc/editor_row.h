@@ -3,13 +3,19 @@
 
 #include <unistd.h>
 
+typedef enum {
+    HL_NORMAL = 0,
+    HL_NUMBER,
+} Highlight;
+
 struct EditorRow {
     unsigned int size;
     char *chars;
+    Highlight* hl;
+
     unsigned int rsize;
     char *render;
 };
-
 
 int editorRowRender(struct EditorRow *row);
 void editorRowFree(struct EditorRow* row);

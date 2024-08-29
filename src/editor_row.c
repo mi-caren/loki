@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -9,26 +10,55 @@
 
 extern struct Editor editor;
 
+unsigned int editorRowUpdateSyntax(struct EditorRow* row) {
+    row->hl = realloc(row->hl, row->size*sizeof(Highlight));
+    memset(row->hl, HL_NORMAL, row->size*sizeof(Highlight));
 
+    Highlight prev_hl = -1;
+    unsigned int hl_escape_seq_size = 0;
+
+    for (unsigned int i = 0; i < row->size; i++) {
+        if (isdigit(row->chars[i])) {
+            row->hl[i] = HL_NUMBER;
+        }
+
+        if (prev_hl != row->hl[i]) {
+            hl_escape_seq_size += 5;
+        }
+
+        prev_hl = row->hl[i];
+    }
+
+    return hl_escape_seq_size;
+}
+
+int syntaxToColor(Highlight hl) {
+    switch (hl) {
+        case HL_NORMAL:
+            return 39;
+        case HL_NUMBER:
+            return 95;
+        default:
+            return 39;
+    }
+}
 
 int editorRowRender(struct EditorRow *row)
 {
     unsigned int i;
     unsigned int tabs = 0;
-    unsigned int digits = 0;
     for (i = 0; i < row->size; i++) {
         if (row->chars[i] == '\t') {
             tabs++;
-        } else if (isdigit(row->chars[i])) {
-            digits++;
         }
     }
+    unsigned int hl_escape_seq_size = editorRowUpdateSyntax(row);
 
     // eventrully free render if it is not null
     // this makes the munction more general because it can be called
     // also to RE-rende a row
     free(row->render);
-    char *new = malloc(row->size + 1 + tabs*(TAB_SPACE_NUM - 1) + digits*10);
+    char *new = malloc(row->size + 1 + tabs*(TAB_SPACE_NUM - 1) + hl_escape_seq_size);
 
     if (new == NULL)
         return -1;
@@ -36,17 +66,21 @@ int editorRowRender(struct EditorRow *row)
     row->render = new;
 
     unsigned int j = 0;
+    int prev_color = -1;
     for (i = 0; i < row->size; i++) {
+        int color = syntaxToColor(row->hl[i]);
+        if (color != prev_color) {
+            char buf[8];
+            int clen = snprintf(buf, sizeof(buf), "\x1b[%dm", color);
+            memcpy(&row->render[j], buf, clen);
+            j += clen;
+        }
+        prev_color = color;
+
         if (row->chars[i] == '\t') {
             unsigned int tab_i;
             for (tab_i = 0; tab_i < TAB_SPACE_NUM; tab_i++)
                 row->render[j++] = ' ';
-        } else if (isdigit(row->chars[i])) {
-            memcpy(&row->render[j], "\x1b[95m", 5);
-            j += 5;
-            row->render[j++] = row->chars[i];
-            memcpy(&row->render[j], "\x1b[39m", 5);
-            j += 5;
         } else {
             row->render[j++] = row->chars[i];
         }
@@ -83,6 +117,7 @@ void editorRowFree(struct EditorRow* row)
 {
     free(row->chars);
     free(row->render);
+    free(row->hl);
 }
 
 struct EditorRow* editorRowAppendString(struct EditorRow* row, char* s, size_t len)
