@@ -368,6 +368,11 @@ int editorSearch(char* query) {
                 return -1;
             }
 
+            // Highlight search results
+            for (unsigned int j = editing_point.cx; j < editing_point.cx + strlen(query); j++) {
+                editor.rows[i].hl[j] = HL_MATCH;
+            }
+
             last_pos = LAST_SEARCH_RESULT.cx + 1;
 
             if (
@@ -381,6 +386,8 @@ int editorSearch(char* query) {
             ) {
                 editor.next_match_result_after_editing_point = editor.search_result.len - 1;
             }
+
+            editorRowRender(&editor.rows[i]);
         }
     }
 
@@ -449,6 +456,7 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
     for (y = 0; y < editor.view_rows; y++) {
         unsigned int filerow = y + editor.rowoff;
         if (filerow >= editor.numrows) {
+            dbuf_append(dbuf, "\x1b[39m", 5); // normal colour
             if (editor.numrows == 0 && y == editor.view_rows / 3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);

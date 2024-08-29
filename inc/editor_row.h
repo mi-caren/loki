@@ -6,6 +6,7 @@
 typedef enum {
     HL_NORMAL = 0,
     HL_NUMBER,
+    HL_MATCH,
 } Highlight;
 
 struct EditorRow {

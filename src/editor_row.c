@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,16 +11,21 @@
 
 extern struct Editor editor;
 
+unsigned int rditorRowResetSyntax
+
 unsigned int editorRowUpdateSyntax(struct EditorRow* row) {
     row->hl = realloc(row->hl, row->size*sizeof(Highlight));
-    memset(row->hl, HL_NORMAL, row->size*sizeof(Highlight));
 
     Highlight prev_hl = -1;
     unsigned int hl_escape_seq_size = 0;
 
     for (unsigned int i = 0; i < row->size; i++) {
-        if (isdigit(row->chars[i])) {
-            row->hl[i] = HL_NUMBER;
+        if (row->hl[i] != HL_MATCH) {
+            if (isdigit(row->chars[i])) {
+                row->hl[i] = HL_NUMBER;
+            } else {
+                row->hl[i] = HL_NORMAL;
+            }
         }
 
         if (prev_hl != row->hl[i]) {
@@ -34,12 +40,10 @@ unsigned int editorRowUpdateSyntax(struct EditorRow* row) {
 
 int syntaxToColor(Highlight hl) {
     switch (hl) {
-        case HL_NORMAL:
-            return 39;
-        case HL_NUMBER:
-            return 95;
-        default:
-            return 39;
+        case HL_NORMAL: return 39;
+        case HL_NUMBER: return 95;
+        case HL_MATCH: return 31;
+        default: return 39;
     }
 }
 
@@ -52,13 +56,22 @@ int editorRowRender(struct EditorRow *row)
             tabs++;
         }
     }
-    unsigned int hl_escape_seq_size = editorRowUpdateSyntax(row);
+
+    // if (editorRowSyntaxReset(row) == -1)
+    //     return -1;
+    unsigned int syntax_hl_esc_seq_size = editorRowUpdateSyntax(row);
+    // unsigned int search_result_hl_esc_seq_size = editorRowHighlightSearchResults(row);
 
     // eventrully free render if it is not null
     // this makes the munction more general because it can be called
     // also to RE-rende a row
     free(row->render);
-    char *new = malloc(row->size + 1 + tabs*(TAB_SPACE_NUM - 1) + hl_escape_seq_size);
+    char *new = malloc(
+        row->size + 1
+        + tabs*(TAB_SPACE_NUM - 1)
+        + syntax_hl_esc_seq_size
+        // + search_result_hl_esc_seq_size
+    );
 
     if (new == NULL)
         return -1;
