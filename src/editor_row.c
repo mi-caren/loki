@@ -55,7 +55,7 @@ void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c)
     memmove(&row->chars[pos + 1], &row->chars[pos], row->size - pos + 1);
     row->size++;
     row->chars[pos] = c;
-    editor.dirty = true;
+    editorSetDirty();
     editorRowRender(row);
 }
 
@@ -64,7 +64,7 @@ void editorRowDeleteChar(struct EditorRow* row, unsigned int pos)
     if (pos >= row->size) return;
     memmove(&row->chars[pos], &row->chars[pos + 1], row->size - pos);
     row->size--;
-    editor.dirty = true;
+    editorSetDirty();
     editorRowRender(row);
 }
 
@@ -85,7 +85,7 @@ struct EditorRow* editorRowAppendString(struct EditorRow* row, char* s, size_t l
     row->size += len;
     row->chars[row->size] = '\0';
     editorRowRender(row);
-    editor.dirty = true;
+    editorSetDirty();
 
     return row;
 }

@@ -26,6 +26,7 @@ struct EditingPoint {
 };
 
 typedef struct {
+    char* query;
     struct EditingPoint* editing_points;
     size_t size;
     size_t len;
@@ -52,6 +53,7 @@ struct Editor {
     bool dirty;
 
     SearchResult search_result;
+    int next_match_result_after_editing_point;
 };
 
 
@@ -62,5 +64,7 @@ void editor_process_keypress();
 void editor_run();
 void init_editor(int height);
 int editor_read_key();
+void editorSetDirty();
+int editorSearch(char* query);
 
 #endif

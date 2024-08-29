@@ -45,6 +45,11 @@ void die_error(Error err) {
     exit(1);
 }
 
+void editorSetDirty() {
+    editor.dirty = true;
+    if (editor.search_result.query != NULL)
+        editorSearch(editor.search_result.query); // search last query
+}
 
 int editor_read_key() {
     int nread;
@@ -150,7 +155,7 @@ void editorDeleteRow(unsigned int pos)
         memmove(&editor.rows[pos], &editor.rows[pos + 1], sizeof(struct EditorRow) * (editor.numrows - pos - 1));
     }
     editor.numrows--;
-    editor.dirty = true;
+    editorSetDirty();
 }
 
 // *** editor operations ***
@@ -319,7 +324,7 @@ static void searchResultPrev() {
     editor.search_result.curr = prev_match;
 }
 
-static int editingPointPush(struct EditingPoint editing_point) {
+static int searchResultPushEditingPoint(struct EditingPoint editing_point) {
     if (editor.search_result.editing_points == NULL) {
         struct EditingPoint* new = malloc(sizeof(struct EditingPoint) * editor.search_result.size);
         if (new == NULL) {
@@ -343,6 +348,44 @@ static int editingPointPush(struct EditingPoint editing_point) {
     return 0;
 }
 
+int editorSearch(char* query) {
+    editor.search_result.len = 0;
+    editor.search_result.curr = 0;
+    editor.next_match_result_after_editing_point = -1;
+
+    for (unsigned int i = 0; i < editor.numrows; i++) {
+        char* match = NULL;
+        int last_pos = 0;
+        while ((match = strstr(&editor.rows[i].chars[last_pos], query)) != NULL) {
+            // editorPushMatch();
+            struct EditingPoint editing_point = (struct EditingPoint){
+                .cx =  match - editor.rows[i].chars,
+                .cy = i,
+            };
+            if (searchResultPushEditingPoint(editing_point) == -1) {
+                messageBarSet("Unable to push match result");
+                return -1;
+            }
+
+            last_pos = LAST_SEARCH_RESULT.cx + 1;
+
+            if (
+                editor.next_match_result_after_editing_point == -1
+                && (
+                    (
+                        LAST_SEARCH_RESULT.cy == editor.editing_point.cy
+                        && LAST_SEARCH_RESULT.cx >= editor.editing_point.cx
+                    ) || LAST_SEARCH_RESULT.cy > editor.editing_point.cy
+                )
+            ) {
+                editor.next_match_result_after_editing_point = editor.search_result.len - 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 int editorFindCallback(char* query, int key) {
     if (key == ARROW_RIGHT || key == ARROW_DOWN || key == CTRL_KEY('n')) {
         searchResultNext();
@@ -355,43 +398,11 @@ int editorFindCallback(char* query, int key) {
     }
 
     // c is a character so i need to perform another search
-    editor.search_result.len = 0;
-    editor.search_result.curr = 0;
-    int match_index_after_editing_point = -1;
-
-    for (unsigned int i = 0; i < editor.numrows; i++) {
-        char* match = NULL;
-        int last_pos = 0;
-        while ((match = strstr(&editor.rows[i].chars[last_pos], query)) != NULL) {
-            // editorPushMatch();
-            struct EditingPoint editing_point = (struct EditingPoint){
-                .cx =  match - editor.rows[i].chars,
-                .cy = i,
-            };
-            if (editingPointPush(editing_point) == -1) {
-                messageBarSet("Unable to push match result");
-                return -1;
-            }
-
-            last_pos = LAST_SEARCH_RESULT.cx + 1;
-
-            if (
-                match_index_after_editing_point == -1
-                && (
-                    (
-                        LAST_SEARCH_RESULT.cy == editor.editing_point.cy
-                        && LAST_SEARCH_RESULT.cx >= editor.editing_point.cx
-                    ) || LAST_SEARCH_RESULT.cy > editor.editing_point.cy
-                )
-            ) {
-                match_index_after_editing_point = editor.search_result.len - 1;
-            }
-        }
-    }
+    if (editorSearch(query) == -1) return -1;
 
     // nextNearestMatch
-    if (match_index_after_editing_point != -1) {
-        editor.editing_point = editor.search_result.editing_points[match_index_after_editing_point];
+    if (editor.next_match_result_after_editing_point != -1) {
+        editor.editing_point = editor.search_result.editing_points[editor.next_match_result_after_editing_point];
     } else if (editor.search_result.len > 0) {
         editor.editing_point = editor.search_result.editing_points[0];
     }
@@ -407,7 +418,9 @@ void editorFind() {
     char* query = messageBarPrompt("Search", editorFindCallback);
 
     if (query) {
-        free(query);
+        if (editor.search_result.query != NULL)
+            free(editor.search_result.query);
+        editor.search_result.query = query;
     } else {
         editor.editing_point = prev_editing_point;
         editor.coloff = prev_coloff;
@@ -620,11 +633,13 @@ void init_editor(int height) {
     editor.dirty = false;
 
     editor.search_result = (SearchResult){
+        .query = NULL,
         .editing_points = NULL,
         .size = DEFAULT_EDITING_POINTS_SIZE,
         .len = 0,
         .curr = 0,
     };
+    editor.next_match_result_after_editing_point = -1;
 
     if (height < 0) {
         editor.view_rows = 0;
