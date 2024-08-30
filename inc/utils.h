@@ -236,6 +236,7 @@ struct DynamicBuffer {
 #define CHAR_IS_STOPCHAR(C)        ( C == ' ' || C == '.' || C == '"' || C == '\'' || C == '(' || C == '[' || C == '{' )
 
 #define CTRL_KEY(k)      ((k) & 0x1f)
+#define COLOR_SEQ_SIZE 10
 
 
 typedef enum {

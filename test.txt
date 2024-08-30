@@ -1,8 +1,11 @@
 cac 1
  ciao    
 ca c p
-ciao
-ciao
 
+    printf("ERROR CODE %d, MSG: %s\r\n", err.code, err.message);
+
+ciao
+ciao
+(message);
 upu oh bel ciao 
 la ciao mondo

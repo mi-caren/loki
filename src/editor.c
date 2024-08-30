@@ -433,12 +433,45 @@ void editor_scroll() {
     }
 }
 
+void editorDrawRow(struct EditorRow* row, struct DynamicBuffer* dbuf) {
+    unsigned int j = 0;
+    unsigned int printable_chars = 0;
+    char first_hl[10];
+    memcpy(first_hl, row->render, COLOR_SEQ_SIZE);
+    while (j < row->rsize) {
+        char c = row->render[j];
+
+        if (printable_chars < editor.coloff) {
+            if (c == '\x1b') {
+                memcpy(first_hl, &row->render[j], COLOR_SEQ_SIZE);
+                j += COLOR_SEQ_SIZE;
+            } else {
+                printable_chars++;
+                j++;
+            }
+            continue;
+        } else if (printable_chars == editor.coloff) {
+            dbuf_append(dbuf, first_hl, COLOR_SEQ_SIZE);
+        }
+
+        if ((int)(printable_chars - editor.coloff) == terminal.screencols) break;
+
+        if (c == '\x1b') {
+            dbuf_append(dbuf, &row->render[j], COLOR_SEQ_SIZE);
+            j += COLOR_SEQ_SIZE;
+        } else {
+            dbuf_append(dbuf, &c, 1);
+            printable_chars++;
+            j++;
+        }
+    }
+}
+
 void editor_draw_rows(struct DynamicBuffer *dbuf) {
     int y;
     for (y = 0; y < editor.view_rows; y++) {
         unsigned int filerow = y + editor.rowoff;
         if (filerow >= editor.numrows) {
-            dbuf_append(dbuf, "\x1b[39m", 5); // normal colour
             if (editor.numrows == 0 && y == editor.view_rows / 3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
@@ -459,10 +492,9 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
                 dbuf_append(dbuf, "~", 1);
             }
         } else {
-            int len = saturating_sub(editor.rows[filerow].rsize, editor.coloff);
-            if (len > terminal.screencols) len = terminal.screencols;
-            dbuf_append(dbuf, &editor.rows[filerow].render[editor.coloff], len);
+            editorDrawRow(&editor.rows[filerow], dbuf);
         }
+        dbuf_append(dbuf, "\x1b[039;049m", COLOR_SEQ_SIZE);
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
         dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE);

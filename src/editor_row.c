@@ -8,7 +8,8 @@
 #include "utils.h"
 #include "editor_row.h"
 
-
+// #define COLOR_SEQ_SIZE 10
+// #define COLOR_SEQ_SIZE 6
 
 extern struct Editor editor;
 
@@ -43,10 +44,10 @@ void editorRowHighlightSearchResults(struct EditorRow* row) {
 
 int syntaxToColor(Highlight hl) {
     switch (hl) {
-        case HL_NORMAL: return 39;
-        case HL_NUMBER: return 95;
-        case HL_MATCH: return 34;
-        default: return 39;
+        case HL_NORMAL: return (39 << 8) | 49;
+        case HL_NUMBER: return (95 << 8) | 49;
+        case HL_MATCH: return (37 << 8) | 100;
+        default: return (39 << 8) | 49;
     }
 }
 
@@ -69,7 +70,7 @@ int editorRowRender(struct EditorRow *row)
     unsigned int hl_escape_seq_size = 0;
     for (i = 0; i < row->size; i++) {
         if (prev_hl != row->hl[i]) {
-            hl_escape_seq_size += 5;
+            hl_escape_seq_size += COLOR_SEQ_SIZE;
         }
 
         prev_hl = row->hl[i];
@@ -95,9 +96,12 @@ int editorRowRender(struct EditorRow *row)
     int prev_color = -1;
     for (i = 0; i < row->size; i++) {
         int color = syntaxToColor(row->hl[i]);
+        int fg = (color >> 8) & 0xff;
+        int bg = color & 0xff;
         if (color != prev_color) {
-            char buf[8];
-            int clen = snprintf(buf, sizeof(buf), "\x1b[%dm", color);
+            char buf[16];
+            int clen = snprintf(buf, sizeof(buf), "\x1b[%03d;%03dm", fg, bg);
+            // int clen = snprintf(buf, sizeof(buf), "\x1b[%03dm", fg);
             memcpy(&row->render[j], buf, clen);
             j += clen;
         }
