@@ -45,7 +45,7 @@ int syntaxToColor(Highlight hl) {
     switch (hl) {
         case HL_NORMAL: return 39;
         case HL_NUMBER: return 95;
-        case HL_MATCH: return 31;
+        case HL_MATCH: return 34;
         default: return 39;
     }
 }
