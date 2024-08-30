@@ -44,6 +44,7 @@ struct Editor {
 
     bool dirty;
 
+    bool searching;
     char* search_query;
 };
 

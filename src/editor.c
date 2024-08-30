@@ -427,15 +427,16 @@ void editorFind() {
     unsigned int prev_coloff = editor.coloff;
     unsigned int prev_rowoff = editor.rowoff;
     char* prev_query = editor.search_query;
+    editor.searching = true;
 
     if (messageBarPrompt("Search", editorFindCallback)) {
         free(prev_query);
-        // searchResultNext();
     } else {
         editor.editing_point = prev_editing_point;
         editor.coloff = prev_coloff;
         editor.rowoff = prev_rowoff;
         editor.search_query = prev_query;
+        editor.searching = false;
     }
 }
 
@@ -676,6 +677,7 @@ void init_editor(int height) {
     editor.message_bar_time = 0;
     editor.dirty = false;
 
+    editor.searching = false;
     editor.search_query = NULL;
 
     if (height < 0) {

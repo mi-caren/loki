@@ -64,7 +64,9 @@ int editorRowRender(struct EditorRow *row)
     if (editorRowResetHighlight(row) == -1)
         return -1;
     editorRowUpdateSyntax(row);
-    editorRowHighlightSearchResults(row);
+    if (editor.searching) {
+        editorRowHighlightSearchResults(row);
+    }
 
     Highlight prev_hl = -1;
     unsigned int hl_escape_seq_size = 0;
