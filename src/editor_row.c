@@ -33,14 +33,9 @@ void editorRowUpdateSyntax(struct EditorRow* row) {
 }
 
 void editorRowHighlightSearchResults(struct EditorRow* row) {
-    // Highlight prev_hl = -1;
-    // unsigned int hl_escape_seq_size = 0;
-
-    ARRAY_RESET(&row->search_match_pos);
-    unsigned int* pos = NULL;
-    while ((pos = arrayNextUnsignedInt(&row->search_match_pos)) != NULL) {
-        unsigned int last_pos = *pos + strlen(editor.search_result.query);
-        for (unsigned int j = *pos; j < last_pos; j++) {
+    ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
+        unsigned int last_pos = *cur + strlen(editor.search_result.query);
+        for (unsigned int j = *cur; j < last_pos; j++) {
             row->hl[j] = HL_MATCH;
         }
     }

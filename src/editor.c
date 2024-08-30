@@ -310,45 +310,6 @@ end:
 }
 
 /***** find *****/
-static void searchResultNext() {
-    if (editor.search_result.len == 0 || editor.search_result.editing_points == NULL) return;
-
-    size_t next_match = editor.search_result.curr == editor.search_result.len - 1 ? 0 : editor.search_result.curr + 1;
-    editor.editing_point = editor.search_result.editing_points[next_match];
-    editor.search_result.curr = next_match;
-}
-
-static void searchResultPrev() {
-    if (editor.search_result.len == 0 || editor.search_result.editing_points == NULL) return;
-
-    size_t prev_match = editor.search_result.curr == 0 ? editor.search_result.len - 1 : editor.search_result.curr - 1;
-    editor.editing_point =editor.search_result.editing_points[prev_match];
-    editor.search_result.curr = prev_match;
-}
-
-static int searchResultPushEditingPoint(struct EditingPoint editing_point) {
-    if (editor.search_result.editing_points == NULL) {
-        struct EditingPoint* new = malloc(sizeof(struct EditingPoint) * editor.search_result.size);
-        if (new == NULL) {
-            return -1;
-        }
-        editor.search_result.editing_points = new;
-    }
-
-    if (editor.search_result.len == editor.search_result.size - 1) {
-        editor.search_result.size *= 2;
-        struct EditingPoint* new = realloc(editor.search_result.editing_points, sizeof(struct EditingPoint) * editor.search_result.size);
-        if (new == NULL) {
-            return -1;
-        }
-        editor.search_result.editing_points = new;
-    }
-
-    editor.search_result.editing_points[editor.search_result.len] = editing_point;
-    editor.search_result.len++;
-
-    return 0;
-}
 
 int editorSearch(char* query) {
     editor.search_result.len = 0;
@@ -371,24 +332,56 @@ int editorSearch(char* query) {
             }
 
             last_pos = match_pos + 1;
-
-            // if (
-            //     editor.next_match_result_after_editing_point == -1
-            //     && (
-            //         (
-            //             LAST_SEARCH_RESULT.cy == editor.editing_point.cy
-            //             && LAST_SEARCH_RESULT.cx >= editor.editing_point.cx
-            //         ) || LAST_SEARCH_RESULT.cy > editor.editing_point.cy
-            //     )
-            // ) {
-            //     editor.next_match_result_after_editing_point = editor.search_result.len - 1;
-            // }
-
         }
         editorRowRender(row);
     }
 
     return 0;
+}
+
+int searchMatchInRowRange(unsigned int start_idx, unsigned int end_idx, int direction) {
+    for (
+        int cy = start_idx;
+        direction == 1 ? cy <= (int)end_idx : cy >= (int)end_idx;
+        cy += direction
+    ) {
+        struct EditorRow* row = &editor.rows[cy];
+        if (cy == (int)editor.editing_point.cy) {
+            ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
+                if ((direction == 1 ? *cur > editor.editing_point.cx : *cur < editor.editing_point.cx)) {
+                    editor.editing_point.cx = *cur;
+                    editor.editing_point.cy = cy;
+                    return 0;
+                }
+            }
+        } else {
+            if (row->search_match_pos.len > 0) {
+                    editor.editing_point.cy = cy;
+                if (direction == 1) {
+                    editor.editing_point.cx = row->search_match_pos.ptr[0];
+                } else {
+                    editor.editing_point.cx = row->search_match_pos.ptr[row->search_match_pos.len - 1];
+                }
+                return 0;
+            }
+        }
+    }
+
+    return -1;
+}
+
+static void searchResultNext() {
+    if (editor.numrows == 0) return;
+    if (searchMatchInRowRange(editor.editing_point.cy, editor.numrows - 1, 1) == 0) return;
+    if (editor.editing_point.cy == 0) return;
+    searchMatchInRowRange(0, editor.editing_point.cy - 1, 1);
+}
+
+static void searchResultPrev() {
+    if (editor.numrows == 0) return;
+    if (searchMatchInRowRange(editor.editing_point.cy, 0, -1) == 0) return;
+    if (editor.editing_point.cy == editor.numrows - 1) return;
+    searchMatchInRowRange(editor.numrows - 1, editor.editing_point.cy + 1, -1);
 }
 
 int editorFindCallback(char* query, int key) {
@@ -405,13 +398,6 @@ int editorFindCallback(char* query, int key) {
     // c is a character so i need to perform another search
     if (editorSearch(query) == -1) return -1;
 
-    // nextNearestMatch
-    // if (editor.next_match_result_after_editing_point != -1) {
-    //     editor.editing_point = editor.search_result.editing_points[editor.next_match_result_after_editing_point];
-    // } else if (editor.search_result.len > 0) {
-    //     editor.editing_point = editor.search_result.editing_points[0];
-    // }
-
     return 0;
 }
 
@@ -423,6 +409,7 @@ void editorFind() {
 
     if (messageBarPrompt("Search", editorFindCallback)) {
         free(prev_query);
+        // searchResultNext();
     } else {
         editor.editing_point = prev_editing_point;
         editor.coloff = prev_coloff;

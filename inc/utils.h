@@ -173,6 +173,15 @@ UNWRAP_FUNC_SIGNATURE(unsigned int);
         return &a->ptr[a->cur++];\
     }
 
+/* A is a reference to an array
+   the loop will provide a reference to the current element
+   accessible via the variable cur, which is a pointer to it*/
+#define ARRAY_FOR_EACH_UINT(A)\
+    ARRAY_RESET(A);\
+    unsigned int* cur = NULL;\
+    while((cur = arrayNextUnsignedInt(A)) != NULL)
+
+
 #define ARRAY_EMPTY_SIG\
     void arrayEmpty(ArrayVoid* a)
 #define DEF_ARRAY_EMPTY\
