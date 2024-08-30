@@ -339,49 +339,74 @@ int editorSearch(char* query) {
     return 0;
 }
 
-int searchMatchInRowRange(unsigned int start_idx, unsigned int end_idx, int direction) {
-    for (
-        int cy = start_idx;
-        direction == 1 ? cy <= (int)end_idx : cy >= (int)end_idx;
-        cy += direction
-    ) {
-        struct EditorRow* row = &editor.rows[cy];
-        if (cy == (int)editor.editing_point.cy) {
-            ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
-                if ((direction == 1 ? *cur > editor.editing_point.cx : *cur < editor.editing_point.cx)) {
-                    editor.editing_point.cx = *cur;
-                    editor.editing_point.cy = cy;
-                    return 0;
-                }
-            }
-        } else {
-            if (row->search_match_pos.len > 0) {
-                    editor.editing_point.cy = cy;
-                if (direction == 1) {
-                    editor.editing_point.cx = row->search_match_pos.ptr[0];
-                } else {
-                    editor.editing_point.cx = row->search_match_pos.ptr[row->search_match_pos.len - 1];
-                }
-                return 0;
-            }
+static void searchResultNext() {
+    if (editor.numrows == 0) return;
+
+    unsigned int cy = editor.editing_point.cy;
+    struct EditorRow* row = &editor.rows[cy];
+    // First search in current line
+    ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
+        if (*cur > editor.editing_point.cx) {
+            editor.editing_point.cx = *cur;
+            editor.editing_point.cy = cy;
+            return;
         }
     }
 
-    return -1;
-}
+    // Then search from next line to last line
+    for (cy++; cy < editor.numrows; cy++) {
+        row = &editor.rows[cy];
+        if (row->search_match_pos.len > 0) {
+            editor.editing_point.cy = cy;
+            editor.editing_point.cx = row->search_match_pos.ptr[0];
+            return;
+        }
+    }
 
-static void searchResultNext() {
-    if (editor.numrows == 0) return;
-    if (searchMatchInRowRange(editor.editing_point.cy, editor.numrows - 1, 1) == 0) return;
-    if (editor.editing_point.cy == 0) return;
-    searchMatchInRowRange(0, editor.editing_point.cy - 1, 1);
+    // Then search from first line to current line
+    for (cy = 0; cy <= editor.editing_point.cy; cy++) {
+        row = &editor.rows[cy];
+        if (row->search_match_pos.len > 0) {
+            editor.editing_point.cy = cy;
+            editor.editing_point.cx = row->search_match_pos.ptr[0];
+            return;
+        }
+    }
 }
 
 static void searchResultPrev() {
     if (editor.numrows == 0) return;
-    if (searchMatchInRowRange(editor.editing_point.cy, 0, -1) == 0) return;
-    if (editor.editing_point.cy == editor.numrows - 1) return;
-    searchMatchInRowRange(editor.numrows - 1, editor.editing_point.cy + 1, -1);
+
+    int cy = editor.editing_point.cy;
+    struct EditorRow* row = &editor.rows[cy];
+    // First search in current line
+    ARRAY_FOR_EACH_UINT_REV(&row->search_match_pos) {
+        if (*cur < editor.editing_point.cx) {
+            editor.editing_point.cx = *cur;
+            editor.editing_point.cy = cy;
+            return;
+        }
+    }
+
+    // Then search from prev line to first line
+    for (cy--; cy >= 0; cy--) {
+        row = &editor.rows[cy];
+        if (row->search_match_pos.len > 0) {
+            editor.editing_point.cy = cy;
+            editor.editing_point.cx = row->search_match_pos.ptr[row->search_match_pos.len - 1];
+            return;
+        }
+    }
+
+    // Then search from last line to current line
+    for (cy = editor.numrows - 1; cy >= (int)editor.editing_point.cy; cy--) {
+        row = &editor.rows[cy];
+        if (row->search_match_pos.len > 0) {
+            editor.editing_point.cy = cy;
+            editor.editing_point.cx = row->search_match_pos.ptr[row->search_match_pos.len - 1];
+            return;
+        }
+    }
 }
 
 int editorFindCallback(char* query, int key) {

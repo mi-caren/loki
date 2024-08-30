@@ -157,13 +157,21 @@ UNWRAP_FUNC_SIGNATURE(unsigned int);
         ptr[a->len++] = el;\
         return a;\
     }
-#define ARRAY_RESET_SIG\
-    void arrayReset(ArrayVoid* a)
-#define DEF_ARRAY_RESET\
-    ARRAY_RESET_SIG {\
+#define ARRAY_START_SIG\
+    void arrayStart(ArrayVoid* a)
+#define DEF_ARRAY_START\
+    ARRAY_START_SIG {\
         a->cur = 0;\
     }
-#define ARRAY_RESET(A)  arrayReset((ArrayVoid*)A)
+#define ARRAY_START(A)  arrayStart((ArrayVoid*)A)
+
+#define ARRAY_END_SIG\
+    void arrayEnd(ArrayVoid* a)
+#define DEF_ARRAY_END\
+    ARRAY_END_SIG {\
+        a->cur = a->len;\
+    }
+#define ARRAY_END(A)  arrayEnd((ArrayVoid*)A)
 
 #define ARRAY_NEXT_UNSIGNED_SIG(TYPE)\
     unsigned TYPE* CAT(arrayNextUnsigned, CAPITAL(TYPE))(ARRAY_NAME_UNSIGNED(TYPE)* a)
@@ -173,14 +181,26 @@ UNWRAP_FUNC_SIGNATURE(unsigned int);
         return &a->ptr[a->cur++];\
     }
 
+#define ARRAY_PREV_UNSIGNED_SIG(TYPE)\
+    unsigned TYPE* CAT(arrayPrevUnsigned, CAPITAL(TYPE))(ARRAY_NAME_UNSIGNED(TYPE)* a)
+#define DEF_ARRAY_PREV_UNSIGNED(TYPE)\
+    ARRAY_PREV_UNSIGNED_SIG(TYPE) {\
+        if (a->cur == 0) return NULL;\
+        return &a->ptr[--a->cur];\
+    }
+
 /* A is a reference to an array
    the loop will provide a reference to the current element
    accessible via the variable cur, which is a pointer to it*/
 #define ARRAY_FOR_EACH_UINT(A)\
-    ARRAY_RESET(A);\
+    ARRAY_START(A);\
     unsigned int* cur = NULL;\
     while((cur = arrayNextUnsignedInt(A)) != NULL)
 
+#define ARRAY_FOR_EACH_UINT_REV(A)\
+    ARRAY_END(A);\
+    unsigned int* cur = NULL;\
+    while((cur = arrayPrevUnsignedInt(A)) != NULL)
 
 #define ARRAY_EMPTY_SIG\
     void arrayEmpty(ArrayVoid* a)
@@ -211,8 +231,10 @@ DEF_ARRAY_UNSIGNED(int);
 ARRAY_PUSH_SIG(int);
 ARRAY_PUSH_UNSIGNED_SIG(int);
 
-ARRAY_RESET_SIG;
+ARRAY_START_SIG;
+ARRAY_END_SIG;
 ARRAY_NEXT_UNSIGNED_SIG(int);
+ARRAY_PREV_UNSIGNED_SIG(int);
 
 ARRAY_EMPTY_SIG;
 
