@@ -5,37 +5,45 @@
 #include <string.h>
 
 #include "editor.h"
+#include "utils.h"
 #include "editor_row.h"
 
 
 
 extern struct Editor editor;
 
-unsigned int rditorRowResetSyntax
+int editorRowResetHighlight(struct EditorRow* row) {
+    if (row->size == 0) return 0;   // realloc sometimes throws double free() error if called with size: 0
 
-unsigned int editorRowUpdateSyntax(struct EditorRow* row) {
-    row->hl = realloc(row->hl, row->size*sizeof(Highlight));
-
-    Highlight prev_hl = -1;
-    unsigned int hl_escape_seq_size = 0;
-
+    Highlight* new = realloc(row->hl, row->size*sizeof(Highlight));
+    if (!new) return -1;
+    row->hl = new;
     for (unsigned int i = 0; i < row->size; i++) {
-        if (row->hl[i] != HL_MATCH) {
-            if (isdigit(row->chars[i])) {
-                row->hl[i] = HL_NUMBER;
-            } else {
-                row->hl[i] = HL_NORMAL;
-            }
-        }
-
-        if (prev_hl != row->hl[i]) {
-            hl_escape_seq_size += 5;
-        }
-
-        prev_hl = row->hl[i];
+        row->hl[i] = HL_NORMAL;
     }
+    return 0;
+}
 
-    return hl_escape_seq_size;
+void editorRowUpdateSyntax(struct EditorRow* row) {
+    for (unsigned int i = 0; i < row->size; i++) {
+        if (isdigit(row->chars[i])) {
+            row->hl[i] = HL_NUMBER;
+        }
+    }
+}
+
+void editorRowHighlightSearchResults(struct EditorRow* row) {
+    // Highlight prev_hl = -1;
+    // unsigned int hl_escape_seq_size = 0;
+
+    ARRAY_RESET(&row->search_match_pos);
+    unsigned int* pos = NULL;
+    while ((pos = arrayNextUnsignedInt(&row->search_match_pos)) != NULL) {
+        unsigned int last_pos = *pos + strlen(editor.search_result.query);
+        for (unsigned int j = *pos; j < last_pos; j++) {
+            row->hl[j] = HL_MATCH;
+        }
+    }
 }
 
 int syntaxToColor(Highlight hl) {
@@ -57,20 +65,30 @@ int editorRowRender(struct EditorRow *row)
         }
     }
 
-    // if (editorRowSyntaxReset(row) == -1)
-    //     return -1;
-    unsigned int syntax_hl_esc_seq_size = editorRowUpdateSyntax(row);
-    // unsigned int search_result_hl_esc_seq_size = editorRowHighlightSearchResults(row);
+    if (editorRowResetHighlight(row) == -1)
+        return -1;
+    editorRowUpdateSyntax(row);
+    editorRowHighlightSearchResults(row);
+
+    Highlight prev_hl = -1;
+    unsigned int hl_escape_seq_size = 0;
+    for (i = 0; i < row->size; i++) {
+        if (prev_hl != row->hl[i]) {
+            hl_escape_seq_size += 5;
+        }
+
+        prev_hl = row->hl[i];
+    }
 
     // eventrully free render if it is not null
     // this makes the munction more general because it can be called
     // also to RE-rende a row
     free(row->render);
+    row->render = NULL;
     char *new = malloc(
         row->size + 1
         + tabs*(TAB_SPACE_NUM - 1)
-        + syntax_hl_esc_seq_size
-        // + search_result_hl_esc_seq_size
+        + hl_escape_seq_size
     );
 
     if (new == NULL)
@@ -131,6 +149,7 @@ void editorRowFree(struct EditorRow* row)
     free(row->chars);
     free(row->render);
     free(row->hl);
+    ARRAY_FREE(&row->search_match_pos);
 }
 
 struct EditorRow* editorRowAppendString(struct EditorRow* row, char* s, size_t len)

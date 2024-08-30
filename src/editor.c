@@ -141,6 +141,7 @@ static int editorInsertRow(unsigned int pos, char *s, size_t len)
     editor.rows[pos].rsize = 0;
     editor.rows[pos].render = NULL;
     editor.rows[pos].hl = NULL;
+    editor.rows[pos].search_match_pos = ARRAY_NEW(ArrayUnsignedInt);
     if (editorRowRender(&editor.rows[pos]) != 0)
         return -1;
     editor.numrows += 1;
@@ -354,41 +355,37 @@ int editorSearch(char* query) {
     editor.search_result.curr = 0;
     editor.next_match_result_after_editing_point = -1;
 
+    editor.search_result.query = query;
+
     for (unsigned int i = 0; i < editor.numrows; i++) {
         char* match = NULL;
         int last_pos = 0;
-        while ((match = strstr(&editor.rows[i].chars[last_pos], query)) != NULL) {
-            // editorPushMatch();
-            struct EditingPoint editing_point = (struct EditingPoint){
-                .cx =  match - editor.rows[i].chars,
-                .cy = i,
-            };
-            if (searchResultPushEditingPoint(editing_point) == -1) {
+        struct EditorRow* row = &editor.rows[i];
+        ARRAY_EMPTY(&row->search_match_pos);
+
+        while ((match = strstr(&row->chars[last_pos], query)) != NULL) {
+            unsigned int match_pos = match - row->chars;
+            if (!arrayPushUnsignedInt(&row->search_match_pos, match_pos)) {
                 messageBarSet("Unable to push match result");
                 return -1;
             }
 
-            // Highlight search results
-            for (unsigned int j = editing_point.cx; j < editing_point.cx + strlen(query); j++) {
-                editor.rows[i].hl[j] = HL_MATCH;
-            }
+            last_pos = match_pos + 1;
 
-            last_pos = LAST_SEARCH_RESULT.cx + 1;
+            // if (
+            //     editor.next_match_result_after_editing_point == -1
+            //     && (
+            //         (
+            //             LAST_SEARCH_RESULT.cy == editor.editing_point.cy
+            //             && LAST_SEARCH_RESULT.cx >= editor.editing_point.cx
+            //         ) || LAST_SEARCH_RESULT.cy > editor.editing_point.cy
+            //     )
+            // ) {
+            //     editor.next_match_result_after_editing_point = editor.search_result.len - 1;
+            // }
 
-            if (
-                editor.next_match_result_after_editing_point == -1
-                && (
-                    (
-                        LAST_SEARCH_RESULT.cy == editor.editing_point.cy
-                        && LAST_SEARCH_RESULT.cx >= editor.editing_point.cx
-                    ) || LAST_SEARCH_RESULT.cy > editor.editing_point.cy
-                )
-            ) {
-                editor.next_match_result_after_editing_point = editor.search_result.len - 1;
-            }
-
-            editorRowRender(&editor.rows[i]);
         }
+        editorRowRender(row);
     }
 
     return 0;
@@ -409,11 +406,11 @@ int editorFindCallback(char* query, int key) {
     if (editorSearch(query) == -1) return -1;
 
     // nextNearestMatch
-    if (editor.next_match_result_after_editing_point != -1) {
-        editor.editing_point = editor.search_result.editing_points[editor.next_match_result_after_editing_point];
-    } else if (editor.search_result.len > 0) {
-        editor.editing_point = editor.search_result.editing_points[0];
-    }
+    // if (editor.next_match_result_after_editing_point != -1) {
+    //     editor.editing_point = editor.search_result.editing_points[editor.next_match_result_after_editing_point];
+    // } else if (editor.search_result.len > 0) {
+    //     editor.editing_point = editor.search_result.editing_points[0];
+    // }
 
     return 0;
 }
@@ -422,17 +419,15 @@ void editorFind() {
     struct EditingPoint prev_editing_point = editor.editing_point;
     unsigned int prev_coloff = editor.coloff;
     unsigned int prev_rowoff = editor.rowoff;
+    char* prev_query = editor.search_result.query;
 
-    char* query = messageBarPrompt("Search", editorFindCallback);
-
-    if (query) {
-        if (editor.search_result.query != NULL)
-            free(editor.search_result.query);
-        editor.search_result.query = query;
+    if (messageBarPrompt("Search", editorFindCallback)) {
+        free(prev_query);
     } else {
         editor.editing_point = prev_editing_point;
         editor.coloff = prev_coloff;
         editor.rowoff = prev_rowoff;
+        editor.search_result.query = prev_query;
     }
 }
 

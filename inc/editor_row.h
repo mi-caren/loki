@@ -3,6 +3,8 @@
 
 #include <unistd.h>
 
+#include "utils.h"
+
 typedef enum {
     HL_NORMAL = 0,
     HL_NUMBER,
@@ -16,6 +18,8 @@ struct EditorRow {
 
     unsigned int rsize;
     char *render;
+
+    ArrayUnsignedInt search_match_pos;
 };
 
 int editorRowRender(struct EditorRow *row);
