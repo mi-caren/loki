@@ -25,14 +25,6 @@ struct EditingPoint {
     unsigned int cy;
 };
 
-typedef struct {
-    char* query;
-    struct EditingPoint* editing_points;
-    size_t size;
-    size_t len;
-    size_t curr;
-} SearchResult;
-
 struct Editor {
     int view_rows;
 
@@ -52,8 +44,7 @@ struct Editor {
 
     bool dirty;
 
-    SearchResult search_result;
-    int next_match_result_after_editing_point;
+    char* search_query;
 };
 
 

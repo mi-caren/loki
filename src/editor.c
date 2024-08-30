@@ -47,8 +47,8 @@ void die_error(Error err) {
 
 void editorSetDirty() {
     editor.dirty = true;
-    if (editor.search_result.query != NULL)
-        editorSearch(editor.search_result.query); // search last query
+    if (editor.search_query != NULL)
+        editorSearch(editor.search_query); // search last query
 }
 
 int editor_read_key() {
@@ -312,11 +312,7 @@ end:
 /***** find *****/
 
 int editorSearch(char* query) {
-    editor.search_result.len = 0;
-    editor.search_result.curr = 0;
-    editor.next_match_result_after_editing_point = -1;
-
-    editor.search_result.query = query;
+    editor.search_query = query;
 
     for (unsigned int i = 0; i < editor.numrows; i++) {
         char* match = NULL;
@@ -430,7 +426,7 @@ void editorFind() {
     struct EditingPoint prev_editing_point = editor.editing_point;
     unsigned int prev_coloff = editor.coloff;
     unsigned int prev_rowoff = editor.rowoff;
-    char* prev_query = editor.search_result.query;
+    char* prev_query = editor.search_query;
 
     if (messageBarPrompt("Search", editorFindCallback)) {
         free(prev_query);
@@ -439,7 +435,7 @@ void editorFind() {
         editor.editing_point = prev_editing_point;
         editor.coloff = prev_coloff;
         editor.rowoff = prev_rowoff;
-        editor.search_result.query = prev_query;
+        editor.search_query = prev_query;
     }
 }
 
@@ -680,14 +676,7 @@ void init_editor(int height) {
     editor.message_bar_time = 0;
     editor.dirty = false;
 
-    editor.search_result = (SearchResult){
-        .query = NULL,
-        .editing_points = NULL,
-        .size = DEFAULT_EDITING_POINTS_SIZE,
-        .len = 0,
-        .curr = 0,
-    };
-    editor.next_match_result_after_editing_point = -1;
+    editor.search_query = NULL;
 
     if (height < 0) {
         editor.view_rows = 0;

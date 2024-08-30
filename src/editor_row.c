@@ -35,7 +35,7 @@ void editorRowUpdateSyntax(struct EditorRow* row) {
 
 void editorRowHighlightSearchResults(struct EditorRow* row) {
     ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
-        unsigned int last_pos = *cur + strlen(editor.search_result.query);
+        unsigned int last_pos = *cur + strlen(editor.search_query);
         for (unsigned int j = *cur; j < last_pos; j++) {
             row->hl[j] = HL_MATCH;
         }
@@ -46,7 +46,7 @@ int syntaxToColor(Highlight hl) {
     switch (hl) {
         case HL_NORMAL: return (39 << 8) | 49;
         case HL_NUMBER: return (95 << 8) | 49;
-        case HL_MATCH: return (37 << 8) | 100;
+        case HL_MATCH: return (39 << 8) | 100;
         default: return (39 << 8) | 49;
     }
 }
