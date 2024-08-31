@@ -29,6 +29,15 @@ static bool isSeparator(char c) {
     return isspace(c) || c == '\0' || strchr(",.()+-/*=~%<>[];", c) != NULL;
 }
 
+const char* C_KEYWORDS[] = {
+    "#include", "#define",
+    "extern", "return", "sizeof",
+    "const", "static",
+    "switch", "case", "if", "else",
+    "for", "do", "while", "continue", "break",
+    NULL
+};
+
 void editorRowHighlightSyntax(struct EditorRow* row) {
     bool in_string = false;
     bool in_comment = false;
@@ -83,6 +92,23 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
         // Highlights numbers
         if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) || (c == '.' && prev_hl == HL_NUMBER)) {
             row->hl[i] = HL_NUMBER;
+            continue;
+        }
+
+        // Highlights keywords
+        if (prev_sep) {
+            for (int j = 0; C_KEYWORDS[j] != NULL; j++) {
+                const char* keyword = C_KEYWORDS[j];
+                int klen = strlen(keyword);
+
+                if (strncmp(&row->chars[i], keyword, klen) == 0 && isSeparator(row->chars[i + klen])) {
+                    for (int k = 0; k < klen; k++) {
+                        row->hl[i] = HL_KEYWORD;
+                        i++;
+                    }
+                    break;
+                }
+            }
         }
     }
 }
@@ -104,6 +130,8 @@ int syntaxToColor(Highlight hl) {
         case HL_COMMENT: return (90 << 8) | 49; // grey | normal
         case HL_NUMBER: return (95 << 8) | 49;  // bright magenta | normal
         case HL_STRING: return (93 << 8) | 49;  // bright yellow | normal
+        case HL_KEYWORD: return (31 << 8) | 49; // red | normal
+        case HL_TYPE: return (96 << 8) | 49;    // bright cyan | normal
         case HL_MATCH: return (39 << 8) | 100;  // normal | grey
         default: return (39 << 8) | 49; // normal | normal
     }

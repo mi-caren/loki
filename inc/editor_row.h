@@ -10,6 +10,8 @@ typedef enum {
     HL_COMMENT,
     HL_NUMBER,
     HL_STRING,
+    HL_KEYWORD,
+    HL_TYPE,
     HL_MATCH,
 } Highlight;
 

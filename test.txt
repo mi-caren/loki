@@ -4,6 +4,9 @@ ca c p
 
     printf("ERROR CODE %d, MSG: %s\r\n", err.code, err.message);
 
+if (a > b) {
+} else {}
+
 ciao
 ciao
 (message);
