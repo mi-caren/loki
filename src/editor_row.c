@@ -30,17 +30,45 @@ static bool isSeparator(char c) {
 }
 
 void editorRowHighlightSyntax(struct EditorRow* row) {
-    bool prev_sep = true;
-    Highlight prev_hl = HL_NORMAL;
+    bool in_string = false;
+    char opening_string_quote_type = '\0';
 
     for (unsigned int i = 0; i < row->size; i++) {
         char c = row->chars[i];
+
+        bool prev_sep = i > 0 ? isSeparator(row->chars[i - 1]) : true;  // beginning of line is considered a separator
+        Highlight prev_hl = i > 0 ? row->hl[i - 1] : HL_NORMAL;
+
+        // Highlights strings
+        if (in_string) {
+            row->hl[i] = HL_STRING;
+            if (c == opening_string_quote_type) {
+                // if prev char is backsles, closing quote is escaped
+                // so it means we are still in string
+                if (i > 0 && row->chars[i - 1] == '\\') {
+                    // but if the char before \ is not \,
+                    // because it would mean we escaped backslash
+                    if (i > 1 && row->chars[i - 2] != '\\')
+                        continue;
+                }
+
+                opening_string_quote_type = '\0';
+                in_string = false;
+            }
+            continue;
+        } else {
+            if (c == '\'' || c == '"') {
+                row->hl[i] = HL_STRING;
+                in_string = true;
+                opening_string_quote_type = c;
+                continue;
+            }
+        }
+
+        // Highlights numbers
         if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) || (c == '.' && prev_hl == HL_NUMBER)) {
             row->hl[i] = HL_NUMBER;
         }
-
-        prev_sep = isSeparator(c);
-        prev_hl = row->hl[i];
     }
 }
 
@@ -57,10 +85,11 @@ void editorRowHighlightSearchResults(struct EditorRow* row) {
 
 int syntaxToColor(Highlight hl) {
     switch (hl) {
-        case HL_NORMAL: return (39 << 8) | 49;
-        case HL_NUMBER: return (95 << 8) | 49;
-        case HL_MATCH: return (39 << 8) | 100;
-        default: return (39 << 8) | 49;
+        case HL_NORMAL: return (39 << 8) | 49;  // normal | normal
+        case HL_NUMBER: return (95 << 8) | 49;  // bright magenta | normal
+        case HL_STRING: return (93 << 8) | 49;  // bright yellow | normal
+        case HL_MATCH: return (39 << 8) | 100;  // normal | grey
+        default: return (39 << 8) | 49; // normal | normal
     }
 }
 

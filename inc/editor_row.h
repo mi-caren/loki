@@ -8,6 +8,7 @@
 typedef enum {
     HL_NORMAL = 0,
     HL_NUMBER,
+    HL_STRING,
     HL_MATCH,
 } Highlight;
 
