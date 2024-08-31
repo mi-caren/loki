@@ -25,11 +25,22 @@ int editorRowResetHighlight(struct EditorRow* row) {
     return 0;
 }
 
-void editorRowUpdateSyntax(struct EditorRow* row) {
+static bool isSeparator(char c) {
+    return isspace(c) || c == '\0' || strchr(",.()+-/*=~%<>[];", c) != NULL;
+}
+
+void editorRowHighlightSyntax(struct EditorRow* row) {
+    bool prev_sep = true;
+    Highlight prev_hl = HL_NORMAL;
+
     for (unsigned int i = 0; i < row->size; i++) {
-        if (isdigit(row->chars[i])) {
+        char c = row->chars[i];
+        if (isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) {
             row->hl[i] = HL_NUMBER;
         }
+
+        prev_sep = isSeparator(c);
+        prev_hl = row->hl[i];
     }
 }
 
@@ -65,7 +76,7 @@ int editorRowRender(struct EditorRow *row)
 
     if (editorRowResetHighlight(row) == -1)
         return -1;
-    editorRowUpdateSyntax(row);
+    editorRowHighlightSyntax(row);
     if (editor.searching) {
         editorRowHighlightSearchResults(row);
     }
