@@ -35,7 +35,7 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
 
     for (unsigned int i = 0; i < row->size; i++) {
         char c = row->chars[i];
-        if (isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) {
+        if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) || (c == '.' && prev_hl == HL_NUMBER)) {
             row->hl[i] = HL_NUMBER;
         }
 
