@@ -333,7 +333,9 @@ int editorSearch(char* query) {
 }
 
 static void searchResultNext() {
-    if (editor.numrows == 0) return;
+    if (editor.numrows == 0 || editor.search_query == NULL) return;
+    editor.searching = true;
+    messageBarSet("Searching (ESC to cancel): %s", editor.search_query);
 
     unsigned int cy = editor.editing_point.cy;
     struct EditorRow* row = &editor.rows[cy];
@@ -368,7 +370,9 @@ static void searchResultNext() {
 }
 
 static void searchResultPrev() {
-    if (editor.numrows == 0) return;
+    if (editor.numrows == 0 || editor.search_query == NULL) return;
+    editor.searching = true;
+    messageBarSet("Searching (ESC to cancel): %s", editor.search_query);
 
     int cy = editor.editing_point.cy;
     struct EditorRow* row = &editor.rows[cy];
@@ -642,11 +646,7 @@ void editor_process_keypress() {
             editorInsertNewline();
             break;
         case '\x1b':
-        // We ignore the Escape key because there are many key escape sequences
-        // that we aren’t handling (such as the F1–F12 keys),
-        // and the way we wrote editorReadKey(), pressing those keys
-        // will be equivalent to pressing the Escape key
-            /* TODO */
+            editor.searching = false;
             break;
 
         default:
