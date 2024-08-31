@@ -31,7 +31,9 @@ static bool isSeparator(char c) {
 
 void editorRowHighlightSyntax(struct EditorRow* row) {
     bool in_string = false;
+    bool in_comment = false;
     char opening_string_quote_type = '\0';
+    char* single_line_comment_start = "//";
 
     for (unsigned int i = 0; i < row->size; i++) {
         char c = row->chars[i];
@@ -57,13 +59,26 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
             }
             continue;
         } else {
-            if (c == '\'' || c == '"') {
+            if (!in_comment && (c == '\'' || c == '"')) {
                 row->hl[i] = HL_STRING;
                 in_string = true;
                 opening_string_quote_type = c;
                 continue;
             }
         }
+
+        // Highlights comments
+        if (in_comment) {
+            row->hl[i] = HL_COMMENT;
+            continue;
+        } else {
+            if (strncmp(&row->chars[i], single_line_comment_start, strlen(single_line_comment_start)) == 0) {
+                row->hl[i] = HL_COMMENT;
+                in_comment = true;
+                continue;
+            }
+        }
+
 
         // Highlights numbers
         if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) || (c == '.' && prev_hl == HL_NUMBER)) {
@@ -86,6 +101,7 @@ void editorRowHighlightSearchResults(struct EditorRow* row) {
 int syntaxToColor(Highlight hl) {
     switch (hl) {
         case HL_NORMAL: return (39 << 8) | 49;  // normal | normal
+        case HL_COMMENT: return (90 << 8) | 49; // grey | normal
         case HL_NUMBER: return (95 << 8) | 49;  // bright magenta | normal
         case HL_STRING: return (93 << 8) | 49;  // bright yellow | normal
         case HL_MATCH: return (39 << 8) | 100;  // normal | grey
