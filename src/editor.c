@@ -142,8 +142,6 @@ static int editorInsertRow(unsigned int pos, char *s, size_t len)
     editor.rows[pos].render = NULL;
     editor.rows[pos].hl = NULL;
     editor.rows[pos].search_match_pos = ARRAY_NEW(ArrayUnsignedInt);
-    if (editorRowRender(&editor.rows[pos]) != 0)
-        return -1;
     editor.numrows += 1;
 
     return 0;
@@ -178,7 +176,6 @@ void editorInsertNewline() {
     editorInsertRow(editor.editing_point.cy + 1, &CURR_ROW.chars[editor.editing_point.cx], CURR_ROW.size - editor.editing_point.cx);
     CURR_ROW.chars[editor.editing_point.cx] = '\0';
     CURR_ROW.size = editor.editing_point.cx;
-    editorRowRender(&CURR_ROW);
 
     editor.editing_point.cy++;
     editor.editing_point.cx = 0;
@@ -329,8 +326,8 @@ int editorSearch(char* query) {
 
             last_pos = match_pos + 1;
         }
-        editorRowRender(row);
     }
+    editor_refresh_screen();
 
     return 0;
 }
@@ -456,10 +453,16 @@ void editor_scroll() {
 }
 
 void editorDrawRow(struct EditorRow* row, struct DynamicBuffer* dbuf) {
+    editorRowRender(row);
+
+    if (row->rsize == 0) return;
+
     unsigned int j = 0;
     unsigned int printable_chars = 0;
     char first_hl[10];
+    // I'm assuming that the firts thing in a line is a color escape sequence
     memcpy(first_hl, row->render, COLOR_SEQ_SIZE);
+
     while (j < row->rsize) {
         char c = row->render[j];
 
@@ -533,10 +536,8 @@ void editor_refresh_screen() {
     editor_scroll();
 
     struct DynamicBuffer dbuf = DBUF_INIT;
-
     // hide cursor while drawing on screen
     dbuf_append(&dbuf, HIDE_CURSOR_SEQ, HIDE_CURSOR_SEQ_SIZE);
-
     // ensure cursor is positioned top-left
     dbuf_append(&dbuf, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE);
 

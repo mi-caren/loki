@@ -34,6 +34,8 @@ void editorRowUpdateSyntax(struct EditorRow* row) {
 }
 
 void editorRowHighlightSearchResults(struct EditorRow* row) {
+    if (editor.search_query == NULL) return;
+
     ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
         unsigned int last_pos = *cur + strlen(editor.search_query);
         for (unsigned int j = *cur; j < last_pos; j++) {
@@ -133,7 +135,6 @@ void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c)
     row->size++;
     row->chars[pos] = c;
     editorSetDirty();
-    editorRowRender(row);
 }
 
 void editorRowDeleteChar(struct EditorRow* row, unsigned int pos)
@@ -142,7 +143,6 @@ void editorRowDeleteChar(struct EditorRow* row, unsigned int pos)
     memmove(&row->chars[pos], &row->chars[pos + 1], row->size - pos);
     row->size--;
     editorSetDirty();
-    editorRowRender(row);
 }
 
 void editorRowFree(struct EditorRow* row)
@@ -163,7 +163,6 @@ struct EditorRow* editorRowAppendString(struct EditorRow* row, char* s, size_t l
     row->chars = new;
     row->size += len;
     row->chars[row->size] = '\0';
-    editorRowRender(row);
     editorSetDirty();
 
     return row;
