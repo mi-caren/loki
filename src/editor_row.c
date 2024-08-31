@@ -31,10 +31,18 @@ static bool isSeparator(char c) {
 
 const char* C_KEYWORDS[] = {
     "#include", "#define",
-    "extern", "return", "sizeof",
+    "extern", "return", "sizeof", "typedef",
     "const", "static",
     "switch", "case", "if", "else",
     "for", "do", "while", "continue", "break",
+    NULL
+};
+
+const char* C_TYPES[] = {
+    "char", "int", "float", "double", "void",
+    "signed", "unsigned",
+    "short", "long",
+    "struct", "enum",
     NULL
 };
 
@@ -104,6 +112,22 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
                 if (strncmp(&row->chars[i], keyword, klen) == 0 && isSeparator(row->chars[i + klen])) {
                     for (int k = 0; k < klen; k++) {
                         row->hl[i] = HL_KEYWORD;
+                        i++;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Highlights types
+        if (prev_sep) {
+            for (int j = 0; C_TYPES[j] != NULL; j++) {
+                const char* type = C_TYPES[j];
+                int tlen = strlen(type);
+
+                if (strncmp(&row->chars[i], type, tlen) == 0 && isSeparator(row->chars[i + tlen])) {
+                    for (int k = 0; k < tlen; k++) {
+                        row->hl[i] = HL_TYPE;
                         i++;
                     }
                     break;
