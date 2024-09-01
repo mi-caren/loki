@@ -12,6 +12,8 @@ if (a > b) {
 int void //ciao
 ciao
 ciao
-(message);
+ciao ciao(message);
 upu oh bel ciao 
+
+ciao mondo()
 la ciao mondo

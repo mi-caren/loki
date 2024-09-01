@@ -10,6 +10,8 @@
 
 // #define COLOR_SEQ_SIZE 10
 // #define COLOR_SEQ_SIZE 6
+#define C_OPERATORS     "+-*/%<>=!|&"
+#define C_SEPARATORS    ",.()+-/*=~%<>[];{}"C_OPERATORS
 
 extern struct Editor editor;
 
@@ -26,11 +28,11 @@ int editorRowResetHighlight(struct EditorRow* row) {
 }
 
 static bool isSeparator(char c) {
-    return isspace(c) || c == '\0' || strchr(",.()+-/*=~%<>[];", c) != NULL;
+    return isspace(c) || c == '\0' || strchr(C_SEPARATORS, c) != NULL;
 }
 
 static bool isOperator(char c) {
-    return strchr("+-*/%<>=!|&", c) != NULL;
+    return strchr(C_OPERATORS   , c) != NULL;
 }
 
 const char* C_KEYWORDS[] = {
@@ -174,6 +176,16 @@ void editorRowHighlightSyntax(unsigned int filerow) {
             continue;
         }
 
+        // Highlights functions
+        if (c == '(' && i > 0) {
+            int j = i - 1;
+            while (j >= 0 && !isSeparator(row->chars[j])) {
+                row->hl[j] = HL_FUNCTION;
+                j--;
+            }
+            if (j != (int)(i - 1)) continue;
+        }
+
     }
 
     if (filerow == editor.view_rows + editor.rowoff - 1) {
@@ -194,14 +206,15 @@ void editorRowHighlightSearchResults(struct EditorRow* row) {
 
 int syntaxToColor(Highlight hl) {
     switch (hl) {
-        case HL_NORMAL: return (39 << 8) | 49;  // normal | normal
-        case HL_COMMENT: return (90 << 8) | 49; // grey | normal
-        case HL_NUMBER: return (95 << 8) | 49;  // bright magenta | normal
-        case HL_STRING: return (93 << 8) | 49;  // bright yellow | normal
-        case HL_KEYWORD: return (91 << 8) | 49; // bright red | normal
-        case HL_TYPE: return (96 << 8) | 49;    // bright cyan | normal
-        case HL_OPERATOR: return (91 << 8) | 49;// bright red | normal
-        case HL_MATCH: return (39 << 8) | 100;  // normal | grey
+        case HL_NORMAL: return (39 << 8) | 49;      // normal | normal
+        case HL_COMMENT: return (90 << 8) | 49;     // grey | normal
+        case HL_NUMBER: return (95 << 8) | 49;      // bright magenta | normal
+        case HL_STRING: return (93 << 8) | 49;      // bright yellow | normal
+        case HL_KEYWORD: return (91 << 8) | 49;     // bright red | normal
+        case HL_TYPE: return (96 << 8) | 49;        // bright cyan | normal
+        case HL_OPERATOR: return (91 << 8) | 49;    // bright red | normal
+        case HL_FUNCTION: return (32 << 8) | 49;    // bright green | normal
+        case HL_MATCH: return (39 << 8) | 100;      // normal | grey
         default: return (39 << 8) | 49; // normal | normal
     }
 }
