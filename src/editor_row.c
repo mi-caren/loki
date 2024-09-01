@@ -49,8 +49,11 @@ const char* C_TYPES[] = {
 void editorRowHighlightSyntax(struct EditorRow* row) {
     bool in_string = false;
     bool in_comment = false;
+    static bool in_multiline_comment = false;
     char opening_string_quote_type = '\0';
     char* single_line_comment_start = "//";
+    char* multiline_comment_start = "/*";
+    char* multiline_comment_end = "*/";
 
     for (unsigned int i = 0; i < row->size; i++) {
         char c = row->chars[i];
@@ -86,11 +89,29 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
 
         // Highlights comments
         if (in_comment) {
-            row->hl[i] = HL_COMMENT;
+            if (strncmp(&row->chars[i], multiline_comment_end, strlen(multiline_comment_end)) == 0) {
+                for (size_t k = 0; k < strlen(multiline_comment_start); k++) {
+                    row->hl[i] = HL_COMMENT;
+                    i++;
+                }
+                i--;
+                in_comment = false;
+                continue;
+            } else {
+                row->hl[i] = HL_COMMENT;
+            }
             continue;
         } else {
             if (strncmp(&row->chars[i], single_line_comment_start, strlen(single_line_comment_start)) == 0) {
                 row->hl[i] = HL_COMMENT;
+                in_comment = true;
+                continue;
+            } else if (strncmp(&row->chars[i], multiline_comment_start, strlen(multiline_comment_start)) == 0) {
+                for (size_t k = 0; k < strlen(multiline_comment_start); k++) {
+                    row->hl[i] = HL_COMMENT;
+                    i++;
+                }
+                i--;
                 in_comment = true;
                 continue;
             }
@@ -105,23 +126,27 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
 
         // Highlights keywords
         if (prev_sep) {
-            for (int j = 0; C_KEYWORDS[j] != NULL; j++) {
+            int j;
+            for (j = 0; C_KEYWORDS[j] != NULL; j++) {
                 const char* keyword = C_KEYWORDS[j];
-                int klen = strlen(keyword);
+                size_t klen = strlen(keyword);
 
                 if (strncmp(&row->chars[i], keyword, klen) == 0 && isSeparator(row->chars[i + klen])) {
-                    for (int k = 0; k < klen; k++) {
+                    for (size_t k = 0; k < klen; k++) {
                         row->hl[i] = HL_KEYWORD;
                         i++;
                     }
+                    i--;
                     break;
                 }
             }
+            if (C_KEYWORDS[j] != NULL) continue;
         }
 
         // Highlights types
         if (prev_sep) {
-            for (int j = 0; C_TYPES[j] != NULL; j++) {
+            int j;
+            for (j = 0; C_TYPES[j] != NULL; j++) {
                 const char* type = C_TYPES[j];
                 int tlen = strlen(type);
 
@@ -130,9 +155,11 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
                         row->hl[i] = HL_TYPE;
                         i++;
                     }
+                    i--;
                     break;
                 }
             }
+            if (C_KEYWORDS[j] != NULL) continue;
         }
     }
 }
@@ -154,7 +181,7 @@ int syntaxToColor(Highlight hl) {
         case HL_COMMENT: return (90 << 8) | 49; // grey | normal
         case HL_NUMBER: return (95 << 8) | 49;  // bright magenta | normal
         case HL_STRING: return (93 << 8) | 49;  // bright yellow | normal
-        case HL_KEYWORD: return (31 << 8) | 49; // red | normal
+        case HL_KEYWORD: return (91 << 8) | 49; // red | normal
         case HL_TYPE: return (96 << 8) | 49;    // bright cyan | normal
         case HL_MATCH: return (39 << 8) | 100;  // normal | grey
         default: return (39 << 8) | 49; // normal | normal
