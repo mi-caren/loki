@@ -11,8 +11,9 @@
 
 // #define COLOR_SEQ_SIZE 10
 // #define COLOR_SEQ_SIZE 6
+#define PARENTHESIS      "()[]{}"
 #define C_OPERATORS     "+-*/%<>=!|&"
-#define C_SEPARATORS    ",.()+-/*=~%<>[];{}"C_OPERATORS
+#define C_SEPARATORS    ",.+-/*=~%<>;" C_OPERATORS PARENTHESIS
 
 extern struct Editor editor;
 
@@ -34,6 +35,10 @@ static bool isSeparator(char c) {
 
 static bool isOperator(char c) {
     return strchr(C_OPERATORS   , c) != NULL;
+}
+
+static bool isParenthesis(char c) {
+    return strchr(PARENTHESIS, c);
 }
 
 const char* C_KEYWORDS[] = {
@@ -183,12 +188,19 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 
         // Highlights functions
         if (c == '(' && i > 0) {
+            row->hl[i] = HL_PARENTHESIS;
             int j = i - 1;
             while (j >= 0 && !isSeparator(row->chars[j])) {
                 row->hl[j] = HL_FUNCTION;
                 j--;
             }
             if (j != (int)(i - 1)) continue;
+        }
+
+        // Highlights parenthesis
+        if (isParenthesis(c)) {
+            row->hl[i] = HL_PARENTHESIS;
+            continue;
         }
 
     }
@@ -219,6 +231,7 @@ int syntaxToColor(Highlight hl) {
         case HL_TYPE: return (96 << 8) | 49;        // bright cyan | normal
         case HL_OPERATOR: return (91 << 8) | 49;    // bright red | normal
         case HL_FUNCTION: return (32 << 8) | 49;    // bright green | normal
+        case HL_PARENTHESIS: return (34 << 8) | 49; // bright blue | normal;
         case HL_MATCH: return (39 << 8) | 100;      // normal | grey
         default: return (39 << 8) | 49; // normal | normal
     }
