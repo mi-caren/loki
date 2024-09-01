@@ -52,6 +52,14 @@ const char* C_TYPES[] = {
     NULL
 };
 
+void highlightFill(struct EditorRow* row, unsigned int* i, Highlight val, size_t count) {
+    for (size_t k = 0; k < count; k++) {
+        row->hl[*i] = val;
+        (*i)++;
+    }
+    (*i)--;
+}
+
 void editorRowHighlightSyntax(unsigned int filerow) {
     bool in_string = false;
     bool in_comment = false;
@@ -98,11 +106,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
         // Highlights comments
         if (in_comment || in_multiline_comment) {
             if (strncmp(&row->chars[i], multiline_comment_end, strlen(multiline_comment_end)) == 0) {
-                for (size_t k = 0; k < strlen(multiline_comment_start); k++) {
-                    row->hl[i] = HL_COMMENT;
-                    i++;
-                }
-                i--;
+                highlightFill(row, &i, HL_COMMENT, strlen(multiline_comment_end));
                 in_multiline_comment = false;
                 continue;
             } else {
@@ -115,11 +119,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                 in_comment = true;
                 continue;
             } else if (strncmp(&row->chars[i], multiline_comment_start, strlen(multiline_comment_start)) == 0) {
-                for (size_t k = 0; k < strlen(multiline_comment_start); k++) {
-                    row->hl[i] = HL_COMMENT;
-                    i++;
-                }
-                i--;
+                highlightFill(row, &i, HL_COMMENT, strlen(multiline_comment_start));
                 in_multiline_comment = true;
                 continue;
             }
@@ -140,11 +140,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                 size_t klen = strlen(keyword);
 
                 if (strncmp(&row->chars[i], keyword, klen) == 0 && isSeparator(row->chars[i + klen])) {
-                    for (size_t k = 0; k < klen; k++) {
-                        row->hl[i] = HL_KEYWORD;
-                        i++;
-                    }
-                    i--;
+                    highlightFill(row, &i, HL_KEYWORD, klen);
                     break;
                 }
             }
@@ -159,11 +155,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                 int tlen = strlen(type);
 
                 if (strncmp(&row->chars[i], type, tlen) == 0 && isSeparator(row->chars[i + tlen])) {
-                    for (int k = 0; k < tlen; k++) {
-                        row->hl[i] = HL_TYPE;
-                        i++;
-                    }
-                    i--;
+                    highlightFill(row, &i, HL_TYPE, tlen);
                     break;
                 }
             }
