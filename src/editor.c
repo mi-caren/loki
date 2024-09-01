@@ -460,6 +460,12 @@ void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf) {
     editorRowRender(filerow);
 
     struct EditorRow* row = &editor.rows[filerow];
+
+    // Line number
+    char buf[32];
+    int len = sprintf(buf, "\x1b[30;100m% 4d", filerow + 1);
+    dbuf_append(dbuf, buf, len);
+
     if (row->rsize == 0) return;
 
     unsigned int j = 0;
@@ -567,7 +573,7 @@ void editor_refresh_screen() {
 
 
 void editor_cx_to_rx() {
-    editor.rx = 0;
+    editor.rx = 4;
     unsigned int i;
     for (i = 0; i < editor.editing_point.cx; i++) {
         if (CURR_ROW.chars[i] == '\t') {

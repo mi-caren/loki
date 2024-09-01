@@ -8,6 +8,7 @@ ca c p
 */
 
 #include <stdio.h>
+#define CACA(CACA)
 
 /*
 	bella funzioncina carina

@@ -1,6 +1,7 @@
 #ifndef TERMINAL_H
 #define TERMINAL_H
 
+#include <termios.h>
 
 #define WRITE_SEQ(SEQ)                          write(STDOUT_FILENO, SEQ##_SEQ, SEQ##_SEQ_SIZE)
 
