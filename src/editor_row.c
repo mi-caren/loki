@@ -46,7 +46,7 @@ const char* C_TYPES[] = {
     NULL
 };
 
-void editorRowHighlightSyntax(struct EditorRow* row) {
+void editorRowHighlightSyntax(unsigned int filerow) {
     bool in_string = false;
     bool in_comment = false;
     static bool in_multiline_comment = false;
@@ -54,6 +54,8 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
     char* single_line_comment_start = "//";
     char* multiline_comment_start = "/*";
     char* multiline_comment_end = "*/";
+
+    struct EditorRow* row = &editor.rows[filerow];
 
     for (unsigned int i = 0; i < row->size; i++) {
         char c = row->chars[i];
@@ -79,7 +81,7 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
             }
             continue;
         } else {
-            if (!in_comment && (c == '\'' || c == '"')) {
+            if (!(in_comment || in_multiline_comment) && (c == '\'' || c == '"')) {
                 row->hl[i] = HL_STRING;
                 in_string = true;
                 opening_string_quote_type = c;
@@ -88,14 +90,14 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
         }
 
         // Highlights comments
-        if (in_comment) {
+        if (in_comment || in_multiline_comment) {
             if (strncmp(&row->chars[i], multiline_comment_end, strlen(multiline_comment_end)) == 0) {
                 for (size_t k = 0; k < strlen(multiline_comment_start); k++) {
                     row->hl[i] = HL_COMMENT;
                     i++;
                 }
                 i--;
-                in_comment = false;
+                in_multiline_comment = false;
                 continue;
             } else {
                 row->hl[i] = HL_COMMENT;
@@ -112,7 +114,7 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
                     i++;
                 }
                 i--;
-                in_comment = true;
+                in_multiline_comment = true;
                 continue;
             }
         }
@@ -162,6 +164,10 @@ void editorRowHighlightSyntax(struct EditorRow* row) {
             if (C_KEYWORDS[j] != NULL) continue;
         }
     }
+
+    if (filerow == editor.view_rows + editor.rowoff - 1) {
+        in_multiline_comment = false;
+    }
 }
 
 void editorRowHighlightSearchResults(struct EditorRow* row) {
@@ -188,8 +194,9 @@ int syntaxToColor(Highlight hl) {
     }
 }
 
-int editorRowRender(struct EditorRow *row)
+int editorRowRender(unsigned int filerow)
 {
+    struct EditorRow* row = &editor.rows[filerow];
     unsigned int i;
     unsigned int tabs = 0;
     for (i = 0; i < row->size; i++) {
@@ -200,7 +207,7 @@ int editorRowRender(struct EditorRow *row)
 
     if (editorRowResetHighlight(row) == -1)
         return -1;
-    editorRowHighlightSyntax(row);
+    editorRowHighlightSyntax(filerow);
     if (editor.searching) {
         editorRowHighlightSearchResults(row);
     }

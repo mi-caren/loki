@@ -26,7 +26,7 @@ struct EditorRow {
     ArrayUnsignedInt search_match_pos;
 };
 
-int editorRowRender(struct EditorRow *row);
+int editorRowRender(unsigned int filerow);
 void editorRowFree(struct EditorRow* row);
 void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c);
 void editorRowDeleteChar(struct EditorRow* row, unsigned int pos);

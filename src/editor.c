@@ -456,9 +456,10 @@ void editor_scroll() {
     }
 }
 
-void editorDrawRow(struct EditorRow* row, struct DynamicBuffer* dbuf) {
-    editorRowRender(row);
+void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf) {
+    editorRowRender(filerow);
 
+    struct EditorRow* row = &editor.rows[filerow];
     if (row->rsize == 0) return;
 
     unsigned int j = 0;
@@ -521,8 +522,9 @@ void editor_draw_rows(struct DynamicBuffer *dbuf) {
                 dbuf_append(dbuf, "~", 1);
             }
         } else {
-            editorDrawRow(&editor.rows[filerow], dbuf);
+            editorDrawRow(filerow, dbuf);
         }
+
         dbuf_append(dbuf, "\x1b[039;049m", COLOR_SEQ_SIZE);
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line

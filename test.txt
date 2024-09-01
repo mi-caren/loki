@@ -1,10 +1,10 @@
 /* ciao mondo */ cacca
 cac 1
- ciao    
+/* ciao    
 ca c p
 
     printf("ERROR CODE %d, MSG: %s\r\n", err.code, err.message);
-
+*/
 // ciao mondo
 if (a > b) {
 } else {}
