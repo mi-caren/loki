@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,6 +77,18 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 
         bool prev_sep = i > 0 ? isSeparator(row->chars[i - 1]) : true;  // beginning of line is considered a separator
         Highlight prev_hl = i > 0 ? row->hl[i - 1] : HL_NORMAL;
+
+        // Highlights includes
+        char* include_match = strstr(row->chars, "#include <");
+        if (c == '<' && include_match) {
+            row->hl[i] = HL_STRING;
+            in_string = true;
+            continue;
+        } else if (c == '>' && include_match) {
+            row->hl[i] = HL_STRING;
+            in_string = false;
+            continue;
+        }
 
         // Highlights strings
         if (in_string) {

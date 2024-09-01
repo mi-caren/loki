@@ -6,6 +6,21 @@ ca c p
 
     printf("ERROR CODE %d, MSG: %s\r\n", err.code, err.message);
 */
+
+#include <stdio.h>
+
+/*
+	bella funzioncina carina
+*/
+int add(int a, int b) {
+	return a + b;
+}
+
+int main() {
+	printf("%d + %d = %d\n", 2, 4, add(2, 4));
+	return 0;
+}
+
 // ciao mondo
 if (a > b) {
 } else {}
@@ -17,3 +32,6 @@ upu oh bel ciao
 
 ciao mondo()
 la ciao mondo
+
+
+
