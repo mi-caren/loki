@@ -12,6 +12,7 @@ typedef enum {
     HL_STRING,
     HL_KEYWORD,
     HL_TYPE,
+    HL_OPERATOR,
     HL_MATCH,
 } Highlight;
 

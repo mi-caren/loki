@@ -29,6 +29,10 @@ static bool isSeparator(char c) {
     return isspace(c) || c == '\0' || strchr(",.()+-/*=~%<>[];", c) != NULL;
 }
 
+static bool isOperator(char c) {
+    return strchr("+-*/%<>=!|&", c) != NULL;
+}
+
 const char* C_KEYWORDS[] = {
     "#include", "#define",
     "extern", "return", "sizeof", "typedef",
@@ -39,7 +43,7 @@ const char* C_KEYWORDS[] = {
 };
 
 const char* C_TYPES[] = {
-    "char", "int", "float", "double", "void",
+    "char", "int", "float", "double", "bool", "void",
     "signed", "unsigned",
     "short", "long",
     "struct", "enum",
@@ -161,8 +165,15 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                     break;
                 }
             }
-            if (C_KEYWORDS[j] != NULL) continue;
+            if (C_TYPES[j] != NULL) continue;
         }
+
+        // Highlights operators
+        if (isOperator(c)) {
+            row->hl[i] = HL_OPERATOR;
+            continue;
+        }
+
     }
 
     if (filerow == editor.view_rows + editor.rowoff - 1) {
@@ -187,8 +198,9 @@ int syntaxToColor(Highlight hl) {
         case HL_COMMENT: return (90 << 8) | 49; // grey | normal
         case HL_NUMBER: return (95 << 8) | 49;  // bright magenta | normal
         case HL_STRING: return (93 << 8) | 49;  // bright yellow | normal
-        case HL_KEYWORD: return (91 << 8) | 49; // red | normal
+        case HL_KEYWORD: return (91 << 8) | 49; // bright red | normal
         case HL_TYPE: return (96 << 8) | 49;    // bright cyan | normal
+        case HL_OPERATOR: return (91 << 8) | 49;// bright red | normal
         case HL_MATCH: return (39 << 8) | 100;  // normal | grey
         default: return (39 << 8) | 49; // normal | normal
     }

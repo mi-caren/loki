@@ -1,3 +1,4 @@
+int c = a + b;
 /* ciao mondo */ cacca
 cac 1
 /* ciao    
