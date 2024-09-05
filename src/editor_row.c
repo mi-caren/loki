@@ -221,11 +221,12 @@ void editorRowHighlightSearchResults(struct EditorRow* row) {
     }
 }
 
-void editorRowHighlightSelection(struct EditorRow* row) {
+void editorRowHighlightSelection(unsigned int filerow) {
     if (!editor.selecting) return;
 
     static bool in_selection = false;
     static char* selection_end = NULL;
+    struct EditorRow* row = &editor.rows[filerow];
 
     for (unsigned int i = 0; i < row->size; i++) {
         char* c = &row->chars[i];
@@ -234,18 +235,27 @@ void editorRowHighlightSelection(struct EditorRow* row) {
                 in_selection = false;
                 selection_end = NULL;
             }
-            row->hl[i] = HL_SELECT;
+            row->hl[i] = HL_SELECTION;
         } else {
             if (c == editor.selection_start) {
                 selection_end = &CURR_CHAR;
                 in_selection = true;
-                row->hl[i] = HL_SELECT;
+                row->hl[i] = HL_SELECTION;
             } else if (c == &CURR_CHAR) {
                 selection_end = editor.selection_start;
                 in_selection = true;
-                row->hl[i] = HL_SELECT;
+                row->hl[i] = HL_SELECTION;
+            }
+
+            if (editor.selection_start == &CURR_CHAR) {
+                in_selection = false;
+                selection_end = NULL;
             }
         }
+    }
+
+    if (filerow == editor.view_rows + editor.rowoff - 1) {
+        in_selection = false;
     }
 }
 
@@ -261,7 +271,7 @@ int syntaxToColor(Highlight hl) {
         case HL_FUNCTION: return (32 << 8) | 49;    // bright green | normal
         case HL_PARENTHESIS: return (34 << 8) | 49; // bright blue | normal;
         case HL_MATCH: return (39 << 8) | 100;      // normal | grey
-        case HL_SELECT: return (39 << 8) | 104;     // normal | bright blue;
+        case HL_SELECTION: return (39 << 8) | 104;     // normal | bright blue;
         default: return (39 << 8) | 49; // normal | normal
     }
 }
@@ -283,7 +293,7 @@ int editorRowRender(unsigned int filerow)
     if (editor.searching) {
         editorRowHighlightSearchResults(row);
     }
-    editorRowHighlightSelection(row);
+    editorRowHighlightSelection(filerow);
 
     Highlight prev_hl = -1;
     unsigned int hl_escape_seq_size = 0;

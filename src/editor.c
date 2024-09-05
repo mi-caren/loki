@@ -93,7 +93,7 @@ int editor_read_key() {
                             case 'C': return CTRL_ARROW_RIGHT;
                             case 'D': return CTRL_ARROW_LEFT;
                         }
-                    } else if (seq[3] == '1') {
+                    } else if (seq[3] == '2') {
                         switch (seq[4]) {
                             case 'A': return SHIFT_ARROW_UP;
                             case 'B': return SHIFT_ARROW_DOWN;
