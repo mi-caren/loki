@@ -153,6 +153,10 @@ void editingPointMove(enum EditorKey key) {
         case ARROW_LEFT:
         case ARROW_DOWN:
         case ARROW_RIGHT:
+        case SHIFT_ARROW_UP:
+        case SHIFT_ARROW_LEFT:
+        case SHIFT_ARROW_DOWN:
+        case SHIFT_ARROW_RIGHT:
             editingPointMoveToChar(editorKeyToDirection(key));
             break;
 

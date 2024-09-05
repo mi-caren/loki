@@ -46,6 +46,9 @@ struct Editor {
 
     bool searching;
     char* search_query;
+
+    bool selecting;
+    char* selection_start; // pointer to a char in editor.rows[i].chars
 };
 
 

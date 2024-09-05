@@ -75,15 +75,19 @@ Direction editorKeyToDirection(enum EditorKey key) {
     switch (key) {
         case CTRL_ARROW_UP:
         case ARROW_UP:
+        case SHIFT_ARROW_UP:
             return Up;
         case CTRL_ARROW_DOWN:
         case ARROW_DOWN:
+        case SHIFT_ARROW_DOWN:
             return Down;
         case CTRL_ARROW_LEFT:
         case ARROW_LEFT:
+        case SHIFT_ARROW_LEFT:
             return Left;
         case CTRL_ARROW_RIGHT:
         case ARROW_RIGHT:
+        case SHIFT_ARROW_RIGHT:
             return Right;
         default:
             die("editor/editorKeyToDirection");

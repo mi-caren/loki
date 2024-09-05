@@ -16,6 +16,7 @@ typedef enum {
     HL_FUNCTION,
     HL_PARENTHESIS,
     HL_MATCH,
+    HL_SELECT,
 } Highlight;
 
 struct EditorRow {

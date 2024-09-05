@@ -1,3 +1,5 @@
 kilo
 valgrind.txt
 bin/*
+test.txt
+.vscode

@@ -260,6 +260,7 @@ struct DynamicBuffer {
 #define CTRL_KEY(k)      ((k) & 0x1f)
 #define COLOR_SEQ_SIZE 10
 
+#define SHIFT_KEY(c)    (c == SHIFT_ARROW_UP || c == SHIFT_ARROW_DOWN || c == SHIFT_ARROW_LEFT || c == SHIFT_ARROW_RIGHT)
 
 typedef enum {
     Up,
@@ -284,6 +285,11 @@ enum EditorKey {
     CTRL_ARROW_DOWN,
     CTRL_ARROW_RIGHT,
     CTRL_ARROW_LEFT,
+
+    SHIFT_ARROW_UP,
+    SHIFT_ARROW_DOWN,
+    SHIFT_ARROW_RIGHT,
+    SHIFT_ARROW_LEFT,
 };
 
 void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len);

@@ -43,3 +43,15 @@
 
 * ctrl-g
 	go to line number
+
+* render trailing spaces
+
+* show modified and new lines by colouring line number
+
+* quando si cerca, mostrare il numero di match trovati nella message bar
+
+* control enter per creare una nuova riga sotto
+
+* creare un editor key NO_OP, in caso non venga riconosciuta una escape sequence invece di ritornare semplicemente '\x1b', che ha n significato per l'edior
+
+* fare in modo che le editor keys siano fatte in modo da confrontarle con delle flag per capire se c'è qualche modificatore premuto

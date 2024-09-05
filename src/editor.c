@@ -93,6 +93,13 @@ int editor_read_key() {
                             case 'C': return CTRL_ARROW_RIGHT;
                             case 'D': return CTRL_ARROW_LEFT;
                         }
+                    } else if (seq[3] == '1') {
+                        switch (seq[4]) {
+                            case 'A': return SHIFT_ARROW_UP;
+                            case 'B': return SHIFT_ARROW_DOWN;
+                            case 'C': return SHIFT_ARROW_RIGHT;
+                            case 'D': return SHIFT_ARROW_LEFT;
+                        }
                     }
                 }
             } else {
@@ -609,6 +616,10 @@ static void editorQuit()
 void editor_process_keypress() {
     int c = editor_read_key();
 
+    if (!SHIFT_KEY(c)) {
+        editor.selecting = false;
+    }
+
     switch (c) {
         case CTRL_KEY('q'):
             editorQuit();
@@ -641,6 +652,18 @@ void editor_process_keypress() {
         case CTRL_ARROW_DOWN:
         case CTRL_ARROW_LEFT:
         case CTRL_ARROW_RIGHT:
+            editingPointMove(c);
+            break;
+
+        case SHIFT_ARROW_UP:
+        case SHIFT_ARROW_DOWN:
+        case SHIFT_ARROW_RIGHT:
+        case SHIFT_ARROW_LEFT:
+            if (!editor.selecting) {
+                editor.selection_start = &CURR_CHAR;
+                editor.selecting = true;
+            }
+
             editingPointMove(c);
             break;
 
@@ -688,6 +711,9 @@ void init_editor(int height) {
 
     editor.searching = false;
     editor.search_query = NULL;
+
+    editor.selecting = false;
+    editor.selection_start = NULL;
 
     if (height < 0) {
         editor.view_rows = 0;
