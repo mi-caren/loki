@@ -228,23 +228,26 @@ void editorRowHighlightSelection(unsigned int filerow) {
     static char* selection_end = NULL;
     struct EditorRow* row = &editor.rows[filerow];
 
-    for (unsigned int i = 0; i < row->size; i++) {
+    for (unsigned int i = 0; i <= row->size; i++) {
         char* c = &row->chars[i];
         if (in_selection) {
             if (c == selection_end) {
                 in_selection = false;
                 selection_end = NULL;
             }
-            row->hl[i] = HL_SELECTION;
+            if (i < row->size)
+                row->hl[i] = HL_SELECTION;
         } else {
             if (c == editor.selection_start) {
                 selection_end = &CURR_CHAR;
                 in_selection = true;
-                row->hl[i] = HL_SELECTION;
+                if (i < row->size)
+                    row->hl[i] = HL_SELECTION;
             } else if (c == &CURR_CHAR) {
                 selection_end = editor.selection_start;
                 in_selection = true;
-                row->hl[i] = HL_SELECTION;
+                if (i < row->size)
+                    row->hl[i] = HL_SELECTION;
             }
 
             if (editor.selection_start == &CURR_CHAR) {

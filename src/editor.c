@@ -580,7 +580,7 @@ void editor_refresh_screen() {
 
 
 void editor_cx_to_rx() {
-    editor.rx = 4;
+    editor.rx = 4;  // 4 chars of line number
     unsigned int i;
     for (i = 0; i < editor.editing_point.cx; i++) {
         if (CURR_ROW.chars[i] == '\t') {

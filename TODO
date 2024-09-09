@@ -52,6 +52,15 @@
 
 * control enter per creare una nuova riga sotto
 
-* creare un editor key NO_OP, in caso non venga riconosciuta una escape sequence invece di ritornare semplicemente '\x1b', che ha n significato per l'edior
+PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una escape sequence invece di ritornare semplicemente '\x1b', che ha n significato per l'edior
 
 * fare in modo che le editor keys siano fatte in modo da confrontarle con delle flag per capire se c'è qualche modificatore premuto
+
+* creare un enum per i colori:
+	FG_BRIGHT_BLUE = 34 << 8
+	BG_BRIGHt_BLUE = 104
+
+* supportare utf-8: tipo la e accentata sono 2 bytes
+
+* c'e' un problema con le linee troppo lunghe: non viene tagliata e wrappa nella riga successiva. vedi PROBLEMA
+
