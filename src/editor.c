@@ -100,6 +100,11 @@ int editor_read_key() {
                             case 'C': return SHIFT_ARROW_RIGHT;
                             case 'D': return SHIFT_ARROW_LEFT;
                         }
+                    } else if (seq[3] == '6') {
+                        switch (seq[4]) {
+                            case 'C': return CTRL_SHIFT_ARROW_RIGHT;
+                            case 'D': return CTRL_SHIFT_ARROW_LEFT;
+                        }
                     }
                 }
             } else {
@@ -659,6 +664,8 @@ void editor_process_keypress() {
         case SHIFT_ARROW_DOWN:
         case SHIFT_ARROW_RIGHT:
         case SHIFT_ARROW_LEFT:
+        case CTRL_SHIFT_ARROW_RIGHT:
+        case CTRL_SHIFT_ARROW_LEFT:
             if (!editor.selecting) {
                 editor.selection_start = &CURR_CHAR;
                 editor.selecting = true;

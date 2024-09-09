@@ -84,10 +84,12 @@ Direction editorKeyToDirection(enum EditorKey key) {
         case CTRL_ARROW_LEFT:
         case ARROW_LEFT:
         case SHIFT_ARROW_LEFT:
+        case CTRL_SHIFT_ARROW_LEFT:
             return Left;
         case CTRL_ARROW_RIGHT:
         case ARROW_RIGHT:
         case SHIFT_ARROW_RIGHT:
+        case CTRL_SHIFT_ARROW_RIGHT:
             return Right;
         default:
             die("editor/editorKeyToDirection");

@@ -166,6 +166,8 @@ void editingPointMove(enum EditorKey key) {
             break;
         case CTRL_ARROW_RIGHT:
         case CTRL_ARROW_LEFT:
+        case CTRL_SHIFT_ARROW_RIGHT:
+        case CTRL_SHIFT_ARROW_LEFT:
             editingPointMoveToWord(editorKeyToDirection(key));
             break;
         default:
