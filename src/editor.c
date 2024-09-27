@@ -618,6 +618,12 @@ static void editorQuit()
     if (quit) editorCleanExit();
 }
 
+// static void editorCopy() {
+//     if (editor.selecting) {
+//         if ()
+//     }
+// }
+
 void editor_process_keypress() {
     int c = editor_read_key();
 
@@ -641,6 +647,8 @@ void editor_process_keypress() {
         case CTRL_KEY('p'):
             searchResultPrev();
             break;
+        case CTRL_KEY('c'):
+            // editorCopy();
         case CTRL_KEY('l'):
             /* TODO */
             break;

@@ -5,6 +5,7 @@
 #include <time.h>
 #include <stdbool.h>
 
+#include "editing_point.h"
 #include "utils.h"
 
 
@@ -19,11 +20,6 @@
 #define DEFAULT_EDITING_POINTS_SIZE    128
 #define LAST_SEARCH_RESULT             ( editor.search_result.editing_points[editor.search_result.len - 1] )
 
-
-struct EditingPoint {
-    unsigned int cx;
-    unsigned int cy;
-};
 
 struct Editor {
     int view_rows;

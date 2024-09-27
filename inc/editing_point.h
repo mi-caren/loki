@@ -3,6 +3,11 @@
 
 #include "utils.h"
 
+struct EditingPoint {
+    unsigned int cx;
+    unsigned int cy;
+};
+
 void editingPointMove(enum EditorKey key);
 
 #endif
