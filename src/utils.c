@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "utils.h"
+#include "terminal.h"
 
 
 extern void die_error(Error err);

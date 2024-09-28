@@ -1,29 +1,48 @@
 CC = gcc
 SHARED_FLAGS = -Wall -Wextra -pedantic -Iinc
 CFLAGS = $(SHARED_FLAGS) -g
-SRCS = $(wildcard src/*.c)
-OBJS = $(patsubst src/%.c, bin/%.o, $(SRCS))
 
+SRCDIR=src
+OBJDIR=bin
+SRCS = $(wildcard $(SRCDIR)/*.c)
+OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
 
-kilo: $(OBJS)
+TESTDIR = tests
+TESTS = $(wildcard $(TESTDIR)/*.c)
+TESTBINS = $(patsubst $(TESTDIR)/%.c, $(TESTDIR)/bin/%, $(TESTS))
+
+kilo: $(OBJDIR) $(OBJS)
 	$(CC) $(OBJS) -o $@
-
 
 release: CFLAGS = $(SHARED_FLAGS) -O3
 release: clean
 release: kilo
 
-bin/%.o: src/%.c
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-run: bin/kilo
-	./bin/kilo
+
+# TESTS
+test: $(OBJDIR) $(OBJS) $(TESTDIR)/bin $(TESTBINS)
+	@for test in $(TESTBINS) ; do ./$$test ; done
+
+$(TESTDIR)/bin:
+	mkdir -p $(TESTDIR)/bin
+
+$(TESTDIR)/bin/%: $(TESTDIR)/%.c
+	$(CC) $(CFLAGS) $< $(filter-out $(OBJDIR)/kilo.o, $(OBJS)) -o $@
+
 
 pre:
 	$(CC) $(CFLAGS) $(SRCS) -E
 
-bin/static-kilo: $(SRCS)
+$(OBJDIR)/static-kilo: $(SRCS)
 	$(CC) $(CFLAGS) $(SRCS) -static -o $@
+
+
 
 clean:
 	rm -f kilo

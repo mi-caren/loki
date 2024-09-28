@@ -54,4 +54,7 @@ void disable_raw_mode();
 int get_cursor_position(int *rows, int *cols);
 void init_terminal();
 
+
+extern struct Terminal terminal;
+
 #endif

@@ -58,4 +58,7 @@ int editor_read_key();
 void editorSetDirty();
 int editorSearch(char* query);
 
+
+extern struct Editor editor;
+
 #endif

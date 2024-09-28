@@ -25,11 +25,7 @@
 
 #define KILO_VERSION     "0.0.1"
 
-
-extern struct Editor editor;
-extern struct Terminal terminal;
-extern void die(const char *s);
-
+struct Editor editor;
 
 // static void editorRxToCx();
 void editor_cx_to_rx();
@@ -42,6 +38,17 @@ void die_error(Error err) {
     WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
 
     printf("ERROR CODE %d, MSG: %s\r\n", err.code, err.message);
+    exit(1);
+}
+
+/*
+ * Print error message and exit with 1
+ */
+void die(const char *s) {
+    WRITE_SEQ(CLEAR_SCREEN);
+    WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
+
+    perror(s);
     exit(1);
 }
 

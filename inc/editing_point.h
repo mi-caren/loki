@@ -9,6 +9,8 @@
 #define EDITING_POINT_BIT_SIZE (32)
 #define EDITING_POINT_ROW_BIT_SIZE (24) // max number of rows in a file: ~16 millions
 #define EDITING_POINT_COL_BIT_SIZE (8)  // max row length: 256
+#define EDITING_POINT_MAX_ROWS (~(~0u << EDITING_POINT_ROW_BIT_SIZE))
+#define EDITING_POINT_MAX_COLS (~(~0u << EDITING_POINT_COL_BIT_SIZE))
 
 typedef uint32_t EditingPoint;
 

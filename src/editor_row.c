@@ -15,7 +15,6 @@
 #define C_OPERATORS     "+-*/%<>=!|&"
 #define C_SEPARATORS    ",.+-/*=~%<>;" C_OPERATORS PARENTHESIS
 
-extern struct Editor editor;
 
 int editorRowResetHighlight(struct EditorRow* row) {
     if (row->size == 0) return 0;   // realloc sometimes throws double free() error if called with size: 0

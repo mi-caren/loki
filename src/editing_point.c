@@ -3,7 +3,6 @@
 #include "editor_row.h"
 #include "utils.h"
 
-extern struct Editor editor;
 
 /* Checks if editing point is at the End Of File */
 static inline bool editingPointIsEOF() {

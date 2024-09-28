@@ -13,8 +13,6 @@
 
 #define PROMPT_CURSOR    "\033[5m_\033[0m"
 
-extern struct Editor editor;
-extern struct Terminal terminal;
 
 
 /* MESSAGE BAR */

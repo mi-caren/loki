@@ -1,14 +1,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "editor.h"
 #include "terminal.h"
-
-extern struct Editor editor;
-extern struct Terminal terminal;
-extern void die(const char *s);
+#include "utils.h"
 
 
+struct Terminal terminal;
 
 /*
  * Legge gli attributi del terminale,
