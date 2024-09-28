@@ -9,11 +9,11 @@
 #include "utils.h"
 
 
-#define CURR_ROW                editor.rows[editor.editing_point.cy]
-#define NEXT_ROW                editor.rows[editor.editing_point.cy + 1]
-#define PREV_ROW                editor.rows[editor.editing_point.cy - 1]
+#define CURR_ROW                editor.rows[getRow(editor.editing_point)]
+#define NEXT_ROW                editor.rows[getRow(editor.editing_point) + 1]
+#define PREV_ROW                editor.rows[getRow(editor.editing_point) - 1]
 
-#define CURR_CHAR               CURR_ROW.chars[editor.editing_point.cx]
+#define CURR_CHAR               CURR_ROW.chars[getCol(editor.editing_point)]
 
 #define STATUS_BAR_ROW          ( editor.view_rows + 1 )
 
@@ -24,7 +24,7 @@
 struct Editor {
     int view_rows;
 
-    struct EditingPoint editing_point;
+    EditingPoint editing_point;
     unsigned int rx;
 
     unsigned int numrows;

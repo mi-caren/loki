@@ -176,8 +176,8 @@ void editorInsertChar(char c) {
     if (editor.numrows == 0) {
         editorInsertRow(editor.numrows, "", 0);
     }
-    editorRowInsertChar(&CURR_ROW, editor.editing_point.cx, c);
-    editor.editing_point.cx++;
+    editorRowInsertChar(&CURR_ROW, getCol(editor.editing_point), c);
+    incCol(&editor.editing_point);
 }
 
 void editorInsertNewline() {
@@ -185,27 +185,27 @@ void editorInsertNewline() {
         editorInsertRow(0, "", 0);
     }
 
-    editorInsertRow(editor.editing_point.cy + 1, &CURR_ROW.chars[editor.editing_point.cx], CURR_ROW.size - editor.editing_point.cx);
-    CURR_ROW.chars[editor.editing_point.cx] = '\0';
-    CURR_ROW.size = editor.editing_point.cx;
+    editorInsertRow(getRow(editor.editing_point) + 1, &CURR_ROW.chars[getCol(editor.editing_point)], CURR_ROW.size - getCol(editor.editing_point));
+    CURR_ROW.chars[getCol(editor.editing_point)] = '\0';
+    CURR_ROW.size = getCol(editor.editing_point);
 
-    editor.editing_point.cy++;
-    editor.editing_point.cx = 0;
+    incRow(&editor.editing_point);
+    setCol(&editor.editing_point, 0);
 }
 
 void editorDeleteChar() {
     if (editor.numrows == 0) return;
-    if (editor.editing_point.cx == 0 && editor.editing_point.cy == 0) return;
+    if (getCol(editor.editing_point) == 0 && getRow(editor.editing_point) == 0) return;
 
-    if (editor.editing_point.cx > 0) {
-        editorRowDeleteChar(&CURR_ROW, editor.editing_point.cx - 1);
-        editor.editing_point.cx--;
+    if (getCol(editor.editing_point) > 0) {
+        editorRowDeleteChar(&CURR_ROW, getCol(editor.editing_point) - 1);
+        decCol(&editor.editing_point);
     } else {
         editingPointMove(ARROW_LEFT);
         if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
-            messageBarSet("Unable to delete char at %d, %d", editor.editing_point.cx - 1, editor.editing_point.cy);
+            messageBarSet("Unable to delete char at %d, %d", getCol(editor.editing_point) - 1, getRow(editor.editing_point));
         }
-        editorDeleteRow(editor.editing_point.cy + 1);
+        editorDeleteRow(getRow(editor.editing_point) + 1);
     }
 }
 
@@ -349,13 +349,13 @@ static void searchResultNext() {
     editor.searching = true;
     messageBarSet("Searching (ESC to cancel): %s", editor.search_query);
 
-    unsigned int cy = editor.editing_point.cy;
+    unsigned int cy = getRow(editor.editing_point);
     struct EditorRow* row = &editor.rows[cy];
     // First search in current line
     ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
-        if (*cur > editor.editing_point.cx) {
-            editor.editing_point.cx = *cur;
-            editor.editing_point.cy = cy;
+        if (*cur > getCol(editor.editing_point)) {
+            setCol(&editor.editing_point, *cur);
+            setRow(&editor.editing_point, cy);
             return;
         }
     }
@@ -364,18 +364,18 @@ static void searchResultNext() {
     for (cy++; cy < editor.numrows; cy++) {
         row = &editor.rows[cy];
         if (row->search_match_pos.len > 0) {
-            editor.editing_point.cy = cy;
-            editor.editing_point.cx = row->search_match_pos.ptr[0];
+            setRow(&editor.editing_point, cy);
+            setCol(&editor.editing_point, row->search_match_pos.ptr[0]);
             return;
         }
     }
 
     // Then search from first line to current line
-    for (cy = 0; cy <= editor.editing_point.cy; cy++) {
+    for (cy = 0; cy <= getRow(editor.editing_point); cy++) {
         row = &editor.rows[cy];
         if (row->search_match_pos.len > 0) {
-            editor.editing_point.cy = cy;
-            editor.editing_point.cx = row->search_match_pos.ptr[0];
+            setRow(&editor.editing_point, cy);
+            setCol(&editor.editing_point, row->search_match_pos.ptr[0]);
             return;
         }
     }
@@ -386,13 +386,13 @@ static void searchResultPrev() {
     editor.searching = true;
     messageBarSet("Searching (ESC to cancel): %s", editor.search_query);
 
-    int cy = editor.editing_point.cy;
+    int cy = getRow(editor.editing_point);
     struct EditorRow* row = &editor.rows[cy];
     // First search in current line
     ARRAY_FOR_EACH_UINT_REV(&row->search_match_pos) {
-        if (*cur < editor.editing_point.cx) {
-            editor.editing_point.cx = *cur;
-            editor.editing_point.cy = cy;
+        if (*cur < getCol(editor.editing_point)) {
+            setCol(&editor.editing_point, *cur);
+            setRow(&editor.editing_point, cy);
             return;
         }
     }
@@ -401,18 +401,18 @@ static void searchResultPrev() {
     for (cy--; cy >= 0; cy--) {
         row = &editor.rows[cy];
         if (row->search_match_pos.len > 0) {
-            editor.editing_point.cy = cy;
-            editor.editing_point.cx = row->search_match_pos.ptr[row->search_match_pos.len - 1];
+            setRow(&editor.editing_point, cy);
+            setCol(&editor.editing_point, row->search_match_pos.ptr[row->search_match_pos.len - 1]);
             return;
         }
     }
 
     // Then search from last line to current line
-    for (cy = editor.numrows - 1; cy >= (int)editor.editing_point.cy; cy--) {
+    for (cy = editor.numrows - 1; cy >= (int)getRow(editor.editing_point); cy--) {
         row = &editor.rows[cy];
         if (row->search_match_pos.len > 0) {
-            editor.editing_point.cy = cy;
-            editor.editing_point.cx = row->search_match_pos.ptr[row->search_match_pos.len - 1];
+            setRow(&editor.editing_point, cy);
+            setCol(&editor.editing_point, row->search_match_pos.ptr[row->search_match_pos.len - 1]);
             return;
         }
     }
@@ -436,7 +436,7 @@ int editorFindCallback(char* query, int key) {
 }
 
 void editorFind() {
-    struct EditingPoint prev_editing_point = editor.editing_point;
+    EditingPoint prev_editing_point = editor.editing_point;
     unsigned int prev_coloff = editor.coloff;
     unsigned int prev_rowoff = editor.rowoff;
     char* prev_query = editor.search_query;
@@ -461,10 +461,10 @@ void editor_scroll() {
     } else if (editor.rx >= editor.coloff + terminal.screencols) {
         editor.coloff = editor.rx - terminal.screencols + 1;
     }
-    if (editor.editing_point.cy < editor.rowoff) {
-        editor.rowoff = editor.editing_point.cy;
-    } else if (editor.editing_point.cy >= editor.rowoff + editor.view_rows) {
-        editor.rowoff = editor.editing_point.cy - editor.view_rows + 1;
+    if (getRow(editor.editing_point) < editor.rowoff) {
+        editor.rowoff = getRow(editor.editing_point);
+    } else if (getRow(editor.editing_point) >= editor.rowoff + editor.view_rows) {
+        editor.rowoff = getRow(editor.editing_point) - editor.view_rows + 1;
     }
 }
 
@@ -571,7 +571,7 @@ void editor_refresh_screen() {
 
     char buf[32];
     // move cursor to terminal cursor position
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", editor.editing_point.cy - editor.rowoff + 1, editor.rx - editor.coloff + 1);
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", getRow(editor.editing_point) - editor.rowoff + 1, editor.rx - editor.coloff + 1);
     dbuf_append(&dbuf, buf, strlen(buf));
 
     // show cursor
@@ -587,7 +587,7 @@ void editor_refresh_screen() {
 void editor_cx_to_rx() {
     editor.rx = 4;  // 4 chars of line number
     unsigned int i;
-    for (i = 0; i < editor.editing_point.cx; i++) {
+    for (i = 0; i < getCol(editor.editing_point); i++) {
         if (CURR_ROW.chars[i] == '\t') {
             editor.rx += TAB_SPACE_NUM - 1;
         }
@@ -712,8 +712,7 @@ void editor_run() {
 // *** init ***
 
 void init_editor(int height) {
-    editor.editing_point.cx = 0;
-    editor.editing_point.cy = 0;
+    editor.editing_point = (EditingPoint) 0;
     editor.rx = 0;
     editor.numrows = 0;
     editor.rows = NULL;

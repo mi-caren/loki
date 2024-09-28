@@ -1,39 +1,39 @@
+#include "editing_point.h"
 #include "editor.h"
 #include "editor_row.h"
 #include "utils.h"
 
 extern struct Editor editor;
 
-
 /* Checks if editing point is at the End Of File */
 static inline bool editingPointIsEOF() {
-    return editor.editing_point.cy == saturating_sub(editor.numrows, 1)
-        && editor.editing_point.cx == CURR_ROW.size;
+    return getRow(editor.editing_point) == saturating_sub(editor.numrows, 1)
+        && getCol(editor.editing_point) == CURR_ROW.size;
 }
 
 /* Checks if editing point is at Beginning Of File */
 static inline bool editingPointIsBOF() {
-    return editor.editing_point.cy == 0
-        && editor.editing_point.cx == 0;
+    return getRow(editor.editing_point) == 0
+        && getCol(editor.editing_point) == 0;
 }
 
 static char editingPointPrevChar() {
-    if (editor.editing_point.cx == 0) {
-        if (editor.editing_point.cy == 0) {
+    if (getCol(editor.editing_point) == 0) {
+        if (getRow(editor.editing_point) == 0) {
             return '\0';
         }
         return PREV_ROW.chars[PREV_ROW.size]; // if prev_row is empty it will return the string terminator \0
     }
 
-    return CURR_ROW.chars[editor.editing_point.cx - 1];
+    return CURR_ROW.chars[getCol(editor.editing_point) - 1];
 }
 
 static inline bool currentRowIsFirstRow() {
-    return editor.editing_point.cy == 0;
+    return getRow(editor.editing_point) == 0;
 }
 
 static inline bool currentRowIsLastRow() {
-    return editor.editing_point.cy == editor.numrows - 1;
+    return getRow(editor.editing_point) == editor.numrows - 1;
 }
 
 static struct EditorRow* editingPointPrevRow() {
@@ -49,35 +49,35 @@ static void editingPointMoveToChar(Direction dir) {
 
     switch (dir) {
         case Up:
-            if (editor.editing_point.cy != 0) {
-                editor.editing_point.cy--;
+            if (getRow(editor.editing_point) != 0) {
+                decRow(&editor.editing_point);
             }
             break;
         case Left:
-            if (editor.editing_point.cx != 0) {
-                editor.editing_point.cx--;
-            } else if (editor.editing_point.cy != 0) {
-                editor.editing_point.cy--;
-                editor.editing_point.cx = CURR_ROW.size;
+            if (getCol(editor.editing_point) != 0) {
+                decCol(&editor.editing_point);
+            } else if (getRow(editor.editing_point) != 0) {
+                decRow(&editor.editing_point);
+                setCol(&editor.editing_point, CURR_ROW.size);
             }
             break;
         case Down:
-            if (editor.editing_point.cy < saturating_sub(editor.numrows, 1)) {
-                editor.editing_point.cy++;
+            if (getRow(editor.editing_point) < saturating_sub(editor.numrows, 1)) {
+                incRow(&editor.editing_point);
             }
             break;
         case Right:
-            if (editor.editing_point.cx < CURR_ROW.size) {
-                editor.editing_point.cx++;
-            } else if (editor.editing_point.cy < saturating_sub(editor.numrows, 1)) {
-                editor.editing_point.cy++;
-                editor.editing_point.cx = 0;
+            if (getCol(editor.editing_point) < CURR_ROW.size) {
+                incCol(&editor.editing_point);
+            } else if (getRow(editor.editing_point) < saturating_sub(editor.numrows, 1)) {
+                incRow(&editor.editing_point);
+                setCol(&editor.editing_point, 0);
             }
             break;
     }
 
-    if (editor.editing_point.cx > CURR_ROW.size) {
-        editor.editing_point.cx = CURR_ROW.size;
+    if (getCol(editor.editing_point) > CURR_ROW.size) {
+        setCol(&editor.editing_point, CURR_ROW.size);
     }
 }
 
@@ -89,8 +89,8 @@ static void editingPointMoveToWord(Direction dir) {
         editingPointMoveToChar(dir);
 
         if (
-            (editor.editing_point.cx == CURR_ROW.size) // stops at the end of the line
-            || (editor.editing_point.cx == 0) // stops at the beginning of the line
+            (getCol(editor.editing_point) == CURR_ROW.size) // stops at the end of the line
+            || (getCol(editor.editing_point) == 0) // stops at the beginning of the line
             || (CHAR_IS_STOPCHAR(editingPointPrevChar()) && !CHAR_IS_STOPCHAR(CURR_CHAR)) // stops if prev char if a stop char
         ) return;
     }
@@ -126,21 +126,21 @@ static void editingPointMoveToParagraph(Direction dir) {
 void editingPointMove(enum EditorKey key) {
     switch (key) {
         case HOME_KEY:
-            editor.editing_point.cx = 0;
+            setCol(&editor.editing_point, 0);
             break;
         case END_KEY:
-            editor.editing_point.cx = CURR_ROW.size;
+            setCol(&editor.editing_point, CURR_ROW.size);
             break;
 
         case PAGE_UP:
         case PAGE_DOWN:
             {
                 if (key == PAGE_UP) {
-                    editor.editing_point.cy = editor.rowoff;
+                    setRow(&editor.editing_point, editor.rowoff);
                 } else {
-                    editor.editing_point.cy = editor.rowoff + editor.view_rows - 1;
-                    if (editor.editing_point.cy > editor.numrows)
-                        editor.editing_point.cy = editor.numrows;
+                    setRow(&editor.editing_point, editor.rowoff + editor.view_rows - 1);
+                    if (getRow(editor.editing_point) > editor.numrows)
+                        setRow(&editor.editing_point, editor.numrows);
                 }
                 int times = editor.view_rows;
                 while (times--) {
@@ -174,4 +174,40 @@ void editingPointMove(enum EditorKey key) {
             die("editing_point/editingPointMove");
             break;
     }
+}
+
+
+inline unsigned int getRow(EditingPoint ep) {
+    return ep >> EDITING_POINT_COL_BIT_SIZE;
+}
+
+inline unsigned int getCol(EditingPoint ep) {
+    return ep & ~(~0u << EDITING_POINT_COL_BIT_SIZE);
+}
+
+inline void setRow(EditingPoint* ep, unsigned int val) {
+    *ep &= ~(~0u << EDITING_POINT_COL_BIT_SIZE);
+    *ep |= (val & ~(~0u << EDITING_POINT_ROW_BIT_SIZE)) << EDITING_POINT_COL_BIT_SIZE;
+}
+
+inline void decRow(EditingPoint *ep) {
+    setRow(ep, getRow(*ep) - 1);
+}
+
+inline void incRow(EditingPoint* ep) {
+    setRow(ep, getRow(*ep) + 1);
+}
+
+
+inline void setCol(EditingPoint* ep, unsigned int val) {
+    *ep &= (~0u << EDITING_POINT_COL_BIT_SIZE);
+    *ep |= val & ~(~0u << EDITING_POINT_COL_BIT_SIZE);
+}
+
+inline void decCol(EditingPoint* ep) {
+    setCol(ep, getCol(*ep) - 1);
+}
+
+inline void incCol(EditingPoint* ep) {
+    setCol(ep, getCol(*ep) + 1);
 }

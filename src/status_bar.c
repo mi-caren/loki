@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+#include "editing_point.h"
 #include "editor.h"
 #include "utils.h"
 #include "terminal.h"
@@ -151,7 +152,7 @@ void infoBarDraw(struct DynamicBuffer *dbuf) {
         editor.dirty ? "(modified)" : ""
     );
     dbuf_append(dbuf, status, len);
-    int len_s2 = snprintf(status, terminal.screencols / 4, "%d/%d lines ", editor.editing_point.cy + (editor.numrows > 0 ? 1 : 0), editor.numrows);
+    int len_s2 = snprintf(status, terminal.screencols / 4, "%d/%d lines ", getRow(editor.editing_point) + (editor.numrows > 0 ? 1 : 0), editor.numrows);
 
 
     while (len < (int)(terminal.screencols - len_s2)) {
