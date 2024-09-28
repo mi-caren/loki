@@ -682,7 +682,7 @@ void editor_process_keypress() {
         case CTRL_SHIFT_ARROW_RIGHT:
         case CTRL_SHIFT_ARROW_LEFT:
             if (!editor.selecting) {
-                editor.selection_start = &CURR_CHAR;
+                editor.selection_start = editor.editing_point;
                 editor.selecting = true;
             }
 
@@ -734,7 +734,7 @@ void init_editor(int height) {
     editor.search_query = NULL;
 
     editor.selecting = false;
-    editor.selection_start = NULL;
+    editor.selection_start = 0;
 
     if (height < 0) {
         editor.view_rows = 0;

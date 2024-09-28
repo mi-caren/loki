@@ -97,3 +97,11 @@ Direction editorKeyToDirection(enum EditorKey key) {
             return 0;    // UNREACHABLE
     }
 }
+
+inline unsigned int umin(unsigned int a, unsigned int b) {
+    return a < b ? a : b;
+}
+
+inline unsigned int umax(unsigned int a, unsigned int b) {
+    return a > b ? a : b;
+}

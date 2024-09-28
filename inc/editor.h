@@ -20,6 +20,8 @@
 #define DEFAULT_EDITING_POINTS_SIZE    128
 #define LAST_SEARCH_RESULT             ( editor.search_result.editing_points[editor.search_result.len - 1] )
 
+#define SELECTION_START     umin(editor.editing_point, editor.selection_start)
+#define SELECTION_END       umax(editor.editing_point, editor.selection_start)
 
 struct Editor {
     int view_rows;
@@ -44,7 +46,7 @@ struct Editor {
     char* search_query;
 
     bool selecting;
-    char* selection_start; // pointer to a char in editor.rows[i].chars
+    EditingPoint selection_start; // pointer to a char in editor.rows[i].chars
 };
 
 

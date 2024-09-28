@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "editing_point.h"
 #include "editor.h"
 #include "utils.h"
 #include "editor_row.h"
@@ -224,38 +225,29 @@ void editorRowHighlightSelection(unsigned int filerow) {
     if (!editor.selecting) return;
 
     static bool in_selection = false;
-    static char* selection_end = NULL;
     struct EditorRow* row = &editor.rows[filerow];
 
-    for (unsigned int i = 0; i <= row->size; i++) {
-        char* c = &row->chars[i];
-        if (in_selection) {
-            if (c == selection_end) {
-                in_selection = false;
-                selection_end = NULL;
-            }
-            if (i < row->size)
-                row->hl[i] = HL_SELECTION;
-        } else {
-            if (c == editor.selection_start) {
-                selection_end = &CURR_CHAR;
-                in_selection = true;
-                if (i < row->size)
-                    row->hl[i] = HL_SELECTION;
-            } else if (c == &CURR_CHAR) {
-                selection_end = editor.selection_start;
-                in_selection = true;
-                if (i < row->size)
-                    row->hl[i] = HL_SELECTION;
-            }
+    if (filerow == editor.rowoff && SELECTION_START < editingPointNew(editor.rowoff, 0))
+        in_selection = true;
 
-            if (editor.selection_start == &CURR_CHAR) {
+    for (unsigned int i = 0; i <= row->size; i++) {
+        if (in_selection) {
+            if (editingPointNew(filerow, i) == SELECTION_END) {
                 in_selection = false;
-                selection_end = NULL;
+            } else if (i < row->size) {
+                row->hl[i] = HL_SELECTION;
+            }
+        } else {
+            EditingPoint curr_ep = editingPointNew(filerow, i);
+            if (curr_ep == SELECTION_START && curr_ep != SELECTION_END) {
+                in_selection = true;
+                if (i < row->size)
+                    row->hl[i] = HL_SELECTION;
             }
         }
     }
 
+    // always reset in_selection when finished rendering visible rows
     if (filerow == editor.view_rows + editor.rowoff - 1) {
         in_selection = false;
     }

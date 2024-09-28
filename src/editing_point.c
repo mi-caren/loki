@@ -175,6 +175,12 @@ void editingPointMove(enum EditorKey key) {
     }
 }
 
+EditingPoint editingPointNew(unsigned int row, unsigned int col) {
+    EditingPoint ep;
+    setRow(&ep, row);
+    setCol(&ep, col);
+    return ep;
+}
 
 inline unsigned int getRow(EditingPoint ep) {
     return ep >> EDITING_POINT_COL_BIT_SIZE;

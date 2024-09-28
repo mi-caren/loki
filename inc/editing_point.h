@@ -16,6 +16,8 @@ typedef uint32_t EditingPoint;
 
 void editingPointMove(enum EditorKey key);
 
+EditingPoint editingPointNew(unsigned int row, unsigned int col);
+
 /* Get editing point row */
 unsigned int getRow(EditingPoint ep);
 /* Get editing point column */

@@ -310,5 +310,7 @@ unsigned int saturating_sub(unsigned int n1, unsigned int n2);
 
 Direction editorKeyToDirection(enum EditorKey key);
 
+unsigned int umin(unsigned int a, unsigned int b);
+unsigned int umax(unsigned int a, unsigned int b);
 
 #endif
