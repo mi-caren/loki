@@ -154,7 +154,11 @@ void* vecPush(void** vec, void* el) {
     return *vec;
 }
 
-void vecReset(void* vec) {
+inline size_t vecLen(void* vec) {
+    return VECHEAD(vec)->len;
+}
+
+inline void vecReset(void* vec) {
     VECHEAD(vec)->cur = NULL;
 }
 

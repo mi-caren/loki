@@ -643,7 +643,7 @@ static void editorCopy() {
                 if (!VECPUSH(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
             }
 
-            if (getCol(ep) == editor.rows[getRow(ep)].size - 1) {
+            if (getCol(ep) == editor.rows[getRow(ep)].size) {
                 incRow(&ep);
                 setCol(&ep, 0);
             } else {
@@ -653,10 +653,24 @@ static void editorCopy() {
 
         char c = '\0';
         if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
-        messageBarSet("Copied: copy_buf -> %s", editor.copy_buf);
+        messageBarSet("Copied!");
         return;
 copy_error:
         messageBarSet("Unable to copy %d", err);
+    }
+}
+
+static void editorPaste() {
+    if (editor.copy_buf == NULL) return;
+
+    VECFOREACH(char, c, editor.copy_buf) {
+        if (c == '\0') {
+            break;
+        } else if (c == '\n') {
+            editorInsertNewline();
+        } else {
+            editorInsertChar(c);
+        }
     }
 }
 
@@ -685,6 +699,9 @@ void editor_process_keypress() {
             break;
         case CTRL_KEY('c'):
             editorCopy();
+            break;
+        case CTRL_KEY('v'):
+            editorPaste();
             break;
         case CTRL_KEY('l'):
             /* TODO */

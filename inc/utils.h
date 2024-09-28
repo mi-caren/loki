@@ -322,9 +322,14 @@ unsigned int umax(unsigned int a, unsigned int b);
         TYPE el = EL;\
         vecPush(VEC, &el);\
     }
+#define VECFOREACH(TYPE, EL, VEC)\
+    size_t idx = 0;\
+    for (TYPE EL = VEC[0]; idx < vecLen(VEC); EL = VEC[++idx])
 
 void* vecNew(size_t sizeof_type);
 void* vecPush(void** vec, void* el);
 void vecEmpty(void* vec);
+size_t vecLen(void* vec);
+void vecReset(void* vec);
 
 #endif
