@@ -14,6 +14,7 @@
 #define PREV_ROW                editor.rows[getRow(editor.editing_point) - 1]
 
 #define CURR_CHAR               CURR_ROW.chars[getCol(editor.editing_point)]
+#define CHAR_AT(EDITING_POINT)  editor.rows[getRow(EDITING_POINT)].chars[getCol(EDITING_POINT)]
 
 #define STATUS_BAR_ROW          ( editor.view_rows + 1 )
 
@@ -30,7 +31,7 @@ struct Editor {
     unsigned int rx;
 
     unsigned int numrows;
-    struct EditorRow *rows;
+    struct EditorRow* rows;
 
     unsigned int rowoff;
     unsigned int coloff;
@@ -46,7 +47,8 @@ struct Editor {
     char* search_query;
 
     bool selecting;
-    EditingPoint selection_start; // pointer to a char in editor.rows[i].chars
+    EditingPoint selection_start;
+    char* copy_buf;
 };
 
 

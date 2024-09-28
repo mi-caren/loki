@@ -1,8 +1,8 @@
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 #include "utils.h"
-#include "terminal.h"
 
 
 extern void die_error(Error err);
@@ -104,4 +104,60 @@ inline unsigned int umin(unsigned int a, unsigned int b) {
 
 inline unsigned int umax(unsigned int a, unsigned int b) {
     return a > b ? a : b;
+}
+
+
+/*   VEC   */
+#define VECHEAD(VEC)    ((VecHeader*)((char*)VEC - sizeof(VecHeader)))
+
+typedef struct {
+    size_t len;
+    size_t cap;
+    size_t sizeof_type;
+    void* cur;
+} VecHeader;
+
+typedef struct {
+    VecHeader header;
+    void* buf;
+} Vec;
+
+void* vecNew(size_t sizeof_type) {
+    char* buf = (char*)malloc(sizeof(VecHeader) + sizeof_type);
+
+    if (buf == NULL) return NULL;
+
+    VecHeader* header = (VecHeader*)buf;
+    header->len = 0;
+    header->cap = 1;
+    header->sizeof_type = sizeof_type;
+    header->cur = NULL;
+
+    return buf + sizeof(VecHeader);
+}
+
+void* vecPush(void** vec, void* el) {
+    if (VECHEAD(*vec)->len == VECHEAD(*vec)->cap) {
+        size_t sizeof_type = VECHEAD(*vec)->sizeof_type;
+        size_t cap = VECHEAD(*vec)->cap;
+        char* new = (char*)realloc((void*)VECHEAD(*vec), sizeof(VecHeader) + sizeof_type*cap*2);
+        if (new == NULL) return NULL;
+
+        *vec = new + sizeof(VecHeader);
+        VECHEAD(*vec)->cap *= 2;
+    }
+
+    char* dest = (char*)*vec;
+    memcpy(&dest[VECHEAD(*vec)->len], el, VECHEAD(*vec)->sizeof_type);
+    VECHEAD(*vec)->len++;
+
+    return *vec;
+}
+
+void vecReset(void* vec) {
+    VECHEAD(vec)->cur = NULL;
+}
+
+inline void vecEmpty(void* vec) {
+    VECHEAD(vec)->len = 0;
 }

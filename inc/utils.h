@@ -313,4 +313,18 @@ Direction editorKeyToDirection(enum EditorKey key);
 unsigned int umin(unsigned int a, unsigned int b);
 unsigned int umax(unsigned int a, unsigned int b);
 
+/*   VEC   */
+
+#define VEC(type) vecNew(sizeof(type))
+#define VECPUSH(VEC, EL) vecPush((void**)&VEC, &EL)
+#define VECPUSH_CONST(TYPE, VEC, EL)\
+    {\
+        TYPE el = EL;\
+        vecPush(VEC, &el);\
+    }
+
+void* vecNew(size_t sizeof_type);
+void* vecPush(void** vec, void* el);
+void vecEmpty(void* vec);
+
 #endif

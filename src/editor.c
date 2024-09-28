@@ -625,16 +625,45 @@ static void editorQuit()
     if (quit) editorCleanExit();
 }
 
-// static void editorCopy() {
-//     if (editor.selecting) {
-//         if ()
-//     }
-// }
+static void editorCopy() {
+    int err = 0;
+    if (editor.selecting) {
+        if (editor.copy_buf == NULL) {
+            if (!(editor.copy_buf = VEC(char))) goto copy_error;
+        }
+
+        vecEmpty(editor.copy_buf);
+
+        EditingPoint ep = SELECTION_START;
+        while (ep != SELECTION_END) {
+            if (CHAR_AT(ep) == '\0') {
+                char c = '\n';
+                if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
+            } else {
+                if (!VECPUSH(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
+            }
+
+            if (getCol(ep) == editor.rows[getRow(ep)].size - 1) {
+                incRow(&ep);
+                setCol(&ep, 0);
+            } else {
+                incCol(&ep);
+            }
+        }
+
+        char c = '\0';
+        if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
+        messageBarSet("Copied: copy_buf -> %s", editor.copy_buf);
+        return;
+copy_error:
+        messageBarSet("Unable to copy %d", err);
+    }
+}
 
 void editor_process_keypress() {
     int c = editor_read_key();
 
-    if (!SHIFT_KEY(c)) {
+    if (!(SHIFT_KEY(c) || c == CTRL_KEY('c'))) {
         editor.selecting = false;
     }
 
@@ -655,7 +684,8 @@ void editor_process_keypress() {
             searchResultPrev();
             break;
         case CTRL_KEY('c'):
-            // editorCopy();
+            editorCopy();
+            break;
         case CTRL_KEY('l'):
             /* TODO */
             break;
@@ -735,6 +765,7 @@ void init_editor(int height) {
 
     editor.selecting = false;
     editor.selection_start = 0;
+    editor.copy_buf = NULL;
 
     if (height < 0) {
         editor.view_rows = 0;
