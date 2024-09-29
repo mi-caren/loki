@@ -23,7 +23,6 @@
 
 
 struct Editor editor;
-extern struct Terminal terminal;
 
 
 

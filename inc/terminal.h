@@ -39,22 +39,22 @@ struct CursorPosition {
     unsigned int cy;
 };
 
-struct Terminal {
+typedef struct {
     struct CursorPosition cursor_pos;
     int screenrows;
     int screencols;
 
     struct termios orig_termios;
-};
+} Terminal;
 
 
 
 int terminalEnableRawMode();
 void terminalDisableRawMode();
 int terminalInit();
-int get_cursor_position(int *rows, int *cols);
+// int terminalGetCursorPorision(int *rows, int *cols);
 
 
-extern struct Terminal terminal;
+extern Terminal terminal;
 
 #endif

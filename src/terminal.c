@@ -4,7 +4,18 @@
 #include "terminal.h"
 
 
-struct Terminal terminal;
+static int terminalGetCursorPorision(int *rows, int *cols);
+static int terminalGetWindowSize(int *rows, int *cols);
+
+
+
+int terminalInit() {
+    terminal.cursor_pos.cx = 0;
+    terminal.cursor_pos.cy = 0;
+    if(terminalGetWindowSize(&terminal.screenrows, &terminal.screencols) != 0)
+        return -1;
+    return 0;
+}
 
 /*
  * Legge gli attributi del terminale,
@@ -42,7 +53,12 @@ inline void terminalDisableRawMode() {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &terminal.orig_termios);
 }
 
-int get_cursor_position(int *rows, int *cols) {
+
+
+
+/* ----------------- STATIC ----------------- */
+
+static int terminalGetCursorPorision(int *rows, int *cols) {
     char buf[32];
     unsigned int i = 0;
 
@@ -67,19 +83,10 @@ int get_cursor_position(int *rows, int *cols) {
     return 0;
 }
 
-int terminal_get_window_size(int *rows, int *cols) {
+static int terminalGetWindowSize(int *rows, int *cols) {
     if (WRITE_SEQ(MOVE_CURSOR_TO_BOTTOM_RIGHT) != 12) {
         return -1;
     };
 
-    return get_cursor_position(rows, cols);
+    return terminalGetCursorPorision(rows, cols);
 }
-
-int terminalInit() {
-    terminal.cursor_pos.cx = 0;
-    terminal.cursor_pos.cy = 0;
-    if(terminal_get_window_size(&terminal.screenrows, &terminal.screencols) != 0)
-        return -1;
-    return 0;
-}
-
