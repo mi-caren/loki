@@ -3,6 +3,8 @@
 
 #include "terminal.h"
 
+Terminal terminal;
+
 
 static int terminalGetCursorPorision(int *rows, int *cols);
 static int terminalGetWindowSize(int *rows, int *cols);

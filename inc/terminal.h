@@ -52,7 +52,6 @@ typedef struct {
 int terminalEnableRawMode();
 void terminalDisableRawMode();
 int terminalInit();
-// int terminalGetCursorPorision(int *rows, int *cols);
 
 
 extern Terminal terminal;
