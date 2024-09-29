@@ -1,5 +1,18 @@
-#ifndef EDITOR_DEFS_H
-#define EDITOR_DEFS_H
+#ifndef EDITOR_KEYS_H
+#define EDITOR_KEYS_H
+
+
+#define CTRL_KEY(k)      ((k) & 0x1f)
+
+#define IS_SHIFT_KEY(c)\
+(\
+    c == SHIFT_ARROW_UP\
+    || c == SHIFT_ARROW_DOWN\
+    || c == SHIFT_ARROW_LEFT\
+    || c == SHIFT_ARROW_RIGHT\
+    || c == CTRL_SHIFT_ARROW_LEFT\
+    || c == CTRL_SHIFT_ARROW_RIGHT\
+)
 
 enum EditorKey {
     BACKSPACE = 127,
@@ -34,9 +47,5 @@ typedef enum {
     Right,
 }  Direction;
 
-/*
- * Print error message and exit with 1
- */
-void die(const char *s);
 
 #endif

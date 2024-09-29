@@ -6,7 +6,8 @@
 #include <string.h>
 
 #include "editing_point.h"
-#include "editor.h"
+#include "editor/defs.h"
+#include "editor/utils.h"
 #include "editor_row.h"
 
 // #define COLOR_SEQ_SIZE 10
@@ -14,6 +15,8 @@
 #define PARENTHESIS      "()[]{}"
 #define C_OPERATORS     "+-*/%<>=!|&"
 #define C_SEPARATORS    ",.+-/*=~%<>;" C_OPERATORS PARENTHESIS
+
+extern struct Editor editor;
 
 
 int editorRowResetHighlight(struct EditorRow* row) {

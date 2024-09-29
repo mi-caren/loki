@@ -3,7 +3,7 @@
 
 
 #include <stdint.h>
-#include "editor_defs.h"
+#include "editor/keys.h"
 
 
 #define EDITING_POINT_BIT_SIZE (32)

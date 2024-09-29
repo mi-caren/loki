@@ -4,15 +4,16 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <stdbool.h>
 
-#include "editing_point.h"
-#include "editor.h"
+#include "editor/defs.h"
 #include "terminal.h"
-#include "editor.h"
+#include "editor/utils.h"
 
 #define PROMPT_CURSOR    "\033[5m_\033[0m"
 
-
+extern struct Editor editor;
+extern struct Terminal terminal;
 
 /* MESSAGE BAR */
 
@@ -58,9 +59,9 @@ char* messageBarPrompt(char* prompt, int (*callback)(char*, int)) {
 
     while (1) {
         messageBarSet("%s (ESC to cancel): %s"PROMPT_CURSOR, prompt, buf);
-        editor_refresh_screen();
+        editorRefreshScreen();
 
-        int c = editor_read_key();
+        int c = editorReadKey();
 
         if (c == '\x1b') {
             messageBarSet("Canceled");
@@ -107,10 +108,10 @@ bool messageBarPromptYesNo(char* prompt) {
     bool answer = false;
     while (1) {
         messageBarSet("%s [y/n] "PROMPT_CURSOR, prompt);
-        editor_refresh_screen();
+        editorRefreshScreen();
         write(STDOUT_FILENO, HIDE_CURSOR_SEQ, HIDE_CURSOR_SEQ_SIZE);
 
-        int c = editor_read_key();
+        int c = editorReadKey();
 
         if (c == 'y' || c == 'Y') {
             answer = true;

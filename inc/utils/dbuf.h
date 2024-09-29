@@ -15,7 +15,5 @@ struct DynamicBuffer {
 void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len);
 void dbuf_free(struct DynamicBuffer *dbuf);
 
-unsigned int saturating_sub(unsigned int n1, unsigned int n2);
-
 
 #endif

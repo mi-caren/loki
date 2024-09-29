@@ -49,10 +49,10 @@ struct Terminal {
 
 
 
-void enable_raw_mode();
-void disable_raw_mode();
+int terminalEnableRawMode();
+void terminalDisableRawMode();
+int terminalInit();
 int get_cursor_position(int *rows, int *cols);
-void init_terminal();
 
 
 extern struct Terminal terminal;

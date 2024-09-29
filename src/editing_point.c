@@ -1,7 +1,9 @@
 #include "editing_point.h"
 #include "editor.h"
+#include "editor/defs.h"
 #include "editor_row.h"
 
+extern struct Editor editor;
 
 /* Checks if editing point is at the End Of File */
 static inline bool editingPointIsEOF() {
@@ -72,6 +74,8 @@ static void editingPointMoveToChar(Direction dir) {
                 setCol(&editor.editing_point, 0);
             }
             break;
+        default:
+            return;
     }
 
     if (getCol(editor.editing_point) > CURR_ROW.size) {
@@ -105,6 +109,31 @@ static void editingPointMoveToParagraph(Direction dir) {
             editingPointPrevRow()->size == 0
             && !(CURR_ROW.size == 0)
         ) return;
+    }
+}
+
+static Direction editorKeyToDirection(enum EditorKey key) {
+    switch (key) {
+        case CTRL_ARROW_UP:
+        case ARROW_UP:
+        case SHIFT_ARROW_UP:
+            return Up;
+        case CTRL_ARROW_DOWN:
+        case ARROW_DOWN:
+        case SHIFT_ARROW_DOWN:
+            return Down;
+        case CTRL_ARROW_LEFT:
+        case ARROW_LEFT:
+        case SHIFT_ARROW_LEFT:
+        case CTRL_SHIFT_ARROW_LEFT:
+            return Left;
+        case CTRL_ARROW_RIGHT:
+        case ARROW_RIGHT:
+        case SHIFT_ARROW_RIGHT:
+        case CTRL_SHIFT_ARROW_RIGHT:
+            return Right;
+        default:
+            return -1;
     }
 }
 
