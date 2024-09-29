@@ -18,8 +18,9 @@
 #include "editor.h"
 #include "editor_row.h"
 #include "terminal.h"
-#include "utils.h"
 #include "status_bar.h"
+#include "utils/dbuf.h"
+#include "utils/vec.h"
 
 
 
@@ -33,23 +34,38 @@ void editor_cx_to_rx();
 /*
  * Print error message and exit with 1
  */
-void die_error(Error err) {
-    WRITE_SEQ(CLEAR_SCREEN);
-    WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
-
-    printf("ERROR CODE %d, MSG: %s\r\n", err.code, err.message);
-    exit(1);
-}
-
-/*
- * Print error message and exit with 1
- */
 void die(const char *s) {
     WRITE_SEQ(CLEAR_SCREEN);
     WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
 
     perror(s);
     exit(1);
+}
+
+Direction editorKeyToDirection(enum EditorKey key) {
+    switch (key) {
+        case CTRL_ARROW_UP:
+        case ARROW_UP:
+        case SHIFT_ARROW_UP:
+            return Up;
+        case CTRL_ARROW_DOWN:
+        case ARROW_DOWN:
+        case SHIFT_ARROW_DOWN:
+            return Down;
+        case CTRL_ARROW_LEFT:
+        case ARROW_LEFT:
+        case SHIFT_ARROW_LEFT:
+        case CTRL_SHIFT_ARROW_LEFT:
+            return Left;
+        case CTRL_ARROW_RIGHT:
+        case ARROW_RIGHT:
+        case SHIFT_ARROW_RIGHT:
+        case CTRL_SHIFT_ARROW_RIGHT:
+            return Right;
+        default:
+            die("editor/editorKeyToDirection");
+            return 0;    // UNREACHABLE
+    }
 }
 
 void editorSetDirty() {

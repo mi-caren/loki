@@ -7,7 +7,6 @@
 
 #include "editing_point.h"
 #include "editor.h"
-#include "utils.h"
 #include "editor_row.h"
 
 // #define COLOR_SEQ_SIZE 10

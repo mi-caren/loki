@@ -1,7 +1,6 @@
 #include "editing_point.h"
 #include "editor.h"
 #include "editor_row.h"
-#include "utils.h"
 
 
 /* Checks if editing point is at the End Of File */

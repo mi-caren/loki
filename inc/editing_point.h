@@ -3,8 +3,8 @@
 
 
 #include <stdint.h>
+#include "editor_defs.h"
 
-#include "utils.h"
 
 #define EDITING_POINT_BIT_SIZE (32)
 #define EDITING_POINT_ROW_BIT_SIZE (24) // max number of rows in a file: ~16 millions

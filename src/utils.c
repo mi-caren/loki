@@ -2,16 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "utils.h"
-
-
-extern void die_error(Error err);
-
-
-UNWRAP_FUNC_DEF(void)
-UNWRAP_FUNC_DEF(int)
-UNWRAP_FUNC_DEF(unsigned int)
-
+#include "utils/array.h"
+#include "utils/dbuf.h"
+#include "utils/vec.h"
 
 
 void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) {
@@ -70,32 +63,6 @@ unsigned int saturating_sub(unsigned int n1, unsigned int n2) {
     int sub = n1 - n2;
     if (sub < 0) return 0;
     return (unsigned int)sub;
-}
-
-Direction editorKeyToDirection(enum EditorKey key) {
-    switch (key) {
-        case CTRL_ARROW_UP:
-        case ARROW_UP:
-        case SHIFT_ARROW_UP:
-            return Up;
-        case CTRL_ARROW_DOWN:
-        case ARROW_DOWN:
-        case SHIFT_ARROW_DOWN:
-            return Down;
-        case CTRL_ARROW_LEFT:
-        case ARROW_LEFT:
-        case SHIFT_ARROW_LEFT:
-        case CTRL_SHIFT_ARROW_LEFT:
-            return Left;
-        case CTRL_ARROW_RIGHT:
-        case ARROW_RIGHT:
-        case SHIFT_ARROW_RIGHT:
-        case CTRL_SHIFT_ARROW_RIGHT:
-            return Right;
-        default:
-            die("editor/editorKeyToDirection");
-            return 0;    // UNREACHABLE
-    }
 }
 
 inline unsigned int umin(unsigned int a, unsigned int b) {

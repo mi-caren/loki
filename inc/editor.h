@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #include "editing_point.h"
-#include "utils.h"
+#include "utils/dbuf.h"
 
 
 #define CURR_ROW                editor.rows[getRow(editor.editing_point)]
@@ -23,6 +23,28 @@
 
 #define SELECTION_START     umin(editor.editing_point, editor.selection_start)
 #define SELECTION_END       umax(editor.editing_point, editor.selection_start)
+
+
+/*
+    Stop Chars are those characters that delimits words:
+    spaces, null chars.
+*/
+#define CHAR_IS_STOPCHAR(C)        ( C == ' ' || C == '.' || C == '"' || C == '\'' || C == '(' || C == '[' || C == '{' )
+
+#define CTRL_KEY(k)      ((k) & 0x1f)
+#define COLOR_SEQ_SIZE 10
+#define TAB_SPACE_NUM    4
+
+#define SHIFT_KEY(c)\
+(\
+    c == SHIFT_ARROW_UP\
+    || c == SHIFT_ARROW_DOWN\
+    || c == SHIFT_ARROW_LEFT\
+    || c == SHIFT_ARROW_RIGHT\
+    || c == CTRL_SHIFT_ARROW_LEFT\
+    || c == CTRL_SHIFT_ARROW_RIGHT\
+)
+
 
 struct Editor {
     int view_rows;
@@ -61,6 +83,7 @@ void init_editor(int height);
 int editor_read_key();
 void editorSetDirty();
 int editorSearch(char* query);
+Direction editorKeyToDirection(enum EditorKey key);
 
 
 extern struct Editor editor;

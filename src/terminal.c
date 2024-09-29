@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 #include "terminal.h"
-#include "utils.h"
+#include "editor_defs.h"
 
 
 struct Terminal terminal;

@@ -3,7 +3,6 @@
 
 #include "editor.h"
 #include "terminal.h"
-#include "utils.h"
 
 
 int main(int argc, char *argv[]) {

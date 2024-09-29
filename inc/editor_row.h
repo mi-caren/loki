@@ -2,8 +2,8 @@
 #define EDITOR_ROW_H
 
 #include <unistd.h>
+#include "utils/array.h"
 
-#include "utils.h"
 
 typedef enum {
     HL_NORMAL = 0,

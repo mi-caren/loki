@@ -3,8 +3,6 @@
 
 #include <stdbool.h>
 
-#include "utils.h"
-
 
 void messageBarDraw(struct DynamicBuffer *dbuf);
 void messageBarSet(const char *fmt, ...);

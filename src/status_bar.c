@@ -7,7 +7,6 @@
 
 #include "editing_point.h"
 #include "editor.h"
-#include "utils.h"
 #include "terminal.h"
 #include "editor.h"
 
