@@ -376,7 +376,7 @@ void editorDrawRows(struct DynamicBuffer *dbuf) {
         if (filerow >= editor.numrows) {
             if (editor.numrows == 0 && y == editor.view_rows / 3) {
                 char welcome[80];
-                int welcomelen = snprintf(welcome, sizeof(welcome), "Kilo editor -- version %s", KILO_VERSION);
+                int welcomelen = snprintf(welcome, sizeof(welcome), "Loki editor -- version %s", LOKI_VERSION);
                 if (welcomelen > terminal.screencols) {
                     welcomelen = terminal.screencols;
                 }

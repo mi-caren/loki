@@ -6,7 +6,7 @@
 
 #include "editing_point.h"
 
-#define KILO_VERSION     "0.0.1"
+#define LOKI_VERSION     "0.0.1"
 
 #define CURR_ROW                editor.rows[getRow(editor.editing_point)]
 #define NEXT_ROW                editor.rows[getRow(editor.editing_point) + 1]

@@ -17,15 +17,17 @@ TESTDIR = tests
 TESTS = $(wildcard $(TESTDIR)/*.c)
 TESTBINS = $(patsubst $(TESTDIR)/%.c, $(TESTDIR)/bin/%, $(TESTS))
 
-kilo: $(OBJDIR) $(OBJS)
+EXE = loki
+
+$(EXE): $(OBJDIR) $(OBJS)
 	$(CC) $(OBJS) -o $@
 
 release: CFLAGS = $(SHARED_FLAGS) -O3
 release: clean
-release: kilo
+release: $(EXE)
 
 force-rebuild: clean
-force-rebuild: kilo
+force-rebuild: $(EXE)
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
@@ -45,18 +47,18 @@ $(TESTDIR)/bin:
 	mkdir -p $(TESTDIR)/bin
 
 $(TESTDIR)/bin/%: $(TESTDIR)/%.c
-	$(CC) $(CFLAGS) $< $(filter-out $(OBJDIR)/kilo.o, $(OBJS)) -o $@
+	$(CC) $(CFLAGS) $< $(filter-out $(OBJDIR)/$(EXE).o, $(OBJS)) -o $@
 
 
 pre:
 	$(CC) $(CFLAGS) $(SRCS) -E
 
-$(OBJDIR)/static-kilo: $(SRCS)
+$(OBJDIR)/static-$(EXE): $(SRCS)
 	$(CC) $(CFLAGS) $(SRCS) -static -o $@
 
 
 
 clean:
-	rm -f kilo
+	rm -f $(EXE)
 	rm -f bin/*
 
