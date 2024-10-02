@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "editor/utils.h"
+#include "editing_point.h"
 #include "editor/commands.h"
 #include "editor/search.h"
 #include "editor/defs.h"
@@ -18,9 +19,9 @@ extern struct Editor editor;
 void editorProcessKeypress() {
     int c = editorReadKey();
 
-    if (!(IS_SHIFT_KEY(c) || c == CTRL_KEY('c'))) {
-        editor.selecting = false;
-    }
+    // if (!(IS_SHIFT_KEY(c) || c == CTRL_KEY('c'))) {
+    //     editor.selecting = false;
+    // }
 
     switch (c) {
         case CTRL_KEY('q'):
@@ -31,18 +32,22 @@ void editorProcessKeypress() {
             break;
         case CTRL_KEY('f'):
             editorFind();
+            editor.selecting = false;
             break;
         case CTRL_KEY('n'):
             searchResultNext();
+            editor.selecting = false;
             break;
         case CTRL_KEY('p'):
             searchResultPrev();
+            editor.selecting = false;
             break;
         case CTRL_KEY('c'):
             editorCopy();
             break;
         case CTRL_KEY('v'):
             editorPaste();
+            editor.selecting = false;
             break;
         case CTRL_KEY('l'):
             /* TODO */
@@ -61,6 +66,7 @@ void editorProcessKeypress() {
         case CTRL_ARROW_LEFT:
         case CTRL_ARROW_RIGHT:
             editingPointMove(c);
+            editor.selecting = false;
             break;
 
         case SHIFT_ARROW_UP:
@@ -79,19 +85,31 @@ void editorProcessKeypress() {
 
         case BACKSPACE:
         case DEL_KEY:
-            if (c == DEL_KEY) editingPointMove(ARROW_RIGHT);
-            editorDeleteChar();
+            if (editor.selecting) {
+                editor.editing_point = SELECTION_END;
+                EditingPoint selection_start = SELECTION_START;
+                while (editor.editing_point != selection_start) {
+                    editorDeleteChar();
+                }
+            } else {
+                if (c == DEL_KEY) editingPointMove(ARROW_RIGHT);
+                editorDeleteChar();
+            }
+            editor.selecting = false;
             break;
 
         case '\r':
             editorInsertNewline();
+            editor.selecting = false;
             break;
         case '\x1b':
             editor.searching = false;
+            editor.selecting = false;
             break;
 
         default:
             editorInsertChar(c);
+            editor.selecting = false;
             break;
     }
 }
