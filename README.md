@@ -13,7 +13,6 @@ Build an optimized binary:
 ```shell
 make release
 ```
----
 Build a debug binary:
 ```shell
 make
