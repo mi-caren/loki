@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}/kilo",
+            "program": "${workspaceFolder}/loki",
             "args": ["test.txt"],
             "cwd": "${workspaceFolder}"
         }
