@@ -33,8 +33,6 @@
 
 * ctrl-d delete line
 
-* copy - paste
-
 * mouse support
 
 * tab insert spaces
@@ -44,6 +42,11 @@
 * ctrl-g
 	go to line number
 
+* ctrl-z
+* ctrl-r
+
+* larghezza colonna numero riga calcolata dinamicamente
+
 * render trailing spaces
 
 * show modified and new lines by colouring line number
@@ -51,6 +54,7 @@
 * quando si cerca, mostrare il numero di match trovati nella message bar
 
 * control enter per creare una nuova riga sotto
+* ctrl-shift enter
 
 PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una escape sequence invece di ritornare semplicemente '\x1b', che ha n significato per l'edior
 
@@ -64,3 +68,11 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
 
 * c'e' un problema con le linee troppo lunghe: non viene tagliata e wrappa nella riga successiva. vedi PROBLEMA
 
+* basic hint che propone di completare con parole già presenti nel file
+
+* highlight di file di tipo diverso dal c
+
+* BUG:
+    provare a selezionare una parte di testo partendo da destra e muovendosi veso sinistra
+    premere backspace
+    il testo selezionato non viene eliminato

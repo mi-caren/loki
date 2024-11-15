@@ -49,6 +49,8 @@ void editorProcessKeypress() {
             editorPaste();
             editor.selecting = false;
             break;
+        case CTRL_KEY('x'):
+            editorCut();
         case CTRL_KEY('l'):
             /* TODO */
             break;
@@ -85,17 +87,7 @@ void editorProcessKeypress() {
 
         case BACKSPACE:
         case DEL_KEY:
-            if (editor.selecting) {
-                editor.editing_point = SELECTION_END;
-                EditingPoint selection_start = SELECTION_START;
-                while (editor.editing_point != selection_start) {
-                    editorDeleteChar();
-                }
-            } else {
-                if (c == DEL_KEY) editingPointMove(ARROW_RIGHT);
-                editorDeleteChar();
-            }
-            editor.selecting = false;
+            editorDelete(c == DEL_KEY);
             break;
 
         case '\r':

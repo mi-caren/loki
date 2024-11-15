@@ -46,8 +46,8 @@ static bool isParenthesis(char c) {
 const char* C_KEYWORDS[] = {
     "#include", "#define",
     "extern", "return", "sizeof", "typedef",
-    "const", "static",
-    "switch", "case", "if", "else",
+    "const", "static", "inline",
+    "switch", "case", "if", "else", "goto",
     "for", "do", "while", "continue", "break",
     NULL
 };

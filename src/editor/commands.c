@@ -169,6 +169,34 @@ void editorPaste() {
     }
 }
 
+static bool editorDeleteSelection() {
+    if (!editor.selecting)
+        return false;
+
+    editor.editing_point = SELECTION_END;
+    EditingPoint selection_start = SELECTION_START;
+    while (editor.editing_point != selection_start) {
+        editorDeleteChar();
+    }
+
+    editor.selecting = false;
+
+    return true;
+}
+
+void editorCut() {
+    editorCopy();
+    editorDeleteSelection();
+}
+
+void editorDelete(bool del_key) {
+    if (!editorDeleteSelection()) {
+        if (del_key)
+            editingPointMove(ARROW_RIGHT);
+        editorDeleteChar();
+    }
+}
+
 void editorFind() {
     EditingPoint prev_editing_point = editor.editing_point;
     unsigned int prev_coloff = editor.coloff;
