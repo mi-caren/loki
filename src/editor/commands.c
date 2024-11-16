@@ -33,18 +33,48 @@ void editorDeleteChar() {
     }
 }
 
+static unsigned int countLeadingSpaces(struct EditorRow* row) {
+    int i = 0;
+    while (row->chars[i] == ' ') {
+        i++;
+    }
+    return i;
+}
 
 void editorInsertNewline() {
     if (editor.numrows == 0) {
-        editorInsertRow(0, "", 0);
+        if (editorInsertRow(0, "", 0) == -1) goto error;
     }
 
-    editorInsertRow(getRow(editor.editing_point) + 1, &CURR_ROW.chars[getCol(editor.editing_point)], CURR_ROW.size - getCol(editor.editing_point));
+    // size of new row is the size of the sliced part of the current
+    // row beginning at current cursor position and ending at end of current row
+    // + the number of spaces of current row, to mantain current indentation
+    // when inserting a newline
+    unsigned int curr_row_slice_size = CURR_ROW.size - getCol(editor.editing_point);
+    unsigned int leading_spaces_count = countLeadingSpaces(&CURR_ROW);
+    unsigned int new_row_size =  curr_row_slice_size + leading_spaces_count;
+
+    char* new_row_chars = malloc(new_row_size + 1);
+    if (!new_row_chars) goto error;
+
+    memset(new_row_chars, ' ', leading_spaces_count);
+    new_row_chars[leading_spaces_count] = '\0';
+    strncat(new_row_chars, &CURR_ROW.chars[getCol(editor.editing_point)], curr_row_slice_size);
+
+    int res = editorInsertRow(getRow(editor.editing_point) + 1, new_row_chars, new_row_size);
+    free(new_row_chars);
+
+    if (res == -1) goto error;
+
     CURR_ROW.chars[getCol(editor.editing_point)] = '\0';
     CURR_ROW.size = getCol(editor.editing_point);
 
     incRow(&editor.editing_point);
-    setCol(&editor.editing_point, 0);
+    setCol(&editor.editing_point, leading_spaces_count);
+    return;
+
+error:
+    messageBarSet("Unable to insert new row");
 }
 
 
