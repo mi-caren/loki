@@ -13,17 +13,53 @@
 #include "status_bar.h"
 #include "terminal.h"
 
-
 extern struct Editor editor;
 
+typedef struct CommandContext {
+    int tmp;
+} CommandContext;
+
+typedef struct Command {
+    CommandContext ctx;
+    void (*execute) (CommandContext* ctx);
+    void (*undo) (CommandContext* ctx);
+} Command;
+
+static void commandExecute(Command* cmd) {
+    cmd->execute(&cmd->ctx);
+}
+
+static inline CommandContext currentContext() {
+    return (CommandContext) {0};
+}
+
+bool buildCommand(Command* cmd, int key) {
+    *cmd = (Command) {
+        .ctx = currentContext(),
+        .execute = NULL,
+        .undo = NULL,
+    };
+
+    switch (key) {
+        case CTRL_KEY('q'):
+            cmd->execute = editorQuit;
+            return true;
+
+        default:
+            return false;
+    }
+}
 
 void editorProcessKeypress() {
     int c = editorReadKey();
 
+    Command cmd;
+    if (buildCommand(&cmd, c)) {
+        commandExecute(&cmd);
+        return;
+    }
+
     switch (c) {
-        case CTRL_KEY('q'):
-            editorQuit();
-            break;
         case CTRL_KEY('s'):
             editorSave();
             break;
@@ -50,6 +86,8 @@ void editorProcessKeypress() {
             editorCut();
         case CTRL_KEY('l'):
             /* TODO */
+            break;
+        case CTRL_KEY('z'):
             break;
 
         case HOME_KEY:
