@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -213,8 +214,19 @@ void editorScroll() {
     }
 }
 
+static unsigned int rowNumberColumnWidth() {
+    unsigned int numrows = editor.numrows;
+    unsigned int digits = 1;
+    while ((numrows /= 10) != 0) {
+        digits++;
+    }
+    if (digits == 1) return 2;
+
+    return digits;
+}
+
 void editorCxToRx() {
-    editor.rx = 4;  // 4 chars of line number
+    editor.rx = rowNumberColumnWidth();
     unsigned int i;
     for (i = 0; i < getCol(editor.editing_point); i++) {
         if (CURR_ROW.chars[i] == '\t') {
@@ -316,8 +328,11 @@ void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf) {
     struct EditorRow* row = &editor.rows[filerow];
 
     // Line number
+    char fmt_string[32];
+    sprintf(fmt_string, "\x1b[30;100m%%%dd", rowNumberColumnWidth());
+
     char buf[32];
-    int len = sprintf(buf, "\x1b[30;100m% 4d", filerow + 1);
+    int len = sprintf(buf, fmt_string, filerow + 1);
     dbuf_append(dbuf, buf, len);
 
     if (row->rsize == 0) return;
