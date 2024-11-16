@@ -19,10 +19,6 @@ extern struct Editor editor;
 void editorProcessKeypress() {
     int c = editorReadKey();
 
-    // if (!(IS_SHIFT_KEY(c) || c == CTRL_KEY('c'))) {
-    //     editor.selecting = false;
-    // }
-
     switch (c) {
         case CTRL_KEY('q'):
             editorQuit();

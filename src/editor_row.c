@@ -347,14 +347,24 @@ int editorRowRender(unsigned int filerow)
     return 0;
 }
 
-void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c)
-{
+void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c) {
     if (pos > row->size)
         pos = row->size;
-    row->chars = realloc(row->chars, row->size + 2);
-    memmove(&row->chars[pos + 1], &row->chars[pos], row->size - pos + 1);
-    row->size++;
-    row->chars[pos] = c;
+
+    int new_space;
+    char insert_char;
+    if (c == '\t') {
+        new_space = 4;
+        insert_char = ' ';
+    } else {
+        new_space = 1;
+        insert_char = c;
+    }
+    row->chars = realloc(row->chars, row->size + new_space + 1);
+    memmove(&row->chars[pos + new_space], &row->chars[pos], row->size - pos + 1);
+    row->size += new_space;
+    // row->chars[pos] = c;
+    memset(&row->chars[pos], insert_char, new_space);
     editorSetDirty();
 }
 

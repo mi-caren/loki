@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "editing_point.h"
 #include "status_bar.h"
 #include "editor_row.h"
 #include "editor/defs.h"
@@ -52,7 +53,7 @@ void editorInsertChar(char c) {
         editorInsertRow(editor.numrows, "", 0);
     }
     editorRowInsertChar(&CURR_ROW, getCol(editor.editing_point), c);
-    incCol(&editor.editing_point);
+    setCol(&editor.editing_point, getCol(editor.editing_point) + (c == '\t' ? 4 : 1));
 }
 
 // The normal way to overwrite a file is to pass the O_TRUNC flag to open(),
