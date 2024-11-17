@@ -15,44 +15,6 @@
 
 extern struct Editor editor;
 
-typedef struct CommandContext {
-    int tmp;
-} CommandContext;
-
-typedef struct Command {
-    CommandContext ctx;
-    bool (*execute) (CommandContext* ctx);
-    void (*undo) (CommandContext* ctx);
-} Command;
-
-static void commandExecute(Command* cmd) {
-    cmd->execute(&cmd->ctx);
-}
-
-static inline CommandContext currentContext() {
-    return (CommandContext) {0};
-}
-
-bool buildCommand(Command* cmd, int key) {
-    *cmd = (Command) {
-        .ctx = currentContext(),
-        .execute = NULL,
-        .undo = NULL,
-    };
-
-    switch (key) {
-        case CTRL_KEY('q'):
-            cmd->execute = editorQuit;
-            return true;
-        case CTRL_KEY('s'):
-            cmd->execute = editorSave;
-            return true;
-
-        default:
-            return false;
-    }
-}
-
 void editorProcessKeypress() {
     int c = editorReadKey();
 

@@ -12,9 +12,19 @@
 #include "editor/utils.h"
 #include "editor/search.h"
 #include "utils/vec.h"
+#include "editor/commands.h"
 
 
 extern struct Editor editor;
+
+
+static inline CommandContext _currentContext();
+static unsigned int _countLeadingSpaces(struct EditorRow* row);
+static bool _editorDeleteSelection();
+
+static bool _editorSave();
+static bool _editorQuit();
+
 
 
 void editorDeleteChar() {
@@ -33,14 +43,6 @@ void editorDeleteChar() {
     }
 }
 
-static unsigned int countLeadingSpaces(struct EditorRow* row) {
-    int i = 0;
-    while (row->chars[i] == ' ') {
-        i++;
-    }
-    return i;
-}
-
 void editorInsertNewline() {
     if (editor.numrows == 0) {
         if (editorInsertRow(0, "", 0) == -1) goto error;
@@ -51,7 +53,7 @@ void editorInsertNewline() {
     // + the number of spaces of current row, to mantain current indentation
     // when inserting a newline
     unsigned int curr_row_slice_size = CURR_ROW.size - getCol(editor.editing_point);
-    unsigned int leading_spaces_count = countLeadingSpaces(&CURR_ROW);
+    unsigned int leading_spaces_count = _countLeadingSpaces(&CURR_ROW);
     unsigned int new_row_size =  curr_row_slice_size + leading_spaces_count;
 
     char* new_row_chars = malloc(new_row_size + 1);
@@ -85,70 +87,6 @@ void editorInsertChar(char c) {
     editorRowInsertChar(&CURR_ROW, getCol(editor.editing_point), c);
     setCol(&editor.editing_point, getCol(editor.editing_point) + (c == '\t' ? 4 : 1));
 }
-
-// The normal way to overwrite a file is to pass the O_TRUNC flag to open(),
-// which truncates the file completely, making it an empty file,
-// before writing the new data into it.
-// By truncating the file ourselves to the same length as the data we are planning to write into it,
-// we are making the whole overwriting operation a little bit safer in case
-// the ftruncate() call succeeds but the write() call fails.
-// In that case, the file would still contain most of the data it had before.
-// But if the file was truncated completely by the open() call and then the write() failed, you’d end up with all of your data lost.
-
-// More advanced editors will write to a new, temporary file,
-// and then rename that file to the actual file the user wants to overwrite,
-// and they’ll carefully check for errors through the whole process.
-/*
-    Returns a bool indicating if saving of file has been successfull.
-*/
-bool editorSave() {
-    bool ok = false;
-
-    if (editor.filename == NULL) {
-        char* filename = messageBarPrompt("Save as", NULL);
-        if (filename == NULL) return false;    // the printing of the error message is handled by messageBarPrompt
-        editor.filename = filename;
-    }
-
-    int len;
-    char* buf = editorRowsToString(&len);
-    if (buf == NULL) goto end;
-
-    int fd = open(editor.filename, O_RDWR | O_CREAT, 0644);
-    if (fd == -1) goto clean_buf;
-    if (ftruncate(fd, len) == -1) goto clean_fd;
-    if (write(fd, buf, len) != len) goto clean_fd;
-    ok = true;
-    editor.dirty = false;
-
-clean_fd:
-    close(fd);
-clean_buf:
-    free(buf);
-end:
-    if (ok) {
-        messageBarSet("%d bytes written", len);
-    } else {
-        messageBarSet("Unable to save buffer! I/O error: %s", strerror(errno));
-    }
-
-    return ok;
-}
-
-bool editorQuit() {
-    if (editor.dirty) {
-        if (messageBarPromptYesNo("File has unsaved changes. Do you want to save before exiting?")) {
-            if (!editorSave()) {
-                return false;
-            }
-        }
-    }
-
-    editorCleanExit();
-
-    return true; // UNREACHABLE
-}
-
 
 void editorCopy() {
     int err = 0;
@@ -200,28 +138,13 @@ void editorPaste() {
     }
 }
 
-static bool editorDeleteSelection() {
-    if (!editor.selecting)
-        return false;
-
-    editor.editing_point = SELECTION_END;
-    EditingPoint selection_start = SELECTION_START;
-    while (editor.editing_point != selection_start) {
-        editorDeleteChar();
-    }
-
-    editor.selecting = false;
-
-    return true;
-}
-
 void editorCut() {
     editorCopy();
-    editorDeleteSelection();
+    _editorDeleteSelection();
 }
 
 void editorDelete(bool del_key) {
-    if (!editorDeleteSelection()) {
+    if (!_editorDeleteSelection()) {
         if (del_key)
             editingPointMove(ARROW_RIGHT);
         editorDeleteChar();
@@ -244,4 +167,125 @@ void editorFind() {
         editor.search_query = prev_query;
         editor.searching = false;
     }
+}
+
+
+void commandExecute(Command* cmd) {
+    cmd->execute(&cmd->ctx);
+}
+
+bool buildCommand(Command* cmd, int key) {
+    *cmd = (Command) {
+        .ctx = _currentContext(),
+        .execute = NULL,
+        .undo = NULL,
+    };
+
+    switch (key) {
+        case CTRL_KEY('q'):
+            cmd->execute = _editorQuit;
+            return true;
+        case CTRL_KEY('s'):
+            cmd->execute = _editorSave;
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+
+// ----------------------------------------------
+// -------------- STATIC FUNCTIONS --------------
+// ----------------------------------------------
+
+
+static inline CommandContext _currentContext() {
+    return (CommandContext) {0};
+}
+
+static unsigned int _countLeadingSpaces(struct EditorRow* row) {
+    int i = 0;
+    while (row->chars[i] == ' ') {
+        i++;
+    }
+    return i;
+}
+
+static bool _editorDeleteSelection() {
+    if (!editor.selecting)
+        return false;
+
+    editor.editing_point = SELECTION_END;
+    EditingPoint selection_start = SELECTION_START;
+    while (editor.editing_point != selection_start) {
+        editorDeleteChar();
+    }
+
+    editor.selecting = false;
+
+    return true;
+}
+
+// The normal way to overwrite a file is to pass the O_TRUNC flag to open(),
+// which truncates the file completely, making it an empty file,
+// before writing the new data into it.
+// By truncating the file ourselves to the same length as the data we are planning to write into it,
+// we are making the whole overwriting operation a little bit safer in case
+// the ftruncate() call succeeds but the write() call fails.
+// In that case, the file would still contain most of the data it had before.
+// But if the file was truncated completely by the open() call and then the write() failed, you’d end up with all of your data lost.
+
+// More advanced editors will write to a new, temporary file,
+// and then rename that file to the actual file the user wants to overwrite,
+// and they’ll carefully check for errors through the whole process.
+/*
+    Returns a bool indicating if saving of file has been successfull.
+*/
+static bool _editorSave() {
+    bool ok = false;
+
+    if (editor.filename == NULL) {
+        char* filename = messageBarPrompt("Save as", NULL);
+        if (filename == NULL) return false;    // the printing of the error message is handled by messageBarPrompt
+        editor.filename = filename;
+    }
+
+    int len;
+    char* buf = editorRowsToString(&len);
+    if (buf == NULL) goto end;
+
+    int fd = open(editor.filename, O_RDWR | O_CREAT, 0644);
+    if (fd == -1) goto clean_buf;
+    if (ftruncate(fd, len) == -1) goto clean_fd;
+    if (write(fd, buf, len) != len) goto clean_fd;
+    ok = true;
+    editor.dirty = false;
+
+clean_fd:
+    close(fd);
+clean_buf:
+    free(buf);
+end:
+    if (ok) {
+        messageBarSet("%d bytes written", len);
+    } else {
+        messageBarSet("Unable to save buffer! I/O error: %s", strerror(errno));
+    }
+
+    return ok;
+}
+
+static bool _editorQuit() {
+    if (editor.dirty) {
+        if (messageBarPromptYesNo("File has unsaved changes. Do you want to save before exiting?")) {
+            if (!_editorSave()) {
+                return false;
+            }
+        }
+    }
+
+    editorCleanExit();
+
+    return true; // UNREACHABLE
 }
