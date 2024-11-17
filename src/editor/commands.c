@@ -24,6 +24,7 @@ static bool _editorDeleteSelection();
 
 static bool _editorSave();
 static bool _editorQuit();
+static bool _editorFind();
 
 
 
@@ -151,25 +152,6 @@ void editorDelete(bool del_key) {
     }
 }
 
-void editorFind() {
-    EditingPoint prev_editing_point = editor.editing_point;
-    unsigned int prev_coloff = editor.coloff;
-    unsigned int prev_rowoff = editor.rowoff;
-    char* prev_query = editor.search_query;
-    editor.searching = true;
-
-    if (messageBarPrompt("Search", editorFindCallback)) {
-        free(prev_query);
-    } else {
-        editor.editing_point = prev_editing_point;
-        editor.coloff = prev_coloff;
-        editor.rowoff = prev_rowoff;
-        editor.search_query = prev_query;
-        editor.searching = false;
-    }
-}
-
-
 void commandExecute(Command* cmd) {
     cmd->execute(&cmd->ctx);
 }
@@ -187,6 +169,9 @@ bool buildCommand(Command* cmd, int key) {
             return true;
         case CTRL_KEY('s'):
             cmd->execute = _editorSave;
+            return true;
+        case CTRL_KEY('f'):
+            cmd->execute = _editorFind;
             return true;
 
         default:
@@ -288,4 +273,27 @@ static bool _editorQuit() {
     editorCleanExit();
 
     return true; // UNREACHABLE
+}
+
+static bool _editorFind() {
+    EditingPoint prev_editing_point = editor.editing_point;
+    unsigned int prev_coloff = editor.coloff;
+    unsigned int prev_rowoff = editor.rowoff;
+    char* prev_query = editor.search_query;
+    editor.searching = true;
+    // clear selection in case user was highlighting something
+    editor.selecting = false;
+
+    if (messageBarPrompt("Search", editorFindCallback)) {
+        free(prev_query);
+        return true;
+    }
+
+    editor.editing_point = prev_editing_point;
+    editor.coloff = prev_coloff;
+    editor.rowoff = prev_rowoff;
+    editor.search_query = prev_query;
+    editor.searching = false;
+
+    return false;
 }

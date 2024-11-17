@@ -27,7 +27,6 @@ void editorCopy();
 void editorPaste();
 void editorCut();
 void editorDelete(bool del_key);
-void editorFind();
 
 
 
