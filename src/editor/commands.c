@@ -135,18 +135,18 @@ end:
     return ok;
 }
 
-void editorQuit() {
-    bool quit = true;
-
+bool editorQuit() {
     if (editor.dirty) {
         if (messageBarPromptYesNo("File has unsaved changes. Do you want to save before exiting?")) {
             if (!editorSave()) {
-                quit = false;
+                return false;
             }
         }
     }
 
-    if (quit) editorCleanExit();
+    editorCleanExit();
+
+    return true; // UNREACHABLE
 }
 
 

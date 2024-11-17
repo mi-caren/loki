@@ -10,7 +10,7 @@ void editorInsertNewline();
 void editorInsertChar(char c);
 
 bool editorSave();
-void editorQuit();
+bool editorQuit();
 void editorCopy();
 void editorPaste();
 void editorCut();

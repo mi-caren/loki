@@ -21,7 +21,7 @@ typedef struct CommandContext {
 
 typedef struct Command {
     CommandContext ctx;
-    void (*execute) (CommandContext* ctx);
+    bool (*execute) (CommandContext* ctx);
     void (*undo) (CommandContext* ctx);
 } Command;
 
@@ -44,6 +44,9 @@ bool buildCommand(Command* cmd, int key) {
         case CTRL_KEY('q'):
             cmd->execute = editorQuit;
             return true;
+        case CTRL_KEY('s'):
+            cmd->execute = editorSave;
+            return true;
 
         default:
             return false;
@@ -60,9 +63,6 @@ void editorProcessKeypress() {
     }
 
     switch (c) {
-        case CTRL_KEY('s'):
-            editorSave();
-            break;
         case CTRL_KEY('f'):
             editorFind();
             editor.selecting = false;
