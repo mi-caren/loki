@@ -79,3 +79,7 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
     copiare
     incollare da qualche parte
     per ogni riga viene aggiunta l'indentazione di quella precedente, il sistema di auto indentazione non deve funzionare in questo caso
+
+[] Remove global declarations on Editor, Terminal ecc...
+
+[] Possibilità di specificare un colore per i messaggi nella message bar, in modo da poter colorare ad esempio in rosso i messaggi di errore
