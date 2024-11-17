@@ -9,8 +9,13 @@
 
 extern struct Editor editor;
 
-void searchResultNext() {
-    if (editor.numrows == 0 || editor.search_query == NULL) return;
+bool searchResultNext() {
+    // impossible to find a match with 0 rows or without a search query
+    if (editor.numrows == 0 || editor.search_query == NULL)
+        return false;
+
+    // clear selection in case user was highlighting something
+    editor.selecting = false;
     editor.searching = true;
     messageBarSet("Searching (ESC to cancel): %s", editor.search_query);
 
@@ -21,7 +26,7 @@ void searchResultNext() {
         if (*cur > getCol(editor.editing_point)) {
             setCol(&editor.editing_point, *cur);
             setRow(&editor.editing_point, cy);
-            return;
+            return true;
         }
     }
 
@@ -31,7 +36,7 @@ void searchResultNext() {
         if (row->search_match_pos.len > 0) {
             setRow(&editor.editing_point, cy);
             setCol(&editor.editing_point, row->search_match_pos.ptr[0]);
-            return;
+            return true;
         }
     }
 
@@ -41,13 +46,20 @@ void searchResultNext() {
         if (row->search_match_pos.len > 0) {
             setRow(&editor.editing_point, cy);
             setCol(&editor.editing_point, row->search_match_pos.ptr[0]);
-            return;
+            return true;
         }
     }
+
+    return false;
 }
 
-void searchResultPrev() {
-    if (editor.numrows == 0 || editor.search_query == NULL) return;
+bool searchResultPrev() {
+    // impossible to find a match with 0 rows or without a search query
+    if (editor.numrows == 0 || editor.search_query == NULL)
+        return false;
+
+    // clear selection in case user was highlighting something
+    editor.selecting = false;
     editor.searching = true;
     messageBarSet("Searching (ESC to cancel): %s", editor.search_query);
 
@@ -58,7 +70,7 @@ void searchResultPrev() {
         if (*cur < getCol(editor.editing_point)) {
             setCol(&editor.editing_point, *cur);
             setRow(&editor.editing_point, cy);
-            return;
+            return true;
         }
     }
 
@@ -68,7 +80,7 @@ void searchResultPrev() {
         if (row->search_match_pos.len > 0) {
             setRow(&editor.editing_point, cy);
             setCol(&editor.editing_point, row->search_match_pos.ptr[row->search_match_pos.len - 1]);
-            return;
+            return true;
         }
     }
 
@@ -78,9 +90,11 @@ void searchResultPrev() {
         if (row->search_match_pos.len > 0) {
             setRow(&editor.editing_point, cy);
             setCol(&editor.editing_point, row->search_match_pos.ptr[row->search_match_pos.len - 1]);
-            return;
+            return true;
         }
     }
+
+    return false;
 }
 
 int editorSearch(char* query) {

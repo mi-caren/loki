@@ -38,8 +38,8 @@
 * ctrl-g
 	go to line number
 
-* ctrl-z
-* ctrl-r
+[] ctrl-z
+[] ctrl-r
 
 * render trailing spaces
 
@@ -70,3 +70,12 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
     provare a selezionare una parte di testo partendo da destra e muovendosi veso sinistra
     premere backspace
     il testo selezionato non viene eliminato
+
+* migliorare codice di searchResultPrev e searchResultNexr
+    -> codice duplicato
+
+* BUG:
+    selezionare una pezzo di tesot su più righe che comprenda dell'indentazione
+    copiare
+    incollare da qualche parte
+    per ogni riga viene aggiunta l'indentazione di quella precedente, il sistema di auto indentazione non deve funzionare in questo caso

@@ -1,9 +1,10 @@
 #include "editor/utils.h"
+#include <stdbool.h>
 
 
 int editorFindCallback(char* query, int key);
 int editorSearch(char* query);
 
-void searchResultNext();
-void searchResultPrev();
+bool searchResultNext();
+bool searchResultPrev();
 

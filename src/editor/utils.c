@@ -25,14 +25,6 @@ void editorProcessKeypress() {
     }
 
     switch (c) {
-        case CTRL_KEY('n'):
-            searchResultNext();
-            editor.selecting = false;
-            break;
-        case CTRL_KEY('p'):
-            searchResultPrev();
-            editor.selecting = false;
-            break;
         case CTRL_KEY('c'):
             editorCopy();
             break;

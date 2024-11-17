@@ -173,6 +173,12 @@ bool buildCommand(Command* cmd, int key) {
         case CTRL_KEY('f'):
             cmd->execute = _editorFind;
             return true;
+        case CTRL_KEY('n'):
+            cmd->execute = searchResultNext;
+            return true;
+        case CTRL_KEY('p'):
+            cmd->execute = searchResultPrev;
+            return true;
 
         default:
             return false;
@@ -281,8 +287,6 @@ static bool _editorFind() {
     unsigned int prev_rowoff = editor.rowoff;
     char* prev_query = editor.search_query;
     editor.searching = true;
-    // clear selection in case user was highlighting something
-    editor.selecting = false;
 
     if (messageBarPrompt("Search", editorFindCallback)) {
         free(prev_query);
