@@ -2,6 +2,7 @@
 #define EDITOR_ROW_H
 
 #include <unistd.h>
+#include "editing_point.h"
 #include "utils/array.h"
 
 
@@ -19,7 +20,7 @@ typedef enum {
     HL_SELECTION,
 } Highlight;
 
-struct EditorRow {
+typedef struct EditorRow {
     unsigned int size;
     char *chars;
     Highlight* hl;
@@ -28,7 +29,7 @@ struct EditorRow {
     char *render;
 
     ArrayUnsignedInt search_match_pos;
-};
+} EditorRow;
 
 int editorRowRender(unsigned int filerow);
 void editorRowFree(struct EditorRow* row);
@@ -36,6 +37,7 @@ void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c);
 void editorRowDeleteChar(struct EditorRow* row, unsigned int pos);
 struct EditorRow* editorRowAppendString(struct EditorRow* row, char* s, size_t len);
 
+EditorRow* editorRowGet(EditingPoint ep);
 
 
 #endif

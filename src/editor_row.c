@@ -19,6 +19,10 @@
 extern struct Editor editor;
 
 
+inline EditorRow* editorRowGet(EditingPoint ep) {
+    return &editor.rows[getRow(ep)];
+}
+
 int editorRowResetHighlight(struct EditorRow* row) {
     if (row->size == 0) return 0;   // realloc sometimes throws double free() error if called with size: 0
 
