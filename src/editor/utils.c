@@ -25,9 +25,6 @@ void editorProcessKeypress() {
     }
 
     switch (c) {
-        case CTRL_KEY('c'):
-            editorCopy();
-            break;
         case CTRL_KEY('v'):
             editorPaste();
             editor.selecting = false;

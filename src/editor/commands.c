@@ -25,7 +25,7 @@ static bool _editorDeleteSelection();
 static bool _editorSave();
 static bool _editorQuit();
 static bool _editorFind();
-
+static bool _editorCopy();
 
 
 void editorDeleteChar() {
@@ -89,42 +89,6 @@ void editorInsertChar(char c) {
     setCol(&editor.editing_point, getCol(editor.editing_point) + (c == '\t' ? 4 : 1));
 }
 
-void editorCopy() {
-    int err = 0;
-    if (editor.selecting) {
-        if (editor.copy_buf == NULL) {
-            if (!(editor.copy_buf = VEC(char))) goto copy_error;
-        }
-
-        vecEmpty(editor.copy_buf);
-
-        EditingPoint ep = SELECTION_START;
-        while (ep != SELECTION_END) {
-            if (CHAR_AT(ep) == '\0') {
-                char c = '\n';
-                if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
-            } else {
-                if (!VECPUSH(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
-            }
-
-            if (getCol(ep) == editor.rows[getRow(ep)].size) {
-                incRow(&ep);
-                setCol(&ep, 0);
-            } else {
-                incCol(&ep);
-            }
-        }
-
-        char c = '\0';
-        if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
-        messageBarSet("Copied!");
-        return;
-copy_error:
-        messageBarSet("Unable to copy %d", err);
-    }
-}
-
-
 void editorPaste() {
     if (editor.copy_buf == NULL) return;
 
@@ -140,8 +104,9 @@ void editorPaste() {
 }
 
 void editorCut() {
-    editorCopy();
-    _editorDeleteSelection();
+    if(_editorCopy()) {
+        _editorDeleteSelection();
+    }
 }
 
 void editorDelete(bool del_key) {
@@ -179,6 +144,9 @@ bool buildCommand(Command* cmd, int key) {
         case CTRL_KEY('p'):
             cmd->execute = searchResultPrev;
             return true;
+        case CTRL_KEY('c'):
+            cmd->execute = _editorCopy;
+            return true;
 
         default:
             return false;
@@ -186,9 +154,13 @@ bool buildCommand(Command* cmd, int key) {
 }
 
 
+
+
 // ----------------------------------------------
 // -------------- STATIC FUNCTIONS --------------
 // ----------------------------------------------
+
+
 
 
 static inline CommandContext _currentContext() {
@@ -299,5 +271,42 @@ static bool _editorFind() {
     editor.search_query = prev_query;
     editor.searching = false;
 
+    return false;
+}
+
+static bool _editorCopy() {
+    int err = 0;
+    if (editor.selecting) {
+        if (editor.copy_buf == NULL) {
+            if (!(editor.copy_buf = VEC(char))) goto copy_error;
+        }
+
+        vecEmpty(editor.copy_buf);
+
+        EditingPoint ep = SELECTION_START;
+        while (ep != SELECTION_END) {
+            if (CHAR_AT(ep) == '\0') {
+                char c = '\n';
+                if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
+            } else {
+                if (!VECPUSH(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
+            }
+
+            if (getCol(ep) == editor.rows[getRow(ep)].size) {
+                incRow(&ep);
+                setCol(&ep, 0);
+            } else {
+                incCol(&ep);
+            }
+        }
+
+        char c = '\0';
+        if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
+        messageBarSet("Copied!");
+        return true;
+    }
+
+copy_error:
+    messageBarSet("Unable to copy %d", err);
     return false;
 }

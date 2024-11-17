@@ -23,7 +23,6 @@ void editorDeleteChar();
 void editorInsertNewline();
 void editorInsertChar(char c);
 
-void editorCopy();
 void editorPaste();
 void editorCut();
 void editorDelete(bool del_key);
