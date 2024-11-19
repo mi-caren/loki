@@ -98,6 +98,24 @@ insert_newline_error:
     return false;
 }
 
+static bool _editorInsertNewlineUndo(CommandContext* ctx) {
+    if (getRow(ctx->editing_point) + 1 >= editor.numrows)
+        return false;
+
+    EditorRow* row = editorRowGet(ctx->editing_point);
+    char* newbuf = realloc(row->chars, ctx->restore_buf_len + 1);
+    if (!newbuf)
+        return false;
+
+    strncpy(newbuf, ctx->resore_buf, ctx->restore_buf_len);
+    newbuf[ctx->restore_buf_len] = 0;
+    row->chars = newbuf;
+    row->size = ctx->restore_buf_len;
+    editorDeleteRow(getRow(ctx->editing_point) + 1);
+
+    return true;
+}
+
 
 void editorInsertChar(char c) {
     if (editor.numrows == 0) {
@@ -140,6 +158,18 @@ void commandExecute(Command* cmd) {
     cmd->execute(&cmd->ctx);
 }
 
+static void _cmdCtxNewline(CommandContext* ctx) {
+    char* newbuf = malloc(CURR_ROW.size + 1);
+    if (!newbuf) {
+        // unable to allocate restorebuf
+        return;
+    }
+    strncpy(newbuf, CURR_ROW.chars, CURR_ROW.size);
+    newbuf[CURR_ROW.size] = 0;
+    ctx->resore_buf = newbuf;
+    ctx->restore_buf_len = CURR_ROW.size;
+}
+
 bool buildCommand(Command* cmd, int key) {
     *cmd = (Command) {
         .ctx = DEFAULT_CTX,
@@ -173,7 +203,9 @@ bool buildCommand(Command* cmd, int key) {
         //     break;
 
         case '\r':
+            _cmdCtxNewline(&cmd->ctx);
             cmd->execute = _editorInsertNewline;
+            cmd->undo = _editorInsertNewlineUndo;
             return true;
 
         default:

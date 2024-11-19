@@ -8,13 +8,17 @@
 
 typedef struct CommandContext {
     char* buf;
+
+    char* resore_buf;
+    size_t restore_buf_len;
+
     EditingPoint editing_point;
 } CommandContext;
 
 typedef struct Command {
     CommandContext ctx;
     bool (*execute) (CommandContext* ctx);
-    void (*undo) (CommandContext* ctx);
+    bool (*undo) (CommandContext* ctx);
 } Command;
 
 
