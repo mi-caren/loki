@@ -72,10 +72,10 @@ void editorProcessKeypress() {
             editorDelete(c == DEL_KEY);
             break;
 
-        case '\r':
-            editorInsertNewline();
-            editor.selecting = false;
-            break;
+        // case '\r':
+        //     editorInsertNewline();
+        //     editor.selecting = false;
+        //     break;
         case '\x1b':
             editor.searching = false;
             editor.selecting = false;

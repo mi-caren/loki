@@ -2,11 +2,13 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#include "editing_point.h"
 #include "editor/utils.h"
 
 
 typedef struct CommandContext {
-    int tmp;
+    char* buf;
+    EditingPoint editing_point;
 } CommandContext;
 
 typedef struct Command {
@@ -20,7 +22,6 @@ bool buildCommand(Command* cmd, int key);
 void commandExecute(Command* cmd);
 
 void editorDeleteChar();
-void editorInsertNewline();
 void editorInsertChar(char c);
 
 void editorPaste();

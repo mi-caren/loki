@@ -83,3 +83,6 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
 [] Remove global declarations on Editor, Terminal ecc...
 
 [] Possibilità di specificare un colore per i messaggi nella message bar, in modo da poter colorare ad esempio in rosso i messaggi di errore
+
+[] replace selection
+    quando digiti o incolli avendo un pezzo di testo selezionato

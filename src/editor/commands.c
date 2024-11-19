@@ -14,11 +14,16 @@
 #include "utils/vec.h"
 #include "editor/commands.h"
 
+#define DEFAULT_CTX \
+{\
+    .editing_point = editor.editing_point,\
+    .buf = NULL,\
+}
+
 
 extern struct Editor editor;
 
 
-static inline CommandContext _currentContext();
 static unsigned int _countLeadingSpaces(struct EditorRow* row);
 static bool _editorDeleteSelection();
 
@@ -26,7 +31,8 @@ static bool _editorSave();
 static bool _editorQuit();
 static bool _editorFind();
 static bool _editorCopy();
-
+// static bool _editorPaste(CommandContext* ctx);
+static bool _editorInsertNewline(CommandContext* ctx);
 
 void editorDeleteChar() {
     if (editor.numrows == 0) return;
@@ -44,40 +50,52 @@ void editorDeleteChar() {
     }
 }
 
-void editorInsertNewline() {
+static bool _editorInsertNewline(CommandContext* ctx) {
     if (editor.numrows == 0) {
-        if (editorInsertRow(0, "", 0) == -1) goto error;
+        if (editorInsertRow(0, "", 0) == -1)
+            goto insert_newline_error;
     }
+
+    // clear selection
+    editor.selecting = false;
 
     // size of new row is the size of the sliced part of the current
     // row beginning at current cursor position and ending at end of current row
     // + the number of spaces of current row, to mantain current indentation
     // when inserting a newline
-    unsigned int curr_row_slice_size = CURR_ROW.size - getCol(editor.editing_point);
-    unsigned int leading_spaces_count = _countLeadingSpaces(&CURR_ROW);
-    unsigned int new_row_size =  curr_row_slice_size + leading_spaces_count;
+    EditorRow* row = editorRowGet(ctx->editing_point);
+    unsigned int row_slice_size = row->size - getCol(ctx->editing_point);
+    unsigned int leading_spaces_count = _countLeadingSpaces(row);
+    unsigned int new_row_size =  row_slice_size + leading_spaces_count;
 
     char* new_row_chars = malloc(new_row_size + 1);
-    if (!new_row_chars) goto error;
+    if (!new_row_chars)
+        goto insert_newline_error;
 
     memset(new_row_chars, ' ', leading_spaces_count);
     new_row_chars[leading_spaces_count] = '\0';
-    strncat(new_row_chars, &CURR_ROW.chars[getCol(editor.editing_point)], curr_row_slice_size);
+    strncat(new_row_chars, &row->chars[getCol(ctx->editing_point)], row_slice_size);
 
-    int res = editorInsertRow(getRow(editor.editing_point) + 1, new_row_chars, new_row_size);
+    int res = editorInsertRow(getRow(ctx->editing_point) + 1, new_row_chars, new_row_size);
     free(new_row_chars);
 
-    if (res == -1) goto error;
+    if (res == -1)
+        goto insert_newline_error;
 
-    CURR_ROW.chars[getCol(editor.editing_point)] = '\0';
-    CURR_ROW.size = getCol(editor.editing_point);
+    // fetch row again because calling editorInsertRow
+    // calls realloc. The address of row could change
+    row = editorRowGet(ctx->editing_point);
+    row->chars[getCol(ctx->editing_point)] = '\0';
+    row->size = getCol(ctx->editing_point);
 
+    editor.editing_point = ctx->editing_point;
     incRow(&editor.editing_point);
     setCol(&editor.editing_point, leading_spaces_count);
-    return;
+    return true;
 
-error:
+insert_newline_error:
     messageBarSet("Unable to insert new row");
+    return false;
 }
 
 
@@ -96,7 +114,8 @@ void editorPaste() {
         if (c == '\0') {
             break;
         } else if (c == '\n') {
-            editorInsertNewline();
+            CommandContext ctx = DEFAULT_CTX;
+            _editorInsertNewline(&ctx);
         } else {
             editorInsertChar(c);
         }
@@ -123,7 +142,7 @@ void commandExecute(Command* cmd) {
 
 bool buildCommand(Command* cmd, int key) {
     *cmd = (Command) {
-        .ctx = _currentContext(),
+        .ctx = DEFAULT_CTX,
         .execute = NULL,
         .undo = NULL,
     };
@@ -147,6 +166,15 @@ bool buildCommand(Command* cmd, int key) {
         case CTRL_KEY('c'):
             cmd->execute = _editorCopy;
             return true;
+        // case CTRL_KEY('v'):
+        //     cmd->ctx.buf = editor.copy_buf;
+        //     cmd->execute = _editorPaste;
+        //     editor.selecting = false;
+        //     break;
+
+        case '\r':
+            cmd->execute = _editorInsertNewline;
+            return true;
 
         default:
             return false;
@@ -163,9 +191,6 @@ bool buildCommand(Command* cmd, int key) {
 
 
 
-static inline CommandContext _currentContext() {
-    return (CommandContext) {0};
-}
 
 static unsigned int _countLeadingSpaces(struct EditorRow* row) {
     int i = 0;
@@ -310,3 +335,19 @@ copy_error:
     messageBarSet("Unable to copy %d", err);
     return false;
 }
+
+// static bool _editorPaste(CommandContext* ctx) {
+//     if (ctx->buf == NULL) return false;
+
+//     VECFOREACH(char, c, editor.copy_buf) {
+//         if (c == '\0') {
+//             break;
+//         } else if (c == '\n') {
+//             editorInsertNewline(ctx);
+//         } else {
+//             editorInsertChar(c);
+//         }
+//     }
+
+//     return true;
+// }
