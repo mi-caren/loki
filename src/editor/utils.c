@@ -18,9 +18,9 @@ extern struct Editor editor;
 void editorProcessKeypress() {
     int c = editorReadKey();
 
-    Command cmd;
-    if (buildCommand(&cmd, c)) {
-        commandExecute(&cmd);
+    Command* cmd;
+    if ((cmd = buildCommand(c)) != NULL) {
+        commandExecute(cmd);
         return;
     }
 
@@ -33,8 +33,6 @@ void editorProcessKeypress() {
             editorCut();
         case CTRL_KEY('l'):
             /* TODO */
-            break;
-        case CTRL_KEY('z'):
             break;
 
         case HOME_KEY:

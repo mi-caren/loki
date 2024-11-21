@@ -14,12 +14,6 @@
 #include "utils/vec.h"
 #include "editor/commands.h"
 
-#define DEFAULT_CTX \
-{\
-    .editing_point = editor.editing_point,\
-    .buf = NULL,\
-}
-
 
 extern struct Editor editor;
 
@@ -101,13 +95,15 @@ insert_newline_error:
 static bool _editorInsertNewlineUndo(CommandContext* ctx) {
     if (getRow(ctx->editing_point) + 1 >= editor.numrows)
         return false;
+    if (ctx->restore_buf == NULL)
+        return false;
 
     EditorRow* row = editorRowGet(ctx->editing_point);
     char* newbuf = realloc(row->chars, ctx->restore_buf_len + 1);
     if (!newbuf)
         return false;
 
-    strncpy(newbuf, ctx->resore_buf, ctx->restore_buf_len);
+    strncpy(newbuf, ctx->restore_buf, ctx->restore_buf_len);
     newbuf[ctx->restore_buf_len] = 0;
     row->chars = newbuf;
     row->size = ctx->restore_buf_len;
@@ -155,7 +151,38 @@ void editorDelete(bool del_key) {
 }
 
 void commandExecute(Command* cmd) {
-    cmd->execute(&cmd->ctx);
+    if (!cmd)
+        return;
+
+    if (cmd->execute)
+        cmd->execute(&cmd->ctx);
+
+    if (cmd->undo) {
+        VECPUSH(editor.undoable_command_history, cmd);
+        vecNext(editor.undoable_command_history);
+    } else {
+        free(cmd);
+    }
+}
+
+void commandFree(Command* cmd) {
+    free(cmd->ctx.buf);
+    free(cmd->ctx.restore_buf);
+    free(cmd);
+}
+
+static Command* _commandNew() {
+    Command* cmd = malloc(sizeof(Command));
+    if (!cmd)
+        return NULL;
+
+    *cmd = (Command) {
+        .ctx = DEFAULT_CTX,
+        .execute = NULL,
+        .undo = NULL,
+    };
+
+    return cmd;
 }
 
 static void _cmdCtxNewline(CommandContext* ctx) {
@@ -166,51 +193,80 @@ static void _cmdCtxNewline(CommandContext* ctx) {
     }
     strncpy(newbuf, CURR_ROW.chars, CURR_ROW.size);
     newbuf[CURR_ROW.size] = 0;
-    ctx->resore_buf = newbuf;
+    ctx->restore_buf = newbuf;
     ctx->restore_buf_len = CURR_ROW.size;
 }
 
-bool buildCommand(Command* cmd, int key) {
-    *cmd = (Command) {
-        .ctx = DEFAULT_CTX,
-        .execute = NULL,
-        .undo = NULL,
-    };
+static bool _editorUndo() {
+    Command* cmd = vecPrev(editor.undoable_command_history);
+    if (!cmd) {
+        return false;
+    }
+
+    if (!cmd->undo(&cmd->ctx)) {
+        vecNext(editor.undoable_command_history);
+        return false;
+    }
+
+    return true;
+}
+
+Command* buildCommand(int key) {
+    Command* cmd = _commandNew();
+
+    if (!cmd)
+        return NULL;
 
     switch (key) {
         case CTRL_KEY('q'):
             cmd->execute = _editorQuit;
-            return true;
+            break;
         case CTRL_KEY('s'):
             cmd->execute = _editorSave;
-            return true;
+            break;
         case CTRL_KEY('f'):
             cmd->execute = _editorFind;
-            return true;
+            break;
         case CTRL_KEY('n'):
             cmd->execute = searchResultNext;
-            return true;
+            break;
         case CTRL_KEY('p'):
             cmd->execute = searchResultPrev;
-            return true;
+            break;
         case CTRL_KEY('c'):
             cmd->execute = _editorCopy;
-            return true;
+            break;
         // case CTRL_KEY('v'):
         //     cmd->ctx.buf = editor.copy_buf;
         //     cmd->execute = _editorPaste;
         //     editor.selecting = false;
         //     break;
+        case CTRL_KEY('z'):
+            cmd->execute = _editorUndo;
+            break;
 
         case '\r':
+            // the creation of the ctx can fail
+            // because malloc is called. this will bring
+            // to the failing of the undo function
+            // we set the undo function anyway
+            // because command execute will check if undo is NULL
+            // to decide if it has to push it in the command history
+            //
+            // In this way, executing the undo function, if it fails
+            // the command will not be popped so it will be impossible to 
+            // undo commands executed before the failing one 
             _cmdCtxNewline(&cmd->ctx);
             cmd->execute = _editorInsertNewline;
             cmd->undo = _editorInsertNewlineUndo;
-            return true;
+            break;
 
         default:
-            return false;
+            commandFree(cmd);
+            return NULL;
     }
+
+    return cmd;
 }
 
 
@@ -344,9 +400,9 @@ static bool _editorCopy() {
         while (ep != SELECTION_END) {
             if (CHAR_AT(ep) == '\0') {
                 char c = '\n';
-                if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
+                if (!VECPUSH(editor.copy_buf, &c)) goto copy_error;
             } else {
-                if (!VECPUSH(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
+                if (!VECPUSH(editor.copy_buf, &CHAR_AT(ep))) goto copy_error;
             }
 
             if (getCol(ep) == editor.rows[getRow(ep)].size) {
@@ -358,7 +414,7 @@ static bool _editorCopy() {
         }
 
         char c = '\0';
-        if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
+        if (!VECPUSH(editor.copy_buf, &c)) goto copy_error;
         messageBarSet("Copied!");
         return true;
     }
