@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "editing_point.h"
+#include "editor/commands.h"
 
 #define LOKI_VERSION     "0.0.1"
 
@@ -59,6 +60,8 @@ struct Editor {
     bool selecting;
     EditingPoint selection_start;
     char* copy_buf;
+
+    Command* undoable_command_history;
 };
 
 

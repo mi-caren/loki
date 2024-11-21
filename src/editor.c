@@ -1,3 +1,4 @@
+#include "utils/vec.h"
 #include <bits/types/struct_iovec.h>
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
@@ -54,6 +55,8 @@ void editorInit() {
     editor.selecting = false;
     editor.selection_start = 0;
     editor.copy_buf = NULL;
+
+    editor.undoable_command_history = VEC(Command);
 
     int height = terminal.screenrows;
     if (height < 0) {
