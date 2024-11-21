@@ -1,3 +1,4 @@
+#include <bits/types/struct_iovec.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -81,13 +82,13 @@ typedef struct {
     size_t len;
     size_t cap;
     size_t sizeof_type;
-    void* cur;
+    size_t cur;
 } VecHeader;
 
-typedef struct {
-    VecHeader header;
-    void* buf;
-} Vec;
+// typedef struct {
+//     VecHeader header;
+//     void* buf;
+// } Vec;
 
 void* vecNew(size_t sizeof_type) {
     char* buf = (char*)malloc(sizeof(VecHeader) + sizeof_type);
@@ -98,7 +99,7 @@ void* vecNew(size_t sizeof_type) {
     header->len = 0;
     header->cap = 1;
     header->sizeof_type = sizeof_type;
-    header->cur = NULL;
+    header->cur = 0;
 
     return buf + sizeof(VecHeader);
 }
@@ -115,7 +116,7 @@ void* vecPush(void** vec, void* el) {
     }
 
     char* dest = (char*)*vec;
-    memcpy(&dest[VECHEAD(*vec)->len], el, VECHEAD(*vec)->sizeof_type);
+    memcpy(dest + VECHEAD(*vec)->len * VECHEAD(*vec)->sizeof_type, el, VECHEAD(*vec)->sizeof_type);
     VECHEAD(*vec)->len++;
 
     return *vec;
@@ -126,9 +127,32 @@ inline size_t vecLen(void* vec) {
 }
 
 inline void vecReset(void* vec) {
-    VECHEAD(vec)->cur = NULL;
+    VECHEAD(vec)->cur = 0;
 }
 
 inline void vecEmpty(void* vec) {
     VECHEAD(vec)->len = 0;
+}
+
+inline void* vecNext(Vec vec) {
+    if (VECHEAD(vec)->cur >= VECHEAD(vec)->len) {
+        return NULL;
+    }
+
+    void* curr = vecCurr(vec);
+    VECHEAD(vec)->cur++;
+    return curr;
+}
+
+inline void* vecPrev(Vec vec) {
+    if (VECHEAD(vec)->cur <= 0) {
+        return NULL;
+    }
+
+    VECHEAD(vec)->cur--;
+    return vecCurr(vec);;
+}
+
+inline void* vecCurr(Vec vec) {
+    return (char*)vec + VECHEAD(vec)->cur * VECHEAD(vec)->sizeof_type;
 }
