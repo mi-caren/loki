@@ -28,6 +28,8 @@ static bool _editorCopy();
 // static bool _editorPaste(CommandContext* ctx);
 static bool _editorInsertNewline(CommandContext* ctx);
 
+static void _commandFree(Command* cmd);
+
 void editorDeleteChar() {
     if (editor.numrows == 0) return;
     if (getCol(editor.editing_point) == 0 && getRow(editor.editing_point) == 0) return;
@@ -150,6 +152,13 @@ void editorDelete(bool del_key) {
     }
 }
 
+static void _freeTrailingCommands() {
+    while (editor.curr_cmd != vecLast(editor.undoable_command_history)) {
+        Command* cmd = vecPop(editor.undoable_command_history);
+        _commandFree(cmd);
+    }
+}
+
 void commandExecute(Command* cmd) {
     if (!cmd)
         return;
@@ -158,14 +167,15 @@ void commandExecute(Command* cmd) {
         cmd->execute(&cmd->ctx);
 
     if (cmd->undo) {
+        _freeTrailingCommands();
         VECPUSH(editor.undoable_command_history, cmd);
-        vecNext(editor.undoable_command_history);
+        editor.curr_cmd = vecEnd(editor.undoable_command_history);
     } else {
         free(cmd);
     }
 }
 
-void commandFree(Command* cmd) {
+static void _commandFree(Command* cmd) {
     free(cmd->ctx.buf);
     free(cmd->ctx.restore_buf);
     free(cmd);
@@ -198,16 +208,15 @@ static void _cmdCtxNewline(CommandContext* ctx) {
 }
 
 static bool _editorUndo() {
-    Command* cmd = vecPrev(editor.undoable_command_history);
-    if (!cmd) {
+    if (!editor.curr_cmd) {
         return false;
     }
 
-    if (!cmd->undo(&cmd->ctx)) {
-        vecNext(editor.undoable_command_history);
+    if (!editor.curr_cmd->undo(&editor.curr_cmd->ctx)) {
         return false;
     }
 
+    editor.curr_cmd = vecPrev(editor.undoable_command_history);
     return true;
 }
 
@@ -262,7 +271,7 @@ Command* buildCommand(int key) {
             break;
 
         default:
-            commandFree(cmd);
+            _commandFree(cmd);
             return NULL;
     }
 

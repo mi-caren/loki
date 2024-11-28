@@ -86,3 +86,10 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
 
 [] replace selection
     quando digiti o incolli avendo un pezzo di testo selezionato
+
+[] indent selection
+    indentazione a multipli di quattro,
+    per cui se sono in colonna 7 e indento
+    non faccio 7 + 4 = 11, ma ((7 + 4) / 4) * 4
+                                       ^
+                                       divisione intera

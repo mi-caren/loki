@@ -62,6 +62,7 @@ struct Editor {
     char* copy_buf;
 
     Command* undoable_command_history;
+    Command* curr_cmd;
 };
 
 

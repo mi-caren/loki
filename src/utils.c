@@ -122,37 +122,80 @@ void* vecPush(void** vec, void* el) {
     return *vec;
 }
 
+void* vecPop(Vec vec) {
+    if (vecLen(vec) == 0) return NULL;
+
+    void* el = vecLast(vec);
+
+    VECHEAD(vec)->len--;
+    if (VECHEAD(vec)->cur >= vecLen(vec))
+        VECHEAD(vec)->cur = vecLen(vec) - 1;
+
+    return el;
+}
+
 inline size_t vecLen(void* vec) {
     return VECHEAD(vec)->len;
 }
 
-inline void vecReset(void* vec) {
+inline void* vecBegin(Vec vec) {
     VECHEAD(vec)->cur = 0;
+    return vecCurr(vec);
+}
+
+inline void* vecEnd(Vec vec) {
+    if (vecLen(vec) == 0) return NULL;
+    VECHEAD(vec)->cur = vecLen(vec) - 1;
+    return vecCurr(vec);
 }
 
 inline void vecEmpty(void* vec) {
     VECHEAD(vec)->len = 0;
 }
 
+inline static void* _vecCurrUnchecked(Vec vec) {
+    return (char*)vec + VECHEAD(vec)->cur * VECHEAD(vec)->sizeof_type;
+}
+
 inline void* vecNext(Vec vec) {
-    if (VECHEAD(vec)->cur >= VECHEAD(vec)->len) {
+    if (VECHEAD(vec)->cur >= vecLen(vec) - 1) {
         return NULL;
     }
 
-    void* curr = vecCurr(vec);
     VECHEAD(vec)->cur++;
-    return curr;
+    return vecCurr(vec);
 }
 
 inline void* vecPrev(Vec vec) {
-    if (VECHEAD(vec)->cur <= 0) {
+    if (VECHEAD(vec)->cur == 0) {
         return NULL;
     }
 
     VECHEAD(vec)->cur--;
-    return vecCurr(vec);;
+    return vecCurr(vec);
 }
 
 inline void* vecCurr(Vec vec) {
-    return (char*)vec + VECHEAD(vec)->cur * VECHEAD(vec)->sizeof_type;
+    if (VECHEAD(vec)->len == 0) return NULL;
+    if (VECHEAD(vec)->cur >= vecLen(vec)) return NULL;
+    return _vecCurrUnchecked(vec);
+}
+
+inline void* vecLast(Vec vec) {
+    if (vecLen(vec) == 0) return NULL;
+    return (char*)vec + (vecLen(vec) - 1) * VECHEAD(vec)->sizeof_type;
+}
+
+inline void* vecAt(Vec vec, size_t pos) {
+    if (pos >= vecLen(vec)) return NULL;
+    return (char*)vec + pos * VECHEAD(vec)->sizeof_type;
+}
+
+inline bool vecSetAt(Vec vec, size_t pos) {
+    if (pos >= VECHEAD(vec)->len) {
+        return false;
+    }
+
+    VECHEAD(vec)->cur = pos;
+    return true;
 }

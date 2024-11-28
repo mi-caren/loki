@@ -2,6 +2,7 @@
 #define VEC_H
 
 #include <bits/types/struct_iovec.h>
+#include <stdbool.h>
 
 /*   VEC   */
 #define VEC(type) vecNew(sizeof(type))
@@ -18,14 +19,26 @@
 typedef void* Vec;
 
 void* vecNew(size_t sizeof_type);
+
 void* vecPush(void** vec, void* el);
-void vecEmpty(void* vec);
+void* vecPop(Vec vec);
+
 size_t vecLen(void* vec);
-void vecReset(void* vec);
+
+void vecEmpty(void* vec);
+
+void* vecBegin(void* vec);
+void* vecEnd(Vec vec);
+
 void* vecNext(Vec vec);
 void* vecPrev(Vec vec);
 void* vecCurr(Vec vec);
+void* vecFirst(Vec vec);
+void* vecLast(Vec vec);
 
+void* vecAt(Vec vec, size_t pos);
+size_t vecGetCurrIdx(Vec vec);
+bool vecSetAt(Vec vec, size_t pos);
 
 
 #endif
