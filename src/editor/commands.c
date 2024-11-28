@@ -154,8 +154,8 @@ void editorDelete(bool del_key) {
 
 static void _freeTrailingCommands() {
     while (editor.curr_cmd != vecLast(editor.undoable_command_history)) {
-        Command* cmd = vecPop(editor.undoable_command_history);
-        _commandFree(cmd);
+        Command** cmd = vecPop(editor.undoable_command_history);
+        _commandFree(*cmd);
     }
 }
 
@@ -163,15 +163,15 @@ void commandExecute(Command* cmd) {
     if (!cmd)
         return;
 
-    if (cmd->execute)
-        cmd->execute(&cmd->ctx);
+    if (!cmd->execute || !cmd->execute(&cmd->ctx))
+        return;
 
     if (cmd->undo) {
         _freeTrailingCommands();
-        VECPUSH(editor.undoable_command_history, cmd);
+        VECPUSH(editor.undoable_command_history, &cmd);
         editor.curr_cmd = vecEnd(editor.undoable_command_history);
     } else {
-        free(cmd);
+        _commandFree(cmd);
     }
 }
 
@@ -211,8 +211,13 @@ static bool _editorUndo() {
     if (!editor.curr_cmd) {
         return false;
     }
+    // editor.curr_cmd is a pointer to an element
+    // inside undoable_command_history, which is a
+    // collection of pointers to commands.
+    // we have to dereference to obtain the pointed command.
+    Command* curr_cmd = *editor.curr_cmd;
 
-    if (!editor.curr_cmd->undo(&editor.curr_cmd->ctx)) {
+    if (!curr_cmd->undo(&curr_cmd->ctx)) {
         return false;
     }
 

@@ -61,8 +61,8 @@ struct Editor {
     EditingPoint selection_start;
     char* copy_buf;
 
-    Command* undoable_command_history;
-    Command* curr_cmd;
+    Command** undoable_command_history;
+    Command** curr_cmd;
 };
 
 
