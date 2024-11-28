@@ -13,21 +13,20 @@
         vecPush(VEC, &el);\
     }
 #define VECFOREACH(TYPE, EL, VEC)\
-    size_t idx = 0;\
-    for (TYPE EL = VEC[0]; idx < vecLen(VEC); EL = VEC[++idx])
+    for (TYPE* EL = vecBegin(VEC); EL != NULL; EL = vecNext(VEC))
 
 typedef void* Vec;
 
 void* vecNew(size_t sizeof_type);
 
-void* vecPush(void** vec, void* el);
+void* vecPush(Vec* vec, void* el);
 void* vecPop(Vec vec);
 
-size_t vecLen(void* vec);
+size_t vecLen(Vec vec);
 
-void vecEmpty(void* vec);
+void vecEmpty(Vec vec);
 
-void* vecBegin(void* vec);
+void* vecBegin(Vec vec);
 void* vecEnd(Vec vec);
 
 void* vecNext(Vec vec);

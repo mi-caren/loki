@@ -127,13 +127,13 @@ void editorPaste() {
     if (editor.copy_buf == NULL) return;
 
     VECFOREACH(char, c, editor.copy_buf) {
-        if (c == '\0') {
+        if (*c == '\0') {
             break;
-        } else if (c == '\n') {
+        } else if (*c == '\n') {
             CommandContext ctx = DEFAULT_CTX;
             _editorInsertNewline(&ctx);
         } else {
-            editorInsertChar(c);
+            editorInsertChar(*c);
         }
     }
 }

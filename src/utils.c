@@ -104,7 +104,7 @@ void* vecNew(size_t sizeof_type) {
     return buf + sizeof(VecHeader);
 }
 
-void* vecPush(void** vec, void* el) {
+void* vecPush(Vec* vec, void* el) {
     if (VECHEAD(*vec)->len == VECHEAD(*vec)->cap) {
         size_t sizeof_type = VECHEAD(*vec)->sizeof_type;
         size_t cap = VECHEAD(*vec)->cap;
