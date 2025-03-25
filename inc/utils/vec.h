@@ -6,7 +6,7 @@
 
 /*   VEC   */
 #define VEC(type) vecNew(sizeof(type))
-#define VECPUSH(VEC, EL) vecPush((void**)&VEC, EL)
+#define VECPUSH(VEC, EL) vecPush((void**)&VEC, &EL)
 #define VECPUSH_CONST(TYPE, VEC, EL)\
     {\
         TYPE el = EL;\

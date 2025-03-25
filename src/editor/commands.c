@@ -168,7 +168,7 @@ void commandExecute(Command* cmd) {
 
     if (cmd->undo) {
         _freeTrailingCommands();
-        VECPUSH(editor.undoable_command_history, &cmd);
+        VECPUSH(editor.undoable_command_history, cmd);
         editor.curr_cmd = vecEnd(editor.undoable_command_history);
     } else {
         _commandFree(cmd);
@@ -414,9 +414,9 @@ static bool _editorCopy() {
         while (ep != SELECTION_END) {
             if (CHAR_AT(ep) == '\0') {
                 char c = '\n';
-                if (!VECPUSH(editor.copy_buf, &c)) goto copy_error;
+                if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
             } else {
-                if (!VECPUSH(editor.copy_buf, &CHAR_AT(ep))) goto copy_error;
+                if (!VECPUSH(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
             }
 
             if (getCol(ep) == editor.rows[getRow(ep)].size) {
@@ -428,7 +428,7 @@ static bool _editorCopy() {
         }
 
         char c = '\0';
-        if (!VECPUSH(editor.copy_buf, &c)) goto copy_error;
+        if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
         messageBarSet("Copied!");
         return true;
     }
