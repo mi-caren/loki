@@ -110,6 +110,7 @@ static bool _editorInsertNewlineUndo(CommandContext* ctx) {
     row->chars = newbuf;
     row->size = ctx->restore_buf_len;
     editorDeleteRow(getRow(ctx->editing_point) + 1);
+    editor.editing_point = ctx->editing_point;
 
     return true;
 }
