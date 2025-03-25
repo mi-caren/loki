@@ -14,7 +14,7 @@
 // #define COLOR_SEQ_SIZE 6
 #define PARENTHESIS      "()[]{}"
 #define C_OPERATORS     "+-*/%<>=!|&"
-#define C_SEPARATORS    ",.+-/*=~%<>;" C_OPERATORS PARENTHESIS
+#define C_SEPARATORS    ",.+-/*=~%<>;:" C_OPERATORS PARENTHESIS
 
 extern struct Editor editor;
 
@@ -51,7 +51,7 @@ const char* C_KEYWORDS[] = {
     "#include", "#define",
     "extern", "return", "sizeof", "typedef",
     "const", "static", "inline",
-    "switch", "case", "if", "else", "goto",
+    "switch", "case", "default", "if", "else", "goto",
     "for", "do", "while", "continue", "break",
     NULL
 };
