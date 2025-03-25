@@ -7,6 +7,8 @@
 #include "editing_point.h"
 #include "editor/commands.h"
 
+#include "utils/vec.h"
+
 #define LOKI_VERSION     "0.0.1"
 
 #define CURR_ROW                editor.rows[getRow(editor.editing_point)]
@@ -59,9 +61,9 @@ struct Editor {
 
     bool selecting;
     EditingPoint selection_start;
-    char* copy_buf;
+    VEC(char) copy_buf;
 
-    Command** undoable_command_history;
+    VEC(Command*) undoable_command_history;
     Command** curr_cmd;
 };
 

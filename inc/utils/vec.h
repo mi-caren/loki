@@ -5,8 +5,9 @@
 #include <stdbool.h>
 
 /*   VEC   */
-#define VEC(type) vecNew(sizeof(type))
-#define VECPUSH(VEC, EL) vecPush((void**)&VEC, &EL)
+#define VEC(TYPE)           TYPE*
+#define VECNEW(TYPE)        vecNew(sizeof(TYPE))
+#define VECPUSH(VEC, EL)    vecPush((void**)&VEC, &EL)
 #define VECPUSH_CONST(TYPE, VEC, EL)\
     {\
         TYPE el = EL;\

@@ -405,7 +405,7 @@ static bool _editorCopy() {
     int err = 0;
     if (editor.selecting) {
         if (editor.copy_buf == NULL) {
-            if (!(editor.copy_buf = VEC(char))) goto copy_error;
+            if (!(editor.copy_buf = VECNEW(char))) goto copy_error;
         }
 
         vecEmpty(editor.copy_buf);
