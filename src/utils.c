@@ -104,13 +104,26 @@ void* vecNew(size_t sizeof_type) {
     return buf + sizeof(VecHeader);
 }
 
+/*
+ * Push a new element into the vector.
+ * The element must be a void* to le this function.
+ * work with any type
+ */
 void* vecPush(Vec* vec, void* el) {
     if (VECHEAD(*vec)->len == VECHEAD(*vec)->cap) {
         size_t sizeof_type = VECHEAD(*vec)->sizeof_type;
         size_t cap = VECHEAD(*vec)->cap;
+        // vecPush can realloc the vector to increase its size.
+        // For this reason we need a Vec* and not just a Vec.
+        // In this way we can modify reference to the vector without needing
+        // the user to reassign it.
         char* new = (char*)realloc((void*)VECHEAD(*vec), sizeof(VecHeader) + sizeof_type*cap*2);
         if (new == NULL) return NULL;
 
+        // If we just took a Vec as parameter: void* vecPush(Vec vec, void* el)
+        // In the case of a realloc the operation below could not be possible
+        // and the user would be forced to reassign the variable every time hu calls vecPush:
+        // myvec = VECPUSH(myvec, el);
         *vec = new + sizeof(VecHeader);
         VECHEAD(*vec)->cap *= 2;
     }
