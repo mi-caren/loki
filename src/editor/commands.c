@@ -18,7 +18,7 @@
 extern struct Editor editor;
 
 
-static unsigned int _countLeadingSpaces(struct EditorRow* row);
+static unsigned int _countLeadingSpacesBeforeCol(struct EditorRow* row, unsigned int col);
 static bool _editorDeleteSelection();
 
 static bool _editorSave();
@@ -61,7 +61,7 @@ static bool _editorInsertNewline(CommandContext* ctx) {
     // when inserting a newline
     EditorRow* row = editorRowGet(ctx->editing_point);
     unsigned int row_slice_size = row->size - getCol(ctx->editing_point);
-    unsigned int leading_spaces_count = _countLeadingSpaces(row);
+    unsigned int leading_spaces_count = _countLeadingSpacesBeforeCol(row, getCol(ctx->editing_point));
     unsigned int new_row_size =  row_slice_size + leading_spaces_count;
 
     char* new_row_chars = malloc(new_row_size + 1);
@@ -294,9 +294,9 @@ Command* buildCommand(int key) {
 
 
 
-static unsigned int _countLeadingSpaces(struct EditorRow* row) {
-    int i = 0;
-    while (row->chars[i] == ' ') {
+static unsigned int _countLeadingSpacesBeforeCol(struct EditorRow* row, unsigned int col) {
+    unsigned int i = 0;
+    while (row->chars[i] == ' ' && i < col) {
         i++;
     }
     return i;

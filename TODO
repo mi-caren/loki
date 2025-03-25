@@ -93,3 +93,8 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
     non faccio 7 + 4 = 11, ma ((7 + 4) / 4) * 4
                                        ^
                                        divisione intera
+
+[] indentazione parentesi aperta:
+    quando si vuole aggiungere una nuova linea (newline command),
+    se il carattere appena prima del cursore è una parentesi aperta
+    allora indenta di un tab aggiuntivo 
