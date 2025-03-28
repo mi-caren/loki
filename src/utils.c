@@ -5,6 +5,7 @@
 
 #include "utils/array.h"
 #include "utils/dbuf.h"
+#include "utils/result.h"
 #include "utils/vec.h"
 
 
@@ -212,3 +213,15 @@ inline bool vecSetAt(Vec vec, size_t pos) {
     VECHEAD(vec)->cur = pos;
     return true;
 }
+
+void panic(char* msg) {
+    fprintf(stderr, "Panicked at %s:%d\n", __FILE__, __LINE__);
+    if (msg) {
+        fprintf(stderr, "%s\n", msg);
+    }
+    exit(EXIT_FAILURE);
+}
+
+
+ERROR_FUNC_DEF(void)
+OK_FUNC_DEF(void)

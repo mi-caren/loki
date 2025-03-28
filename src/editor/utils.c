@@ -171,11 +171,9 @@ void editorSetDirty() {
 }
 
 void editorExitError(const char *s) {
-    WRITE_SEQ(CLEAR_SCREEN);
-    WRITE_SEQ(MOVE_CURSOR_TO_ORIG);
-
+    WRITE_SEQ(LEAVE_ALTERNATE_SCREEN);
     perror(s);
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 void editorCleanExit() {

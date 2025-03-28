@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -161,8 +162,7 @@ static void _freeTrailingCommands() {
 }
 
 void commandExecute(Command* cmd) {
-    if (!cmd)
-        return;
+    assert(cmd != NULL);
 
     if (!cmd->execute || !cmd->execute(&cmd->ctx))
         return;

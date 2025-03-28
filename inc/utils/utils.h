@@ -2,8 +2,11 @@
 #define UTILS_H
 
 #include <bits/types/struct_iovec.h>
+#include <unistd.h>
 
-
+#define EMPTY()
+#define DEFER(A)                            A EMPTY()
+#define EXPAND(...)                         __VA_ARGS__
 #define PRIMITIVE_CAT(A, ...)               A##__VA_ARGS__
 #define CAT(A, B)                           PRIMITIVE_CAT(A, B)
 #define PAREN_CLOSE(A)                      A)
@@ -12,6 +15,8 @@
 
 #define IF_1(A, B)                          A
 #define IF_0(A, B)                          B
+
+void panic(char* msg);
 
 unsigned int umin(unsigned int a, unsigned int b);
 unsigned int umax(unsigned int a, unsigned int b);

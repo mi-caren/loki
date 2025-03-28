@@ -3,11 +3,15 @@
 
 #include <termios.h>
 
+#include "utils/result.h"
+
 #define WRITE_SEQ(SEQ)                          write(STDOUT_FILENO, SEQ##_SEQ, SEQ##_SEQ_SIZE)
 
 
 #define CLEAR_SCREEN_SEQ                        "\x1b[2J"
 #define CLEAR_SCREEN_SEQ_SIZE                   4
+#define CLEAR_SCREEN_CURSOR_DOWN_SEQ            "\x1b[0J"
+#define CLEAR_SCREEN_CURSOR_DOWN_SEQ_SIZE       4
 
 #define MOVE_CURSOR_TO_ORIG_SEQ                 "\x1b[H"
 #define MOVE_CURSOR_TO_ORIG_SEQ_SIZE            3
@@ -33,6 +37,12 @@
 #define NORMAL_FORMATTING_SEQ                   "\x1b[m"
 #define NORMAL_FORMATTING_SEQ_SIZE              3
 
+#define ENTER_ALTERNATE_SCREEN_SEQ              "\x1b[?1049h"
+#define ENTER_ALTERNATE_SCREEN_SEQ_SIZE         8
+#define LEAVE_ALTERNATE_SCREEN_SEQ              "\x1b[?1049l"
+#define LEAVE_ALTERNATE_SCREEN_SEQ_SIZE         8
+
+
 
 struct CursorPosition {
     unsigned int cx;
@@ -47,12 +57,22 @@ typedef struct {
     struct termios orig_termios;
 } Terminal;
 
+typedef enum {
+    TermOk = OK_CODE,
+    TermReadAttr,
+    TermWriteAttr,
+    TermGetCursorPos,
+    TermEscSeq,
+} TerminalErrorCode;
 
+#define TERM_ERR_READ_ATTR              ERROR_PARAMS(TermReadAttr, "Unable to read termianl attributes")
+#define TERM_ERR_WRITE_ATTR             ERROR_PARAMS(TermWriteAttr, "Unable to write terminal attributes")
+#define TERM_ERR_GET_CURSOR_POS         ERROR_PARAMS(TermGetCursorPos, "Error while getting terminal cursor position")
+#define TERM_ERR_ESC_SEQ                ERROR_PARAMS(TermEscSeq, "Escape sequence error")
 
-int terminalEnableRawMode();
+RESULT(void) terminalEnableRawMode();
 void terminalDisableRawMode();
-int terminalInit();
-
+RESULT(void) terminalInit();
 
 extern Terminal terminal;
 

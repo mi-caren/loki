@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "editor.h"
@@ -14,5 +15,5 @@ int main(int argc, char *argv[]) {
 
     editorRun();
 
-    return 0;
+    return EXIT_SUCCESS;
 }

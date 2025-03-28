@@ -1,9 +1,6 @@
-#include "utils/vec.h"
-#include <bits/types/struct_iovec.h>
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #define _GNU_SOURCE
-
 
 #include <stdbool.h>
 #include <fcntl.h>
@@ -12,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <bits/types/struct_iovec.h>
 
 #include "editing_point.h"
 #include "editor.h"
@@ -21,21 +19,29 @@
 #include "terminal.h"
 #include "status_bar.h"
 #include "utils/dbuf.h"
+#include "utils/vec.h"
+#include "utils/result.h"
 
 
 struct Editor editor;
 
 
+void _abortHandler() {
+    WRITE_SEQ(LEAVE_ALTERNATE_SCREEN);
+    write(STDOUT_FILENO, "\r\n", 2);
+}
 
+void terminate() {
+    terminalDisableRawMode();
+    WRITE_SEQ(LEAVE_ALTERNATE_SCREEN);
+}
 // *** init , open, run ***
 
 void editorInit() {
-    if (terminalEnableRawMode() == -1)
-        editorExitError("Cannot set raw mode\r\n");
+    WRITE_SEQ(ENTER_ALTERNATE_SCREEN);
+    atexit(terminate);
 
-    atexit(terminalDisableRawMode);
-
-    if (terminalInit() == -1)
+    if (IS_ERROR(terminalInit()))
         editorExitError("Unable to initialize terminal\r\n");
 
     editor.editing_point = (EditingPoint) 0;
