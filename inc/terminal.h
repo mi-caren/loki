@@ -65,7 +65,7 @@ typedef enum {
     TermEscSeq,
 } TerminalErrorCode;
 
-#define TERM_ERR_READ_ATTR              ERROR_PARAMS(TermReadAttr, "Unable to read termianl attributes")
+#define TERM_ERR_READ_ATTR              ERROR_PARAMS(TermReadAttr, "Unable to read terminal attributes")
 #define TERM_ERR_WRITE_ATTR             ERROR_PARAMS(TermWriteAttr, "Unable to write terminal attributes")
 #define TERM_ERR_GET_CURSOR_POS         ERROR_PARAMS(TermGetCursorPos, "Error while getting terminal cursor position")
 #define TERM_ERR_ESC_SEQ                ERROR_PARAMS(TermEscSeq, "Escape sequence error")
@@ -73,6 +73,7 @@ typedef enum {
 RESULT(void) terminalEnableRawMode();
 void terminalDisableRawMode();
 RESULT(void) terminalInit();
+void terminalDeinit();
 
 extern Terminal terminal;
 

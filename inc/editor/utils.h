@@ -6,7 +6,6 @@
 void editorProcessKeypress();
 int editorReadKey();
 void editorSetDirty();
-void editorCleanExit();
 void editorExitError(const char *s);
 
 void editorCxToRx();

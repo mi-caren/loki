@@ -16,7 +16,8 @@
 #define IF_1(A, B)                          A
 #define IF_0(A, B)                          B
 
-void panic(char* msg);
+void panic(char* filename, int linenumber, char* msg);
+void atPanic(void (*beforePanicCallback) ());
 
 unsigned int umin(unsigned int a, unsigned int b);
 unsigned int umax(unsigned int a, unsigned int b);

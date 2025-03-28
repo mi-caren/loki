@@ -21,6 +21,7 @@
 #include "utils/dbuf.h"
 #include "utils/vec.h"
 #include "utils/result.h"
+#include "utils/utils.h"
 
 
 struct Editor editor;
@@ -31,18 +32,21 @@ void _abortHandler() {
     write(STDOUT_FILENO, "\r\n", 2);
 }
 
-void terminate() {
-    terminalDisableRawMode();
+void atPanicCallback() {
     WRITE_SEQ(LEAVE_ALTERNATE_SCREEN);
 }
-// *** init , open, run ***
 
 void editorInit() {
+    // We immediately switch to alternate screen
+    // because terminalInit function can mess the terminal by moving the cursor
     WRITE_SEQ(ENTER_ALTERNATE_SCREEN);
-    atexit(terminate);
+    // Leave alternate screen if a panic occurs
+    atPanic(atPanicCallback);
 
     if (IS_ERROR(terminalInit()))
-        editorExitError("Unable to initialize terminal\r\n");
+        editorExitError("Unable to initialize terminal\n");
+
+    atexit(terminalDeinit);
 
     editor.editing_point = (EditingPoint) 0;
     editor.rx = 0;

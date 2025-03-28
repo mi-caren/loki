@@ -56,12 +56,12 @@
 
 
 #define UNWRAP_FUNC_NAME(TYPE)          CAT(unwrap_, RESULT(TYPE))
-#define UNWRAP_FUNC_SIGNATURE(TYPE)     TYPE UNWRAP_FUNC_NAME(TYPE)(RESULT(TYPE) result)
+#define UNWRAP_FUNC_SIGNATURE(TYPE)     TYPE UNWRAP_FUNC_NAME(TYPE)(RESULT(TYPE) result, char* filename, int linenumber)
 
 #define UNWRAP_FUNC_DEF(TYPE) \
     UNWRAP_FUNC_SIGNATURE(TYPE) { \
         if (result.err.code != OK_CODE) { \
-            panic(result.err.message); \
+            panic(filename, linenumber, result.err.message); \
         } \
         IF_VOID(TYPE)( \
             , \
@@ -70,7 +70,7 @@
     }
 
 
-#define UNWRAP(TYPE, RESULT)            UNWRAP_FUNC_NAME(TYPE)(RESULT)
+#define UNWRAP(TYPE, RESULT)            UNWRAP_FUNC_NAME(TYPE)(RESULT, __FILE__, __LINE__)
 
 #define TRY(TYPE, EXPR, ...) { \
     RESULT(TYPE) __res__ = EXPR; \

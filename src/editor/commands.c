@@ -376,7 +376,7 @@ static bool _editorQuit() {
         }
     }
 
-    editorCleanExit();
+    exit(EXIT_SUCCESS);
 
     return true; // UNREACHABLE
 }

@@ -57,6 +57,10 @@ inline void terminalDisableRawMode() {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &terminal.orig_termios);
 }
 
+void terminalDeinit() {
+    WRITE_SEQ(LEAVE_ALTERNATE_SCREEN);
+    terminalDisableRawMode();
+}
 
 
 

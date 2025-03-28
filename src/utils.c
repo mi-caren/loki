@@ -214,14 +214,32 @@ inline bool vecSetAt(Vec vec, size_t pos) {
     return true;
 }
 
-void panic(char* msg) {
-    fprintf(stderr, "Panicked at %s:%d\n", __FILE__, __LINE__);
+
+static void (*beforePanicFunc) () = NULL;
+
+
+void atPanic(void (*beforePanicCallback) ()) {
+    beforePanicFunc = beforePanicCallback;
+}
+
+// Calls a function registered with atPanic,
+// print an error message and exits with error.
+void panic(char* filename, int linenumber, char* msg) {
+    if (beforePanicFunc) {
+        beforePanicFunc();
+    }
+
+    fprintf(stderr, "Panicked at %s:%d\n", filename, linenumber);
     if (msg) {
         fprintf(stderr, "%s\n", msg);
     }
     exit(EXIT_FAILURE);
 }
 
+UNWRAP_FUNC_DEF(void)
+UNWRAP_FUNC_DEF(int)
+UNWRAP_FUNC_DEF(unsigned int)
 
 ERROR_FUNC_DEF(void)
+
 OK_FUNC_DEF(void)
