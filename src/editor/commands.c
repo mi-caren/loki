@@ -12,11 +12,17 @@
 #include "editor/defs.h"
 #include "editor/utils.h"
 #include "editor/search.h"
+#include "utils/result.h"
 #include "utils/vec.h"
 #include "editor/commands.h"
 
 
 extern struct Editor editor;
+
+
+ERROR_FUNC_DEF(CommandPtr)
+OK_FUNC_DEF(CommandPtr)
+TRY_FUNC_DEF(CommandPtr)
 
 
 static unsigned int _countLeadingSpacesBeforeCol(struct EditorRow* row, unsigned int col);
@@ -182,10 +188,10 @@ static void _commandFree(Command* cmd) {
     free(cmd);
 }
 
-static Command* _commandNew() {
+static RESULT(CommandPtr) _commandNew() {
     Command* cmd = malloc(sizeof(Command));
     if (!cmd)
-        return NULL;
+        return ERROR(CommandPtr, CMD_ERR_NEW);
 
     *cmd = (Command) {
         .ctx = DEFAULT_CTX,
@@ -193,7 +199,7 @@ static Command* _commandNew() {
         .undo = NULL,
     };
 
-    return cmd;
+    return OK(CommandPtr, cmd);
 }
 
 static void _cmdCtxNewline(CommandContext* ctx) {
@@ -226,11 +232,8 @@ static bool _editorUndo() {
     return true;
 }
 
-Command* buildCommand(int key) {
-    Command* cmd = _commandNew();
-
-    if (!cmd)
-        return NULL;
+RESULT(CommandPtr) buildCommand(int key) {
+    Command* cmd = TRY(CommandPtr, _commandNew());
 
     switch (key) {
         case CTRL_KEY('q'):
@@ -278,10 +281,10 @@ Command* buildCommand(int key) {
 
         default:
             _commandFree(cmd);
-            return NULL;
+            return ERROR(CommandPtr, CMD_ERR_NOT_KNOWN);
     }
 
-    return cmd;
+    return OK(CommandPtr, cmd);
 }
 
 

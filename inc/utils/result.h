@@ -22,6 +22,11 @@
 
 
 
+typedef struct Error {
+    int code;
+    char* message;
+} Error;
+
 #define RESULT(TYPE)\
     IF_UNSIGNED(TYPE)(\
         CAT(RESULT_, PAREN_CLOSE(TYPE)),\
@@ -72,14 +77,33 @@
 
 #define UNWRAP(TYPE, RESULT)            UNWRAP_FUNC_NAME(TYPE)(RESULT, __FILE__, __LINE__)
 
-#define TRY(TYPE, EXPR, ...) { \
-    RESULT(TYPE) __res__ = EXPR; \
-    if (__res__.err.code != OK_CODE) return __res__; \
-    IF_EMPTY(__VA_ARGS__)( \
-        , \
-        __VA_ARGS__ = __res__.val; \
-    ) \
-}
+void __set_try_error__(Error err);
+Error __get_try_error__();
+
+#define TRY_FUNC_NAME(TYPE)             CAT(try_, RESULT(TYPE))
+#define TRY_FUNC_SIGNATURE(TYPE)              TYPE TRY_FUNC_NAME(TYPE)(RESULT(TYPE) result)
+
+#define TRY_FUNC_DEF(TYPE) \
+    TRY_FUNC_SIGNATURE(TYPE) { \
+        __set_try_error__(result.err); \
+        IF_VOID(TYPE)( \
+            , \
+            return result.val; \
+        ) \
+    }
+
+#define TRY(TYPE, EXPR) \
+    TRY_FUNC_NAME(TYPE)(EXPR); \
+    if (__get_try_error__().code != OK_CODE) \
+        return (RESULT(TYPE)){ .err = __get_try_error__() };
+
+
+#define CATCH(TYPE, EXPR, ERR) \
+    TRY_FUNC_NAME(TYPE)(EXPR); \
+    ERR = __get_try_error__(); \
+    if (ERR.code != OK_CODE) \
+
+
 
 #define ERROR_FUNC_NAME(TYPE)           CAT(error_, RESULT(TYPE))
 #define ERROR_FUNC_SIGNATURE(TYPE)      RESULT(TYPE) ERROR_FUNC_NAME(TYPE)(unsigned int code, char* message)
@@ -117,10 +141,6 @@
 #define IS_OK(RESULT)                   (RESULT.err.code == OK_CODE)
 #define IS_ERROR(RESULT)                (RESULT.err.code != OK_CODE)
 
-typedef struct Error {
-    int code;
-    char* message;
-} Error;
 
 RESULT_STRUCT_DEF(void);
 RESULT_STRUCT_DEF(int);
@@ -130,6 +150,9 @@ RESULT_STRUCT_DEF(unsigned int);
 UNWRAP_FUNC_SIGNATURE(void);
 UNWRAP_FUNC_SIGNATURE(int);
 UNWRAP_FUNC_SIGNATURE(unsigned int);
+
+
+TRY_FUNC_SIGNATURE(void);
 
 
 ERROR_FUNC_SIGNATURE(void);

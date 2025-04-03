@@ -7,6 +7,7 @@
 
 #include "editing_point.h"
 #include "editor/utils.h"
+#include "utils/result.h"
 
 #define DEFAULT_CTX \
 {\
@@ -31,8 +32,17 @@ typedef struct Command {
     bool (*undo) (CommandContext* ctx);
 } Command;
 
+typedef Command* CommandPtr;
 
-Command* buildCommand(int key);
+RESULT_STRUCT_DEF(CommandPtr);
+
+TRY_FUNC_SIGNATURE(CommandPtr);
+
+ERROR_FUNC_SIGNATURE(CommandPtr);
+OK_FUNC_SIGNATURE(CommandPtr);
+
+
+RESULT(CommandPtr) buildCommand(int key);
 void commandExecute(Command* cmd);
 
 void editorDeleteChar();
@@ -42,6 +52,14 @@ void editorPaste();
 void editorCut();
 void editorDelete(bool del_key);
 
+typedef enum {
+    CmdOk = OK_CODE,
+    CmdNew,
+    CmdNotKnown,
+} CommandErrorCode;
+
+#define CMD_ERR_NEW                 ERROR_PARAMS(CmdNew, "Unable to create new editor command")
+#define CMD_ERR_NOT_KNOWN           ERROR_PARAMS(CmdNotKnown, "Unknown editor command")
 
 
 #endif

@@ -12,16 +12,20 @@
 #include "editor_row.h"
 #include "status_bar.h"
 #include "terminal.h"
+#include "utils/result.h"
+#include "utils/utils.h"
 
 extern struct Editor editor;
 
 void editorProcessKeypress() {
     int c = editorReadKey();
 
-    Command* cmd;
-    if ((cmd = buildCommand(c)) != NULL) {
-        commandExecute(cmd);
+    RESULT(CommandPtr) res = buildCommand(c);
+    if (IS_OK(res)) {
+        commandExecute(res.val);
         return;
+    } else if (res.err.code != CmdNotKnown) {
+        panic(__FILE__, __LINE__, res.err.message);
     }
 
     switch (c) {

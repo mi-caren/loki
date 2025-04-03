@@ -8,6 +8,8 @@
 #include "utils/result.h"
 #include "utils/vec.h"
 
+static Error __try_error__ = INIT_RESULT_ERR;
+
 
 void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) {
     char *new = realloc(dbuf->b, dbuf->len + len);
@@ -240,6 +242,15 @@ UNWRAP_FUNC_DEF(void)
 UNWRAP_FUNC_DEF(int)
 UNWRAP_FUNC_DEF(unsigned int)
 
+TRY_FUNC_DEF(void)
+
 ERROR_FUNC_DEF(void)
 
 OK_FUNC_DEF(void)
+
+inline void __set_try_error__(Error err) {
+    __try_error__ = err;
+}
+inline Error __get_try_error__() {
+    return __try_error__;
+}
