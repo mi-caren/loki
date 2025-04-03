@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <bits/types/struct_iovec.h>
 
 #include "editing_point.h"
 #include "editor.h"

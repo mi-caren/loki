@@ -1,4 +1,4 @@
-CC = gcc
+CC = zig cc
 SHARED_FLAGS = -Wall -Wextra -pedantic -Iinc
 CFLAGS = $(SHARED_FLAGS) -g
 
@@ -20,7 +20,8 @@ TESTBINS = $(patsubst $(TESTDIR)/%.c, $(TESTDIR)/bin/%, $(TESTS))
 EXE = loki
 
 $(EXE): $(OBJDIR) $(OBJS)
-	$(CC) $(OBJS) -o $@
+	zig build-exe --library c -target x86_64-linux-musl $(OBJS) -femit-bin=$@
+#	$(CC) $(OBJS) -o $@
 
 release: CFLAGS = $(SHARED_FLAGS) -O3
 release: clean
@@ -33,10 +34,12 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	zig build-obj -Iinc --library c -target x86_64-linux-musl $< -femit-bin=$@
+#	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/editor_%.o: $(SRCDIR)/editor/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	zig build-obj -Iinc --library c -target x86_64-linux-musl $< -femit-bin=$@
+#	$(CC) $(CFLAGS) -c $< -o $@
 
 
 # TESTS

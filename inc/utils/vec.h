@@ -1,8 +1,8 @@
 #ifndef VEC_H
 #define VEC_H
 
-#include <bits/types/struct_iovec.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 /*   VEC   */
 #define VEC(TYPE)           TYPE*

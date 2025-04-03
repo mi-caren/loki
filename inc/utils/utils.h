@@ -1,7 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <bits/types/struct_iovec.h>
 #include <unistd.h>
 
 #define EMPTY()
