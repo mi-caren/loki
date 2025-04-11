@@ -22,10 +22,7 @@
 
 
 
-typedef struct Error {
-    int code;
-    char* message;
-} Error;
+typedef int Error;
 
 #define RESULT(TYPE)\
     IF_UNSIGNED(TYPE)(\
@@ -56,8 +53,7 @@ typedef struct Error {
 
 
 
-#define INIT_RESULT                     { .err = INIT_RESULT_ERR }
-#define INIT_RESULT_ERR                 { .code = 0, .message = NULL }
+#define INIT_RESULT                     { .err = OK_CODE }
 
 
 #define UNWRAP_FUNC_NAME(TYPE)          CAT(unwrap_, RESULT(TYPE))
@@ -65,8 +61,10 @@ typedef struct Error {
 
 #define UNWRAP_FUNC_DEF(TYPE) \
     UNWRAP_FUNC_SIGNATURE(TYPE) { \
-        if (result.err.code != OK_CODE) { \
-            panic(filename, linenumber, result.err.message); \
+        if (result.err != OK_CODE) { \
+            char __err_msg_buf__[24]; \
+            snprintf(__err_msg_buf__, 24, "ERROR CODE: [%d]", result.err); \
+            panic(filename, linenumber, __err_msg_buf__); \
         } \
         IF_VOID(TYPE)( \
             , \
@@ -94,7 +92,7 @@ Error __get_try_error__();
 
 #define TRY(TYPE, EXPR) \
     TRY_FUNC_NAME(TYPE)(EXPR); \
-    if (__get_try_error__().code != OK_CODE) \
+    if (__get_try_error__() != OK_CODE) \
         return (RESULT(TYPE)){ .err = __get_try_error__() };
 
 
@@ -106,13 +104,12 @@ Error __get_try_error__();
 
 
 #define ERROR_FUNC_NAME(TYPE)           CAT(error_, RESULT(TYPE))
-#define ERROR_FUNC_SIGNATURE(TYPE)      RESULT(TYPE) ERROR_FUNC_NAME(TYPE)(unsigned int code, char* message)
+#define ERROR_FUNC_SIGNATURE(TYPE)      RESULT(TYPE) ERROR_FUNC_NAME(TYPE)(Error code)
 
 #define ERROR_FUNC_DEF(TYPE) \
     inline ERROR_FUNC_SIGNATURE(TYPE) { \
         RESULT(TYPE) res; \
-        res.err.code = code; \
-        res.err.message = message; \
+        res.err = code; \
         return res; \
     }
 
@@ -138,8 +135,8 @@ Error __get_try_error__();
 #define OK_CODE 0
 #define OK(TYPE, ...)                   OK_FUNC_NAME(TYPE)(IF_VOID(TYPE)( , __VA_ARGS__))
 
-#define IS_OK(RESULT)                   (RESULT.err.code == OK_CODE)
-#define IS_ERROR(RESULT)                (RESULT.err.code != OK_CODE)
+#define IS_OK(RESULT)                   (RESULT.err == OK_CODE)
+#define IS_ERROR(RESULT)                (RESULT.err != OK_CODE)
 
 
 RESULT_STRUCT_DEF(void);

@@ -7,7 +7,7 @@
 #include "utils/result.h"
 #include "utils/vec.h"
 
-static Error __try_error__ = INIT_RESULT_ERR;
+static Error __try_error__ = OK_CODE;
 
 
 void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) {
@@ -238,14 +238,15 @@ void panic(char* filename, int linenumber, char* msg) {
 }
 
 UNWRAP_FUNC_DEF(void)
+TRY_FUNC_DEF(void)
+ERROR_FUNC_DEF(void)
+OK_FUNC_DEF(void)
+
 UNWRAP_FUNC_DEF(int)
 UNWRAP_FUNC_DEF(unsigned int)
 
-TRY_FUNC_DEF(void)
 
-ERROR_FUNC_DEF(void)
 
-OK_FUNC_DEF(void)
 
 inline void __set_try_error__(Error err) {
     __try_error__ = err;

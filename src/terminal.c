@@ -3,6 +3,7 @@
 
 #include "terminal.h"
 #include "utils/result.h"
+#include "error.h"
 
 Terminal terminal;
 
@@ -27,7 +28,7 @@ RESULT(void) terminalInit() {
  */
 RESULT(void) terminalEnableRawMode() {
     if (tcgetattr(STDIN_FILENO, &terminal.orig_termios) == -1)
-        return ERROR(void, TERM_ERR_READ_ATTR);
+        return ERROR(void, ERR_TERM_READ_ATTR);
 
     struct termios raw = terminal.orig_termios;
     cfmakeraw(&raw);
@@ -41,7 +42,7 @@ RESULT(void) terminalEnableRawMode() {
     //    aspetta che tutti gli output siano stati scritti sul terminale
     //    e scarta tutti gli input non letti
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1)
-        return ERROR(void, TERM_ERR_WRITE_ATTR);
+        return ERROR(void, ERR_TERM_WRITE_ATTR);
 
     return OK(void);
 }
@@ -71,7 +72,7 @@ static RESULT(void) terminalGetCursorPosition(int *rows, int *cols) {
     unsigned int i = 0;
 
     if (WRITE_SEQ(REQUEST_CURSOR_POSITION) != 4)
-        return ERROR(void, TERM_ERR_GET_CURSOR_POS);
+        return ERROR(void, ERR_TERM_GET_CURSOR_POS);
 
     while (i < sizeof(buf) - 1) {
         if (read(STDIN_FILENO, &buf[i], 1) != 1) break;
@@ -81,17 +82,17 @@ static RESULT(void) terminalGetCursorPosition(int *rows, int *cols) {
     buf[i] = '\0';
 
     if (buf[0] != '\x1b' || buf[1] != '[')
-        return ERROR(void, TERM_ERR_GET_CURSOR_POS);
+        return ERROR(void, ERR_TERM_GET_CURSOR_POS);
 
     if (sscanf(&buf[2], "%d;%d", rows, cols) != 2)
-        return ERROR(void, TERM_ERR_GET_CURSOR_POS);
+        return ERROR(void, ERR_TERM_GET_CURSOR_POS);
 
     return OK(void);
 }
 
 static RESULT(void) terminalGetWindowSize(int *rows, int *cols) {
     if (WRITE_SEQ(MOVE_CURSOR_TO_BOTTOM_RIGHT) != 12)
-        return ERROR(void, TERM_ERR_ESC_SEQ);
+        return ERROR(void, ERR_TERM_ESC_SEQ);
 
     return terminalGetCursorPosition(rows, cols);
 }

@@ -15,6 +15,7 @@
 #include "utils/result.h"
 #include "utils/vec.h"
 #include "editor/commands.h"
+#include "error.h"
 
 
 extern struct Editor editor;
@@ -191,7 +192,7 @@ static void _commandFree(Command* cmd) {
 static RESULT(CommandPtr) _commandNew() {
     Command* cmd = malloc(sizeof(Command));
     if (!cmd)
-        return ERROR(CommandPtr, CMD_ERR_NEW);
+        return ERROR(CommandPtr, ERR_CMD_NEW);
 
     *cmd = (Command) {
         .ctx = DEFAULT_CTX,
@@ -281,7 +282,7 @@ RESULT(CommandPtr) buildCommand(int key) {
 
         default:
             _commandFree(cmd);
-            return ERROR(CommandPtr, CMD_ERR_NOT_KNOWN);
+            return ERROR(CommandPtr, ERR_CMD_NOT_KNOWN);
     }
 
     return OK(CommandPtr, cmd);

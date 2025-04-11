@@ -14,6 +14,7 @@
 #include "terminal.h"
 #include "utils/result.h"
 #include "utils/utils.h"
+#include "error.h"
 
 extern struct Editor editor;
 
@@ -24,8 +25,8 @@ void editorProcessKeypress() {
     if (IS_OK(res)) {
         commandExecute(res.val);
         return;
-    } else if (res.err.code != CmdNotKnown) {
-        panic(__FILE__, __LINE__, res.err.message);
+    } else if (res.err != ERR_CMD_NOT_KNOWN) {
+        panic(__FILE__, __LINE__, NULL);
     }
 
     switch (c) {

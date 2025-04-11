@@ -52,11 +52,6 @@ void editorPaste();
 void editorCut();
 void editorDelete(bool del_key);
 
-typedef enum {
-    CmdOk = OK_CODE,
-    CmdNew,
-    CmdNotKnown,
-} CommandErrorCode;
 
 #define CMD_ERR_NEW                 ERROR_PARAMS(CmdNew, "Unable to create new editor command")
 #define CMD_ERR_NOT_KNOWN           ERROR_PARAMS(CmdNotKnown, "Unknown editor command")

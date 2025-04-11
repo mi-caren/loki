@@ -57,14 +57,6 @@ typedef struct {
     struct termios orig_termios;
 } Terminal;
 
-typedef enum {
-    TermOk = OK_CODE,
-    TermReadAttr,
-    TermWriteAttr,
-    TermGetCursorPos,
-    TermEscSeq,
-} TerminalErrorCode;
-
 #define TERM_ERR_READ_ATTR              ERROR_PARAMS(TermReadAttr, "Unable to read terminal attributes")
 #define TERM_ERR_WRITE_ATTR             ERROR_PARAMS(TermWriteAttr, "Unable to write terminal attributes")
 #define TERM_ERR_GET_CURSOR_POS         ERROR_PARAMS(TermGetCursorPos, "Error while getting terminal cursor position")
