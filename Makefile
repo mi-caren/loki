@@ -6,7 +6,7 @@ SRCS = $(wildcard $(SRCDIR)/*.c $(SRCDIR)/*/*.c)
 EXE = loki
 
 loki: $(SRCS)
-	zig build-exe -I inc --library c $(SRCS) -femit-bin=loki
+	zig build-exe $(SRCS) -I inc --library c -target x86_64-linux-musl -femit-bin=loki
 
 
 release: clean
