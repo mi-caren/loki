@@ -13,12 +13,16 @@
         TYPE el = EL;\
         vecPush(VEC, &el);\
     }
-#define VECFOREACH(TYPE, EL, VEC)\
+#define VECFOREACH(TYPE, EL, VEC) \
     for (TYPE* EL = vecBegin(VEC); EL != NULL; EL = vecNext(VEC))
+
+#define VEC_FOREACH_REV(TYPE, EL, VEC) \
+    for (TYPE* EL = vecEnd(VEC); EL != NULL; EL = vecPrev(VEC))
 
 typedef void* Vec;
 
 void* vecNew(size_t sizeof_type);
+void vecFree(Vec vec);
 
 void* vecPush(Vec* vec, void* el);
 void* vecPop(Vec vec);
@@ -27,7 +31,9 @@ size_t vecLen(Vec vec);
 
 void vecEmpty(Vec vec);
 
+/* Resets the vector iterator to its first element and returns that element */
 void* vecBegin(Vec vec);
+/* Sets the vector iterator to its last element and returns that element */
 void* vecEnd(Vec vec);
 
 void* vecNext(Vec vec);

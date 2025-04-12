@@ -7,12 +7,14 @@
 #include <unistd.h>
 
 #include "editing_point.h"
+#include "editor/keys.h"
 #include "status_bar.h"
 #include "editor_row.h"
 #include "editor/defs.h"
 #include "editor/utils.h"
 #include "editor/search.h"
 #include "utils/result.h"
+#include "utils/utils.h"
 #include "utils/vec.h"
 #include "editor/commands.h"
 #include "error.h"
@@ -21,45 +23,80 @@
 extern struct Editor editor;
 
 
-ERROR_FUNC_DEF(CommandPtr)
-OK_FUNC_DEF(CommandPtr)
-TRY_FUNC_DEF(CommandPtr)
-
-
 static unsigned int _countLeadingSpacesBeforeCol(struct EditorRow* row, unsigned int col);
 static bool _editorDeleteSelection();
 
-static bool _editorSave();
-static bool _editorQuit();
-static bool _editorFind();
-static bool _editorCopy();
 // static bool _editorPaste(CommandContext* ctx);
-static bool _editorInsertNewline(CommandContext* ctx);
+static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep);
+static void _historyPushCmd(VEC(CoreCommand) cmd);
 
-static void _commandFree(Command* cmd);
+// static void _commandFree(Command* cmd);
 
-void editorDeleteChar() {
-    if (editor.numrows == 0) return;
-    if (getCol(editor.editing_point) == 0 && getRow(editor.editing_point) == 0) return;
-
-    if (getCol(editor.editing_point) > 0) {
-        editorRowDeleteChar(&CURR_ROW, getCol(editor.editing_point) - 1);
-        decCol(&editor.editing_point);
-    } else {
-        editingPointMove(ARROW_LEFT);
-        if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
-            messageBarSet("Unable to delete char at %d, %d", getCol(editor.editing_point) - 1, getRow(editor.editing_point));
-        }
-        editorDeleteRow(getRow(editor.editing_point) + 1);
-    }
-}
-
-static bool _editorInsertNewline(CommandContext* ctx) {
+static RESULT(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
     if (editor.numrows == 0) {
         if (editorInsertRow(0, "", 0) == -1)
-            goto insert_newline_error;
+            return ERROR(EditingPoint, ERR_CORE_INSERT_ROW);
     }
 
+    if (c == '\r')
+        return _coreInsertNewline(ep);
+
+    editorRowInsertChar(&ROW_AT(ep), getCol(ep), c);
+    setCol(&ep, getCol(ep) + (c == '\t' ? 4 : 1));
+
+    return OK(EditingPoint, ep);
+}
+
+static RESULT(char) _coreDeleteChar(EditingPoint ep) {
+    if (editor.numrows == 0)
+        return ERROR(char, ERR_CORE_DELETE_NO_ROWS);
+
+    if (getRow(ep) >= editor.numrows || getCol(ep) > ROW_AT(ep).size)
+        return ERROR(char, ERR_CORE_DELETE_CHAR_INVALID_EP);
+
+    if (getCol(ep) == ROW_AT(ep).size) {
+        EditorRow next_row = ROW_AT(addRows(ep, 1));
+        if (!editorRowAppendString(&ROW_AT(ep), next_row.chars, next_row.size))
+            return ERROR(char, ERR_CORE_APPEND_NEXT_ROW);
+        editorDeleteRow(getRow(ep) + 1);
+
+        return OK(char, '\r');
+    }
+
+    char c = CHAR_AT(ep);
+    editorRowDeleteChar(&ROW_AT(ep), getCol(ep));
+    // decCol(&ep);
+    return OK(char, c);
+
+    // if (getCol(editor.editing_point) > 0) {
+    //     editorRowDeleteChar(&CURR_ROW, getCol(editor.editing_point) - 1);
+    //     decCol(&editor.editing_point);
+    // } else {
+    //     editingPointMove(ARROW_LEFT);
+    //     if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
+    //         messageBarSet("Unable to delete char at %d, %d", getCol(editor.editing_point) - 1, getRow(editor.editing_point));
+    //     }
+    //     editorDeleteRow(getRow(editor.editing_point) + 1);
+    // }
+}
+
+// void editorDeleteChar() {
+//     if (editor.numrows == 0) return;
+//     if (getCol(editor.editing_point) == 0 && getRow(editor.editing_point) == 0) return;
+
+//     if (getCol(editor.editing_point) > 0) {
+//         editorRowDeleteChar(&CURR_ROW, getCol(editor.editing_point) - 1);
+//         decCol(&editor.editing_point);
+//     } else {
+//         editingPointMove(ARROW_LEFT);
+//         if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
+//             messageBarSet("Unable to delete char at %d, %d", getCol(editor.editing_point) - 1, getRow(editor.editing_point));
+//         }
+//         editorDeleteRow(getRow(editor.editing_point) + 1);
+//     }
+// }
+
+static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep) {
     // clear selection
     editor.selecting = false;
 
@@ -67,9 +104,9 @@ static bool _editorInsertNewline(CommandContext* ctx) {
     // row beginning at current cursor position and ending at end of current row
     // + the number of spaces of current row, to mantain current indentation
     // when inserting a newline
-    EditorRow* row = editorRowGet(ctx->editing_point);
-    unsigned int row_slice_size = row->size - getCol(ctx->editing_point);
-    unsigned int leading_spaces_count = _countLeadingSpacesBeforeCol(row, getCol(ctx->editing_point));
+    EditorRow* row = editorRowGet(ep);
+    unsigned int row_slice_size = row->size - getCol(ep);
+    unsigned int leading_spaces_count = _countLeadingSpacesBeforeCol(row, getCol(ep));
     unsigned int new_row_size =  row_slice_size + leading_spaces_count;
 
     char* new_row_chars = malloc(new_row_size + 1);
@@ -78,9 +115,9 @@ static bool _editorInsertNewline(CommandContext* ctx) {
 
     memset(new_row_chars, ' ', leading_spaces_count);
     new_row_chars[leading_spaces_count] = '\0';
-    strncat(new_row_chars, &row->chars[getCol(ctx->editing_point)], row_slice_size);
+    strncat(new_row_chars, &row->chars[getCol(ep)], row_slice_size);
 
-    int res = editorInsertRow(getRow(ctx->editing_point) + 1, new_row_chars, new_row_size);
+    int res = editorInsertRow(getRow(ep) + 1, new_row_chars, new_row_size);
     free(new_row_chars);
 
     if (res == -1)
@@ -88,204 +125,217 @@ static bool _editorInsertNewline(CommandContext* ctx) {
 
     // fetch row again because calling editorInsertRow
     // calls realloc. The address of row could change
-    row = editorRowGet(ctx->editing_point);
-    row->chars[getCol(ctx->editing_point)] = '\0';
-    row->size = getCol(ctx->editing_point);
+    row = editorRowGet(ep);
+    row->chars[getCol(ep)] = '\0';
+    row->size = getCol(ep);
 
-    editor.editing_point = ctx->editing_point;
-    incRow(&editor.editing_point);
-    setCol(&editor.editing_point, leading_spaces_count);
-    return true;
+    incRow(&ep);
+    setCol(&ep, leading_spaces_count);
+    return OK(EditingPoint, ep);
 
 insert_newline_error:
     messageBarSet("Unable to insert new row");
-    return false;
+    return ERROR(EditingPoint, ERR_CORE_INSERT_NEWLINE);
 }
 
-static bool _editorInsertNewlineUndo(CommandContext* ctx) {
-    if (getRow(ctx->editing_point) + 1 >= editor.numrows)
-        return false;
-    if (ctx->restore_buf == NULL)
-        return false;
+// static bool _editorInsertNewlineUndo(CommandContext* ctx) {
+//     if (getRow(ctx->editing_point) + 1 >= editor.numrows)
+//         return false;
+//     if (ctx->restore_buf == NULL)
+//         return false;
 
-    EditorRow* row = editorRowGet(ctx->editing_point);
-    char* newbuf = realloc(row->chars, ctx->restore_buf_len + 1);
-    if (!newbuf)
-        return false;
+//     EditorRow* row = editorRowGet(ctx->editing_point);
+//     char* newbuf = realloc(row->chars, ctx->restore_buf_len + 1);
+//     if (!newbuf)
+//         return false;
 
-    strncpy(newbuf, ctx->restore_buf, ctx->restore_buf_len);
-    newbuf[ctx->restore_buf_len] = 0;
-    row->chars = newbuf;
-    row->size = ctx->restore_buf_len;
-    editorDeleteRow(getRow(ctx->editing_point) + 1);
-    editor.editing_point = ctx->editing_point;
+//     strncpy(newbuf, ctx->restore_buf, ctx->restore_buf_len);
+//     newbuf[ctx->restore_buf_len] = 0;
+//     row->chars = newbuf;
+//     row->size = ctx->restore_buf_len;
+//     editorDeleteRow(getRow(ctx->editing_point) + 1);
+//     editor.editing_point = ctx->editing_point;
 
-    return true;
+//     return true;
+// }
+
+
+void cmdInsertChar(char c) {
+    EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(c, editor.editing_point));
+
+    /* Rimuovere la logica per aggiustare l'indentazione
+       da dentro _coreInsertNewline. Questa funzione non deve fare altro
+       che quello che dice il suo nome.
+       Qui devo controllare se c == '\r', nel caso sistemare
+       l'indentazione e poi aggiungere gli eventuali core_commands
+       aggiuntivi nella command history! */
+
+    // Insert command into command_history
+    CoreCommand ccmd = {
+        .type = CCMD_INSERT_CHAR,
+        .ep = editor.editing_point,
+        .c = c,
+    };
+    VEC(CoreCommand) cmd = VECNEW(CoreCommand);
+    VECPUSH(cmd, ccmd);
+    _historyPushCmd(cmd);
+
+    editor.editing_point = ep;
 }
 
-
-void editorInsertChar(char c) {
-    if (editor.numrows == 0) {
-        editorInsertRow(editor.numrows, "", 0);
-    }
-    editorRowInsertChar(&CURR_ROW, getCol(editor.editing_point), c);
-    setCol(&editor.editing_point, getCol(editor.editing_point) + (c == '\t' ? 4 : 1));
-}
-
-void editorPaste() {
+void cmdPaste() {
     if (editor.copy_buf == NULL) return;
 
+    VEC(CoreCommand) cmd = VECNEW(CoreCommand);
+
     VECFOREACH(char, c, editor.copy_buf) {
-        if (*c == '\0') {
-            break;
-        } else if (*c == '\n') {
-            CommandContext ctx = DEFAULT_CTX;
-            _editorInsertNewline(&ctx);
-        } else {
-            editorInsertChar(*c);
-        }
+        EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(*c, editor.editing_point));
+
+        // Insert every CoreCommand into the Editor Command
+        CoreCommand ccmd = {
+            .type = CCMD_INSERT_CHAR,
+            .ep = editor.editing_point,
+            .c = *c,
+        };
+        VECPUSH(cmd, ccmd);
+
+        editor.editing_point = ep;
     }
+
+    _historyPushCmd(cmd);
 }
 
-void editorCut() {
-    if(_editorCopy()) {
+void cmdCut() {
+    if(cmdCopy()) {
         _editorDeleteSelection();
     }
 }
 
-void editorDelete(bool del_key) {
-    if (!_editorDeleteSelection()) {
-        if (del_key)
-            editingPointMove(ARROW_RIGHT);
-        editorDeleteChar();
-    }
-}
 
-static void _freeTrailingCommands() {
-    while (editor.curr_cmd != vecLast(editor.undoable_command_history)) {
-        Command** cmd = vecPop(editor.undoable_command_history);
-        _commandFree(*cmd);
-    }
-}
-
-void commandExecute(Command* cmd) {
-    assert(cmd != NULL);
-
-    if (!cmd->execute || !cmd->execute(&cmd->ctx))
-        return;
-
-    if (cmd->undo) {
-        _freeTrailingCommands();
-        VECPUSH(editor.undoable_command_history, cmd);
-        editor.curr_cmd = vecEnd(editor.undoable_command_history);
-    } else {
-        _commandFree(cmd);
-    }
-}
-
-static void _commandFree(Command* cmd) {
-    free(cmd->ctx.buf);
-    free(cmd->ctx.restore_buf);
-    free(cmd);
-}
-
-static RESULT(CommandPtr) _commandNew() {
-    Command* cmd = malloc(sizeof(Command));
-    if (!cmd)
-        return ERROR(CommandPtr, ERR_CMD_NEW);
-
-    *cmd = (Command) {
-        .ctx = DEFAULT_CTX,
-        .execute = NULL,
-        .undo = NULL,
-    };
-
-    return OK(CommandPtr, cmd);
-}
-
-static void _cmdCtxNewline(CommandContext* ctx) {
-    char* newbuf = malloc(CURR_ROW.size + 1);
-    if (!newbuf) {
-        // unable to allocate restorebuf
-        return;
-    }
-    strncpy(newbuf, CURR_ROW.chars, CURR_ROW.size);
-    newbuf[CURR_ROW.size] = 0;
-    ctx->restore_buf = newbuf;
-    ctx->restore_buf_len = CURR_ROW.size;
-}
-
-static bool _editorUndo() {
-    if (!editor.curr_cmd) {
+static bool _editorDeleteSelection() {
+    if (!editor.selecting)
         return false;
-    }
-    // editor.curr_cmd is a pointer to an element
-    // inside undoable_command_history, which is a
-    // collection of pointers to commands.
-    // we have to dereference to obtain the pointed command.
-    Command* curr_cmd = *editor.curr_cmd;
 
-    if (!curr_cmd->undo(&curr_cmd->ctx)) {
-        return false;
-    }
+    EditingPoint selection_start = SELECTION_START;
+    editor.editing_point = SELECTION_END;
+    editingPointMove(ARROW_LEFT);
 
-    editor.curr_cmd = vecPrev(editor.undoable_command_history);
+    VEC(CoreCommand) cmd = VECNEW(CoreCommand);
+
+    while (editor.editing_point >= selection_start) {
+        char c = CATCH(char, _coreDeleteChar(editor.editing_point), err) {
+            if (err != ERR_CORE_DELETE_NO_ROWS)
+                PANIC_FMT("[ERROR CODE %d]: core delete char", err);
+        }
+
+        CoreCommand ccmd = {
+            .type = CCMD_DELETE_CHAR,
+            .ep = editor.editing_point,
+            .c = c,
+        };
+        VECPUSH(cmd, ccmd);
+        editingPointMove(ARROW_LEFT);
+    }
+    editingPointMove(ARROW_RIGHT);
+    _historyPushCmd(cmd);
+
+    editor.selecting = false;
+
     return true;
 }
 
-RESULT(CommandPtr) buildCommand(int key) {
-    Command* cmd = TRY(CommandPtr, _commandNew());
+void cmdDelete(bool del_key) {
+    if (!_editorDeleteSelection()) {
+        if (!del_key)
+            editingPointMove(ARROW_LEFT);
 
-    switch (key) {
-        case CTRL_KEY('q'):
-            cmd->execute = _editorQuit;
-            break;
-        case CTRL_KEY('s'):
-            cmd->execute = _editorSave;
-            break;
-        case CTRL_KEY('f'):
-            cmd->execute = _editorFind;
-            break;
-        case CTRL_KEY('n'):
-            cmd->execute = searchResultNext;
-            break;
-        case CTRL_KEY('p'):
-            cmd->execute = searchResultPrev;
-            break;
-        case CTRL_KEY('c'):
-            cmd->execute = _editorCopy;
-            break;
-        // case CTRL_KEY('v'):
-        //     cmd->ctx.buf = editor.copy_buf;
-        //     cmd->execute = _editorPaste;
-        //     editor.selecting = false;
-        //     break;
-        case CTRL_KEY('z'):
-            cmd->execute = _editorUndo;
-            break;
+        char c = CATCH(char, _coreDeleteChar(editor.editing_point), err) {
+            if (err != ERR_CORE_DELETE_NO_ROWS)
+                PANIC_FMT("[ERROR CODE %d]: core delete char", err);
+        }
 
-        case '\r':
-            // the creation of the ctx can fail
-            // because malloc is called. this will bring
-            // to the failing of the undo function
-            // we set the undo function anyway
-            // because command execute will check if undo is NULL
-            // to decide if it has to push it in the command history
-            //
-            // In this way, executing the undo function, if it fails
-            // the command will not be popped so it will be impossible to 
-            // undo commands executed before the failing one 
-            _cmdCtxNewline(&cmd->ctx);
-            cmd->execute = _editorInsertNewline;
-            cmd->undo = _editorInsertNewlineUndo;
-            break;
-
-        default:
-            _commandFree(cmd);
-            return ERROR(CommandPtr, ERR_CMD_NOT_KNOWN);
+        CoreCommand ccmd = {
+            .type = CCMD_DELETE_CHAR,
+            .ep = editor.editing_point,
+            .c = c,
+        };
+        VEC(CoreCommand) cmd = VECNEW(CoreCommand);
+        VECPUSH(cmd, ccmd);
+        _historyPushCmd(cmd);
     }
+}
 
-    return OK(CommandPtr, cmd);
+static void _historyFreeTrailingCmds() {
+    while (editor.curr_history_cmd != vecLast(editor.command_history)) {
+        VEC(CoreCommand) cmd = vecPop(editor.command_history);
+        vecFree(cmd);
+    }
+}
+
+static void _historyPushCmd(VEC(CoreCommand) cmd) {
+    assert(cmd != NULL);
+    _historyFreeTrailingCmds();
+    VECPUSH(editor.command_history, cmd);
+    editor.curr_history_cmd = vecEnd(editor.command_history);
+}
+
+// static void _commandFree(Command* cmd) {
+//     free(cmd->ctx.buf);
+//     free(cmd->ctx.restore_buf);
+//     free(cmd);
+// }
+
+// static RESULT(CommandPtr) _commandNew() {
+//     Command* cmd = malloc(sizeof(Command));
+//     if (!cmd)
+//         return ERROR(CommandPtr, ERR_CMD_NEW);
+
+//     *cmd = (Command) {
+//         .ctx = DEFAULT_CTX,
+//         .execute = NULL,
+//         .undo = NULL,
+//     };
+
+//     return OK(CommandPtr, cmd);
+// }
+
+// static void _cmdCtxNewline(CommandContext* ctx) {
+//     char* newbuf = malloc(CURR_ROW.size + 1);
+//     if (!newbuf) {
+//         // unable to allocate restorebuf
+//         return;
+//     }
+//     strncpy(newbuf, CURR_ROW.chars, CURR_ROW.size);
+//     newbuf[CURR_ROW.size] = 0;
+//     ctx->restore_buf = newbuf;
+//     ctx->restore_buf_len = CURR_ROW.size;
+// }
+
+bool cmdUndo() {
+    if (!editor.curr_history_cmd)
+        return false;
+
+    // editor.curr_history_cmd is a pointer to an element
+    // inside command_history, which is a
+    // collection of pointers to commands.
+    // we have to dereference to obtain the pointed command.
+    VEC(CoreCommand) cmd = *editor.curr_history_cmd;
+
+    VEC_FOREACH_REV(CoreCommand, ccmd, cmd) {
+        switch (ccmd->type) {
+            case CCMD_INSERT_CHAR:
+                UNWRAP(char, _coreDeleteChar(ccmd->ep));
+                break;
+            case CCMD_DELETE_CHAR:
+                UNWRAP(EditingPoint, _coreInsertChar(ccmd->c, ccmd->ep));
+                break;
+        }
+    }
+    CoreCommand* ccmd = vecFirst(cmd);
+    editor.editing_point = ccmd->ep;
+
+    editor.curr_history_cmd = vecPrev(editor.command_history);
+    return true;
 }
 
 
@@ -307,21 +357,6 @@ static unsigned int _countLeadingSpacesBeforeCol(struct EditorRow* row, unsigned
     return i;
 }
 
-static bool _editorDeleteSelection() {
-    if (!editor.selecting)
-        return false;
-
-    editor.editing_point = SELECTION_END;
-    EditingPoint selection_start = SELECTION_START;
-    while (editor.editing_point != selection_start) {
-        editorDeleteChar();
-    }
-
-    editor.selecting = false;
-
-    return true;
-}
-
 // The normal way to overwrite a file is to pass the O_TRUNC flag to open(),
 // which truncates the file completely, making it an empty file,
 // before writing the new data into it.
@@ -337,7 +372,7 @@ static bool _editorDeleteSelection() {
 /*
     Returns a bool indicating if saving of file has been successfull.
 */
-static bool _editorSave() {
+bool cmdSave() {
     bool ok = false;
 
     if (editor.filename == NULL) {
@@ -371,10 +406,10 @@ end:
     return ok;
 }
 
-static bool _editorQuit() {
+bool cmdQuit() {
     if (editor.dirty) {
         if (messageBarPromptYesNo("File has unsaved changes. Do you want to save before exiting?")) {
-            if (!_editorSave()) {
+            if (!cmdSave()) {
                 return false;
             }
         }
@@ -385,7 +420,7 @@ static bool _editorQuit() {
     return true; // UNREACHABLE
 }
 
-static bool _editorFind() {
+bool cmdFind() {
     EditingPoint prev_editing_point = editor.editing_point;
     unsigned int prev_coloff = editor.coloff;
     unsigned int prev_rowoff = editor.rowoff;
@@ -406,7 +441,15 @@ static bool _editorFind() {
     return false;
 }
 
-static bool _editorCopy() {
+inline bool cmdSearchNext() {
+    return searchResultNext();
+}
+
+inline bool cmdSearchPrev() {
+    return searchResultPrev();
+}
+
+bool cmdCopy() {
     int err = 0;
     if (editor.selecting) {
         if (editor.copy_buf == NULL) {
@@ -418,7 +461,7 @@ static bool _editorCopy() {
         EditingPoint ep = SELECTION_START;
         while (ep != SELECTION_END) {
             if (CHAR_AT(ep) == '\0') {
-                char c = '\n';
+                char c = '\r';
                 if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
             } else {
                 if (!VECPUSH(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
@@ -432,8 +475,8 @@ static bool _editorCopy() {
             }
         }
 
-        char c = '\0';
-        if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
+        // char c = '\0';
+        // if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
         messageBarSet("Copied!");
         return true;
     }
@@ -443,18 +486,3 @@ copy_error:
     return false;
 }
 
-// static bool _editorPaste(CommandContext* ctx) {
-//     if (ctx->buf == NULL) return false;
-
-//     VECFOREACH(char, c, editor.copy_buf) {
-//         if (c == '\0') {
-//             break;
-//         } else if (c == '\n') {
-//             editorInsertNewline(ctx);
-//         } else {
-//             editorInsertChar(c);
-//         }
-//     }
-
-//     return true;
-// }

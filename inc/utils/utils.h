@@ -15,6 +15,15 @@
 #define IF_1(A, B)                          A
 #define IF_0(A, B)                          B
 
+
+#define PANIC_FMT(FMT_MSG, ...) \
+{ \
+    char __err_msg_buf__[128]; \
+    snprintf(__err_msg_buf__, 128, FMT_MSG, __VA_ARGS__); \
+    panic(__FILE__, __LINE__, __err_msg_buf__); \
+}
+#define PANIC()
+
 void panic(char* filename, int linenumber, char* msg);
 void atPanic(void (*beforePanicCallback) ());
 

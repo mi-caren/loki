@@ -65,8 +65,8 @@ void editorInit() {
     editor.selection_start = 0;
     editor.copy_buf = NULL;
 
-    editor.undoable_command_history = VECNEW(Command*);
-    editor.curr_cmd = NULL;
+    editor.command_history = VECNEW(VEC(CoreCommand));
+    editor.curr_history_cmd = NULL;
 
     int height = terminal.screenrows;
     if (height < 0) {

@@ -2,8 +2,11 @@
 #include "editor.h"
 #include "editor/defs.h"
 #include "editor_row.h"
+#include "utils/result.h"
 
 extern struct Editor editor;
+
+RESULT_IMPL(EditingPoint)
 
 /* Checks if editing point is at the End Of File */
 static inline bool editingPointIsEOF() {
@@ -229,6 +232,11 @@ inline void decRow(EditingPoint *ep) {
 
 inline void incRow(EditingPoint* ep) {
     setRow(ep, getRow(*ep) + 1);
+}
+
+inline EditingPoint addRows(EditingPoint ep, unsigned int numrows) {
+    setRow(&ep, getRow(ep) + numrows);
+    return ep;
 }
 
 

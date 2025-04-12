@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include "editor/keys.h"
+#include "utils/result.h"
 
 
 #define EDITING_POINT_BIT_SIZE (32)
@@ -31,6 +32,8 @@ void setRow(EditingPoint* ep, unsigned int val);
 void decRow(EditingPoint* ep);
 /* Increments editing point row */
 void incRow(EditingPoint* ep);
+/* Adds numrows rows to ep and return the modified editing point */
+EditingPoint addRows(EditingPoint ep, unsigned int numrows);
 
 
 /* Set the editing point column value.
@@ -42,6 +45,6 @@ void decCol(EditingPoint* ep);
 /* Increments editing point column */
 void incCol(EditingPoint* ep);
 
-
+RESULT_DEFS(EditingPoint)
 
 #endif

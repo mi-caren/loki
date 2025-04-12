@@ -14,6 +14,7 @@
 #define CURR_ROW                editor.rows[getRow(editor.editing_point)]
 #define NEXT_ROW                editor.rows[getRow(editor.editing_point) + 1]
 #define PREV_ROW                editor.rows[getRow(editor.editing_point) - 1]
+#define ROW_AT(EDITING_POINT)   editor.rows[getRow(EDITING_POINT)]
 
 #define CURR_CHAR               CURR_ROW.chars[getCol(editor.editing_point)]
 #define CHAR_AT(EDITING_POINT)  editor.rows[getRow(EDITING_POINT)].chars[getCol(EDITING_POINT)]
@@ -63,8 +64,15 @@ struct Editor {
     EditingPoint selection_start;
     VEC(char) copy_buf;
 
-    VEC(Command*) undoable_command_history;
-    Command** curr_cmd;
+    /*
+     * The history of the executed Editor Commands.
+     * Every editor command (like pasting a buffer) is represented
+     * by a row in this vector. Every row is an array of CoreCommands.
+     * Undoing a command means reverting every CoreCommand contained
+     * in a row of this vector.
+     */
+    VEC(VEC(CoreCommand)) command_history;
+    CoreCommand** curr_history_cmd;
 };
 
 

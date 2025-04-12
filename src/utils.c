@@ -9,6 +9,11 @@
 
 static Error __try_error__ = OK_CODE;
 
+RESULT_IMPL(void)
+RESULT_IMPL(int)
+RESULT_IMPL(unsigned int)
+RESULT_IMPL(char)
+
 
 void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) {
     char *new = realloc(dbuf->b, dbuf->len + len);
@@ -106,6 +111,10 @@ void* vecNew(size_t sizeof_type) {
     return buf + sizeof(VecHeader);
 }
 
+inline void vecFree(Vec vec) {
+    free(VECHEAD(vec));
+}
+
 /*
  * Push a new element into the vector.
  * The element must be a void* to le this function.
@@ -196,6 +205,10 @@ inline void* vecCurr(Vec vec) {
     return _vecCurrUnchecked(vec);
 }
 
+inline void* vecFirst(Vec vec) {
+    return vec;
+}
+
 inline void* vecLast(Vec vec) {
     if (vecLen(vec) == 0) return NULL;
     return (char*)vec + (vecLen(vec) - 1) * VECHEAD(vec)->sizeof_type;
@@ -236,16 +249,6 @@ void panic(char* filename, int linenumber, char* msg) {
     }
     exit(EXIT_FAILURE);
 }
-
-UNWRAP_FUNC_DEF(void)
-TRY_FUNC_DEF(void)
-ERROR_FUNC_DEF(void)
-OK_FUNC_DEF(void)
-
-UNWRAP_FUNC_DEF(int)
-UNWRAP_FUNC_DEF(unsigned int)
-
-
 
 
 inline void __set_try_error__(Error err) {

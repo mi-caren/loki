@@ -12,32 +12,39 @@
 #include "editor_row.h"
 #include "status_bar.h"
 #include "terminal.h"
-#include "utils/result.h"
-#include "utils/utils.h"
-#include "error.h"
 
 extern struct Editor editor;
 
 void editorProcessKeypress() {
     int c = editorReadKey();
 
-    RESULT(CommandPtr) res = buildCommand(c);
-    if (IS_OK(res)) {
-        commandExecute(res.val);
-        return;
-    } else if (res.err != ERR_CMD_NOT_KNOWN) {
-        panic(__FILE__, __LINE__, NULL);
-    }
-
     switch (c) {
+        case CTRL_KEY('q'):
+            cmdQuit();
+            break;
+        case CTRL_KEY('s'):
+            cmdSave();
+            break;
+        case CTRL_KEY('f'):
+            cmdFind();
+            break;
+        case CTRL_KEY('n'):
+            cmdSearchNext();
+            break;
+        case CTRL_KEY('p'):
+            cmdSearchPrev();
+            break;
+        case CTRL_KEY('c'):
+            cmdCopy();
+            break;
         case CTRL_KEY('v'):
-            editorPaste();
+            cmdPaste();
             editor.selecting = false;
             break;
         case CTRL_KEY('x'):
-            editorCut();
-        case CTRL_KEY('l'):
-            /* TODO */
+            cmdCut();
+        case CTRL_KEY('z'):
+            cmdUndo();
             break;
 
         case HOME_KEY:
@@ -72,7 +79,7 @@ void editorProcessKeypress() {
 
         case BACKSPACE:
         case DEL_KEY:
-            editorDelete(c == DEL_KEY);
+            cmdDelete(c == DEL_KEY);
             break;
 
         // case '\r':
@@ -85,7 +92,7 @@ void editorProcessKeypress() {
             break;
 
         default:
-            editorInsertChar(c);
+            cmdInsertChar(c);
             editor.selecting = false;
             break;
     }

@@ -98,8 +98,9 @@ Error __get_try_error__();
 
 #define CATCH(TYPE, EXPR, ERR) \
     TRY_FUNC_NAME(TYPE)(EXPR); \
-    ERR = __get_try_error__(); \
-    if (ERR.code != OK_CODE) \
+    Error ERR = __get_try_error__(); \
+    if (ERR != OK_CODE)
+
 
 
 
@@ -114,7 +115,7 @@ Error __get_try_error__();
     }
 
 #define ERROR_PARAMS(CODE, MSG)         CODE, MSG
-#define ERROR(TYPE, ...)                ERROR_FUNC_NAME(TYPE)(__VA_ARGS__)
+#define ERROR(TYPE, CODE)               ERROR_FUNC_NAME(TYPE)(CODE)
 
 #define OK_FUNC_NAME(TYPE)              CAT(ok_, RESULT(TYPE))
 #define OK_FUNC_SIGNATURE(TYPE) \
@@ -138,22 +139,24 @@ Error __get_try_error__();
 #define IS_OK(RESULT)                   (RESULT.err == OK_CODE)
 #define IS_ERROR(RESULT)                (RESULT.err != OK_CODE)
 
+#define RESULT_DEFS(TYPE) \
+    RESULT_STRUCT_DEF(TYPE); \
+    UNWRAP_FUNC_SIGNATURE(TYPE); \
+    TRY_FUNC_SIGNATURE(TYPE); \
+    ERROR_FUNC_SIGNATURE(TYPE); \
+    OK_FUNC_SIGNATURE(TYPE);
 
-RESULT_STRUCT_DEF(void);
-RESULT_STRUCT_DEF(int);
-RESULT_STRUCT_DEF(unsigned int);
+#define RESULT_IMPL(TYPE) \
+    UNWRAP_FUNC_DEF(TYPE); \
+    TRY_FUNC_DEF(TYPE); \
+    ERROR_FUNC_DEF(TYPE); \
+    OK_FUNC_DEF(TYPE);
 
 
-UNWRAP_FUNC_SIGNATURE(void);
-UNWRAP_FUNC_SIGNATURE(int);
-UNWRAP_FUNC_SIGNATURE(unsigned int);
+RESULT_DEFS(void)
+RESULT_DEFS(int)
+RESULT_DEFS(unsigned int)
+RESULT_DEFS(char)
 
-
-TRY_FUNC_SIGNATURE(void);
-
-
-ERROR_FUNC_SIGNATURE(void);
-
-OK_FUNC_SIGNATURE(void);
 
 #endif
