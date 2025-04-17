@@ -15,7 +15,10 @@ OBJS = $(ROOT_OBJS) $(EDITOR_OBJS)
 
 EXE = loki
 
-loki: $(SRCS)
+loki: $(OBJDIR) $(OBJS)
+	$(CC) $(OBJS) -o loki
+
+loki-zig: $(SRCS)
 	zig build-exe $(SRCS) -I inc --library c -femit-bin=loki
 
 
@@ -24,10 +27,6 @@ release: clean
 
 test: $(TESTDIR)/*.c
 	zig run -I inc --library c $< $(filter-out $(SRCDIR)/$(EXE).c, $(SRCS))
-
-
-loki-gcc: $(OBJDIR) $(OBJS)
-	$(CC) $(OBJS) -o loki
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)

@@ -131,7 +131,10 @@ void cmdInsertChar(char c) {
 }
 
 void cmdPaste() {
-    if (editor.copy_buf == NULL) return;
+    if (editor.copy_buf == NULL) {
+        messageBarSet("Nothing to copy. Copy buffer empty!");
+        return;
+    };
 
     VEC(CoreCommand) cmd = VECNEW(CoreCommand);
 
@@ -150,6 +153,7 @@ void cmdPaste() {
     }
 
     _historyPushCmd(cmd);
+    editor.selecting = false;
 }
 
 void cmdCut() {
@@ -390,8 +394,6 @@ bool cmdCopy() {
             }
         }
 
-        // char c = '\0';
-        // if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
         messageBarSet("Copied!");
         return true;
     }

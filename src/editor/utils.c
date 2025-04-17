@@ -39,7 +39,6 @@ void editorProcessKeypress() {
             break;
         case CTRL_KEY('v'):
             cmdPaste();
-            editor.selecting = false;
             break;
         case CTRL_KEY('x'):
             cmdCut();
