@@ -360,7 +360,7 @@ void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf) {
 }
 
 void editorDrawRows(struct DynamicBuffer *dbuf) {
-    int y;
+    unsigned int y;
     for (y = 0; y < editor.view_rows; y++) {
         unsigned int filerow = y + editor.rowoff;
         if (filerow >= editor.numrows) {

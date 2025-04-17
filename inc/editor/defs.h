@@ -39,7 +39,8 @@
 
 
 typedef struct Editor {
-    int view_rows;
+    /* Number of rows visible on screen */
+    unsigned int view_rows;
 
     EditingPoint editing_point;
     unsigned int rx;
