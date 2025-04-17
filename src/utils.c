@@ -92,10 +92,6 @@ typedef struct {
     size_t cur;
 } VecHeader;
 
-// typedef struct {
-//     VecHeader header;
-//     void* buf;
-// } Vec;
 
 void* vecNew(size_t sizeof_type) {
     char* buf = (char*)malloc(sizeof(VecHeader) + sizeof_type);

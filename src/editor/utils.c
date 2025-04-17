@@ -43,6 +43,7 @@ void editorProcessKeypress() {
             break;
         case CTRL_KEY('x'):
             cmdCut();
+            break;
         case CTRL_KEY('z'):
             cmdUndo();
             break;

@@ -26,11 +26,8 @@ extern struct Editor editor;
 static unsigned int _countLeadingSpacesBeforeCol(struct EditorRow* row, unsigned int col);
 static bool _editorDeleteSelection();
 
-// static bool _editorPaste(CommandContext* ctx);
 static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep);
 static void _historyPushCmd(VEC(CoreCommand) cmd);
-
-// static void _commandFree(Command* cmd);
 
 static RESULT(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
     if (editor.numrows == 0) {
@@ -65,36 +62,8 @@ static RESULT(char) _coreDeleteChar(EditingPoint ep) {
 
     char c = CHAR_AT(ep);
     editorRowDeleteChar(&ROW_AT(ep), getCol(ep));
-    // decCol(&ep);
     return OK(char, c);
-
-    // if (getCol(editor.editing_point) > 0) {
-    //     editorRowDeleteChar(&CURR_ROW, getCol(editor.editing_point) - 1);
-    //     decCol(&editor.editing_point);
-    // } else {
-    //     editingPointMove(ARROW_LEFT);
-    //     if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
-    //         messageBarSet("Unable to delete char at %d, %d", getCol(editor.editing_point) - 1, getRow(editor.editing_point));
-    //     }
-    //     editorDeleteRow(getRow(editor.editing_point) + 1);
-    // }
 }
-
-// void editorDeleteChar() {
-//     if (editor.numrows == 0) return;
-//     if (getCol(editor.editing_point) == 0 && getRow(editor.editing_point) == 0) return;
-
-//     if (getCol(editor.editing_point) > 0) {
-//         editorRowDeleteChar(&CURR_ROW, getCol(editor.editing_point) - 1);
-//         decCol(&editor.editing_point);
-//     } else {
-//         editingPointMove(ARROW_LEFT);
-//         if (!editorRowAppendString(&CURR_ROW, NEXT_ROW.chars, NEXT_ROW.size)) {
-//             messageBarSet("Unable to delete char at %d, %d", getCol(editor.editing_point) - 1, getRow(editor.editing_point));
-//         }
-//         editorDeleteRow(getRow(editor.editing_point) + 1);
-//     }
-// }
 
 static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep) {
     // clear selection
@@ -137,28 +106,6 @@ insert_newline_error:
     messageBarSet("Unable to insert new row");
     return ERROR(EditingPoint, ERR_CORE_INSERT_NEWLINE);
 }
-
-// static bool _editorInsertNewlineUndo(CommandContext* ctx) {
-//     if (getRow(ctx->editing_point) + 1 >= editor.numrows)
-//         return false;
-//     if (ctx->restore_buf == NULL)
-//         return false;
-
-//     EditorRow* row = editorRowGet(ctx->editing_point);
-//     char* newbuf = realloc(row->chars, ctx->restore_buf_len + 1);
-//     if (!newbuf)
-//         return false;
-
-//     strncpy(newbuf, ctx->restore_buf, ctx->restore_buf_len);
-//     newbuf[ctx->restore_buf_len] = 0;
-//     row->chars = newbuf;
-//     row->size = ctx->restore_buf_len;
-//     editorDeleteRow(getRow(ctx->editing_point) + 1);
-//     editor.editing_point = ctx->editing_point;
-
-//     return true;
-// }
-
 
 void cmdInsertChar(char c) {
     EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(c, editor.editing_point));
@@ -267,8 +214,8 @@ void cmdDelete(bool del_key) {
 
 static void _historyFreeTrailingCmds() {
     while (editor.curr_history_cmd != vecLast(editor.command_history)) {
-        VEC(CoreCommand) cmd = vecPop(editor.command_history);
-        vecFree(cmd);
+        VEC(CoreCommand)* cmd = vecPop(editor.command_history);
+        vecFree(*cmd);
     }
 }
 
@@ -278,38 +225,6 @@ static void _historyPushCmd(VEC(CoreCommand) cmd) {
     VECPUSH(editor.command_history, cmd);
     editor.curr_history_cmd = vecEnd(editor.command_history);
 }
-
-// static void _commandFree(Command* cmd) {
-//     free(cmd->ctx.buf);
-//     free(cmd->ctx.restore_buf);
-//     free(cmd);
-// }
-
-// static RESULT(CommandPtr) _commandNew() {
-//     Command* cmd = malloc(sizeof(Command));
-//     if (!cmd)
-//         return ERROR(CommandPtr, ERR_CMD_NEW);
-
-//     *cmd = (Command) {
-//         .ctx = DEFAULT_CTX,
-//         .execute = NULL,
-//         .undo = NULL,
-//     };
-
-//     return OK(CommandPtr, cmd);
-// }
-
-// static void _cmdCtxNewline(CommandContext* ctx) {
-//     char* newbuf = malloc(CURR_ROW.size + 1);
-//     if (!newbuf) {
-//         // unable to allocate restorebuf
-//         return;
-//     }
-//     strncpy(newbuf, CURR_ROW.chars, CURR_ROW.size);
-//     newbuf[CURR_ROW.size] = 0;
-//     ctx->restore_buf = newbuf;
-//     ctx->restore_buf_len = CURR_ROW.size;
-// }
 
 bool cmdUndo() {
     if (!editor.curr_history_cmd)

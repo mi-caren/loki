@@ -147,10 +147,10 @@ Error __get_try_error__();
     OK_FUNC_SIGNATURE(TYPE);
 
 #define RESULT_IMPL(TYPE) \
-    UNWRAP_FUNC_DEF(TYPE); \
-    TRY_FUNC_DEF(TYPE); \
-    ERROR_FUNC_DEF(TYPE); \
-    OK_FUNC_DEF(TYPE);
+    UNWRAP_FUNC_DEF(TYPE) \
+    TRY_FUNC_DEF(TYPE) \
+    ERROR_FUNC_DEF(TYPE) \
+    OK_FUNC_DEF(TYPE)
 
 
 RESULT_DEFS(void)

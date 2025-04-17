@@ -98,3 +98,8 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
     quando si vuole aggiungere una nuova linea (newline command),
     se il carattere appena prima del cursore è una parentesi aperta
     allora indenta di un tab aggiuntivo 
+
+[] aggiungere core commands per ottimizzare le performance e non ridurre tutto
+    ad un saplice operazione di inserimento/rimozione di un byte alla volta quando
+    in certi casi si può spostare un pezzo di buffer all'interno di una riga o
+    eliminare interamente una riga
