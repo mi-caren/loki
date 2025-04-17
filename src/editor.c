@@ -35,7 +35,7 @@ void atPanicCallback() {
     WRITE_SEQ(LEAVE_ALTERNATE_SCREEN);
 }
 
-void editorInit() {
+void editorInit(Editor* ed) {
     // We immediately switch to alternate screen
     // because terminalInit function can mess the terminal by moving the cursor
     WRITE_SEQ(ENTER_ALTERNATE_SCREEN);
@@ -47,34 +47,34 @@ void editorInit() {
 
     atexit(terminalDeinit);
 
-    editor.editing_point = (EditingPoint) 0;
-    editor.rx = 0;
-    editor.numrows = 0;
-    editor.rows = NULL;
-    editor.rowoff = 0;
-    editor.coloff = 0;
-    editor.filename = NULL;
-    editor.message_bar_buf[0] = '\0';
-    editor.message_bar_time = 0;
-    editor.dirty = false;
+    ed->editing_point = (EditingPoint) 0;
+    ed->rx = 0;
+    ed->numrows = 0;
+    ed->rows = NULL;
+    ed->rowoff = 0;
+    ed->coloff = 0;
+    ed->filename = NULL;
+    ed->message_bar_buf[0] = '\0';
+    ed->message_bar_time = 0;
+    ed->dirty = false;
 
-    editor.searching = false;
-    editor.search_query = NULL;
+    ed->searching = false;
+    ed->search_query = NULL;
 
-    editor.selecting = false;
-    editor.selection_start = 0;
-    editor.copy_buf = NULL;
+    ed->selecting = false;
+    ed->selection_start = 0;
+    ed->copy_buf = NULL;
 
-    editor.command_history = VECNEW(VEC(CoreCommand));
-    editor.curr_history_cmd = NULL;
+    ed->command_history = VECNEW(VEC(CoreCommand));
+    ed->curr_history_cmd = NULL;
 
     int height = terminal.screenrows;
     if (height < 0) {
-        editor.view_rows = 0;
+        ed->view_rows = 0;
     } else if (height <= 2) {
-        editor.view_rows = height;
+        ed->view_rows = height;
     }
-    editor.view_rows = height - 2;
+    ed->view_rows = height - 2;
 }
 
 int editorOpen(char *filename) {

@@ -38,7 +38,7 @@
 #define TAB_SPACE_NUM    4
 
 
-struct Editor {
+typedef struct Editor {
     int view_rows;
 
     EditingPoint editing_point;
@@ -73,7 +73,7 @@ struct Editor {
      */
     VEC(VEC(CoreCommand)) command_history;
     CoreCommand** curr_history_cmd;
-};
+} Editor;
 
 
 #endif
