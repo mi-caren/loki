@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "editor/utils.h"
 #include "editing_point.h"
@@ -12,6 +13,8 @@
 #include "editor_row.h"
 #include "status_bar.h"
 #include "terminal.h"
+#include "utils/array.h"
+#include "utils/vec.h"
 
 extern struct Editor editor;
 
@@ -202,7 +205,7 @@ void editorScroll() {
 }
 
 static unsigned int rowNumberColumnWidth() {
-    unsigned int numrows = editor.numrows;
+    unsigned int numrows = vecLen(editor.rows);
     unsigned int digits = 1;
     while ((numrows /= 10) != 0) {
         digits++;
@@ -251,7 +254,7 @@ void editorRefreshScreen() {
 
 char* editorRowsToString(int* buflen) {
     *buflen = 0;
-    for (unsigned int i = 0; i < editor.numrows; i++) {
+    for (unsigned int i = 0; i < vecLen(editor.rows); i++) {
         *buflen += editor.rows[i].size + 1;
     }
 
@@ -262,7 +265,7 @@ char* editorRowsToString(int* buflen) {
     }
 
     char* p = buf;
-    for (unsigned int i = 0; i < editor.numrows; i++) {
+    for (unsigned int i = 0; i < vecLen(editor.rows); i++) {
         memcpy(p, editor.rows[i].chars, editor.rows[i].size);
         p += editor.rows[i].size;
         *p = '\n';
@@ -273,37 +276,30 @@ char* editorRowsToString(int* buflen) {
 }
 
 int editorInsertRow(unsigned int pos, char *s, size_t len) {
-    if (pos > editor.numrows) return -1;
-
-    char *new = realloc(editor.rows, sizeof(struct EditorRow) * (editor.numrows + 1));
-
-    if (new == NULL)
+    if (pos > vecLen(editor.rows))
         return -1;
 
-    editor.rows = (struct EditorRow*)new;
-    memmove(&editor.rows[pos + 1], &editor.rows[pos], sizeof(struct EditorRow) * (editor.numrows - pos));
+    EditorRow row = {
+        .size = len,
+        .chars = malloc(len + 1),
+        .rsize = 0,
+        .render = NULL,
+        .hl = NULL,
+        .search_match_pos = ARRAY_NEW(ArrayUnsignedInt),
+    };
+    memcpy(row.chars, s, len);
+    row.chars[len] = '\0';
 
-    editor.rows[pos].size = len;
-    editor.rows[pos].chars = malloc(len + 1);
-    memcpy(editor.rows[pos].chars, s, len);
-    editor.rows[pos].chars[len] = '\0';
-
-    editor.rows[pos].rsize = 0;
-    editor.rows[pos].render = NULL;
-    editor.rows[pos].hl = NULL;
-    editor.rows[pos].search_match_pos = ARRAY_NEW(ArrayUnsignedInt);
-    editor.numrows += 1;
+    VEC_INSERT(editor.rows, pos, row);
 
     return 0;
 }
 
 void editorDeleteRow(unsigned int pos) {
-    if (pos > editor.numrows) return;
+    if (pos >= vecLen(editor.rows)) return;
+
     editorRowFree(&editor.rows[pos]);
-    if (pos != editor.numrows) {
-        memmove(&editor.rows[pos], &editor.rows[pos + 1], sizeof(struct EditorRow) * (editor.numrows - pos - 1));
-    }
-    editor.numrows--;
+    vecRemove(editor.rows, pos);
     editorSetDirty();
 }
 
@@ -363,8 +359,8 @@ void editorDrawRows(struct DynamicBuffer *dbuf) {
     unsigned int y;
     for (y = 0; y < editor.view_rows; y++) {
         unsigned int filerow = y + editor.rowoff;
-        if (filerow >= editor.numrows) {
-            if (editor.numrows == 0 && y == editor.view_rows / 3) {
+        if (filerow >= vecLen(editor.rows)) {
+            if (vecLen(editor.rows) == 0 && y == editor.view_rows / 3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome, sizeof(welcome), "Loki editor -- version %s", LOKI_VERSION);
                 if (welcomelen > terminal.screencols) {

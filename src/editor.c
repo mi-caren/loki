@@ -10,6 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "editor_row.h"
 #include "editing_point.h"
 #include "editor.h"
 #include "editor/defs.h"
@@ -49,8 +50,7 @@ void editorInit(Editor* ed) {
 
     ed->editing_point = (EditingPoint) 0;
     ed->rx = 0;
-    ed->numrows = 0;
-    ed->rows = NULL;
+    ed->rows = VECNEW(EditorRow);
     ed->rowoff = 0;
     ed->coloff = 0;
     ed->filename = NULL;
@@ -99,7 +99,7 @@ int editorOpen(char *filename) {
             linelen--;
         }
 
-        if (editorInsertRow(editor.numrows, line, linelen) != 0) {
+        if (editorInsertRow(vecLen(editor.rows), line, linelen) != 0) {
             retval = -1;
             goto cleanup;
         }

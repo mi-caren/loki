@@ -30,7 +30,7 @@ static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep);
 static void _historyPushCmd(VEC(CoreCommand) cmd);
 
 static RESULT(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
-    if (editor.numrows == 0) {
+    if (vecLen(editor.rows) == 0) {
         if (editorInsertRow(0, "", 0) == -1)
             return ERROR(EditingPoint, ERR_CORE_INSERT_ROW);
     }
@@ -45,10 +45,10 @@ static RESULT(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
 }
 
 static RESULT(char) _coreDeleteChar(EditingPoint ep) {
-    if (editor.numrows == 0)
+    if (vecLen(editor.rows) == 0)
         return ERROR(char, ERR_CORE_DELETE_NO_ROWS);
 
-    if (getRow(ep) >= editor.numrows || getCol(ep) > ROW_AT(ep).size)
+    if (getRow(ep) >= vecLen(editor.rows) || getCol(ep) > ROW_AT(ep).size)
         return ERROR(char, ERR_CORE_DELETE_CHAR_INVALID_EP);
 
     if (getCol(ep) == ROW_AT(ep).size) {

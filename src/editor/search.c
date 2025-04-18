@@ -11,7 +11,7 @@ extern struct Editor editor;
 
 bool searchResultNext() {
     // impossible to find a match with 0 rows or without a search query
-    if (editor.numrows == 0 || editor.search_query == NULL)
+    if (vecLen(editor.rows) == 0 || editor.search_query == NULL)
         return false;
 
     // clear selection in case user was highlighting something
@@ -31,7 +31,7 @@ bool searchResultNext() {
     }
 
     // Then search from next line to last line
-    for (cy++; cy < editor.numrows; cy++) {
+    for (cy++; cy < vecLen(editor.rows); cy++) {
         row = &editor.rows[cy];
         if (row->search_match_pos.len > 0) {
             setRow(&editor.editing_point, cy);
@@ -55,7 +55,7 @@ bool searchResultNext() {
 
 bool searchResultPrev() {
     // impossible to find a match with 0 rows or without a search query
-    if (editor.numrows == 0 || editor.search_query == NULL)
+    if (vecLen(editor.rows) == 0 || editor.search_query == NULL)
         return false;
 
     // clear selection in case user was highlighting something
@@ -85,7 +85,7 @@ bool searchResultPrev() {
     }
 
     // Then search from last line to current line
-    for (cy = editor.numrows - 1; cy >= (int)getRow(editor.editing_point); cy--) {
+    for (cy = vecLen(editor.rows) - 1; cy >= (int)getRow(editor.editing_point); cy--) {
         row = &editor.rows[cy];
         if (row->search_match_pos.len > 0) {
             setRow(&editor.editing_point, cy);
@@ -100,7 +100,7 @@ bool searchResultPrev() {
 int editorSearch(char* query) {
     editor.search_query = query;
 
-    for (unsigned int i = 0; i < editor.numrows; i++) {
+    for (unsigned int i = 0; i < vecLen(editor.rows); i++) {
         char* match = NULL;
         int last_pos = 0;
         struct EditorRow* row = &editor.rows[i];

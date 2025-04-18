@@ -5,9 +5,10 @@
 #include <stdlib.h>
 
 /*   VEC   */
-#define VEC(TYPE)           TYPE*
-#define VECNEW(TYPE)        vecNew(sizeof(TYPE))
-#define VECPUSH(VEC, EL)    vecPush((void**)&VEC, &EL)
+#define VEC(TYPE)                       TYPE*
+#define VECNEW(TYPE)                    vecNew(sizeof(TYPE))
+#define VECPUSH(VEC, EL)                vecPush((void**)&VEC, &EL)
+#define VEC_INSERT(VEC, INDEX, EL)      vecInsert((Vec*)&VEC, INDEX, &EL)
 #define VECPUSH_CONST(TYPE, VEC, EL)\
     {\
         TYPE el = EL;\
@@ -31,7 +32,12 @@ void* vecNew(size_t sizeof_type);
 void vecFree(Vec vec);
 
 void* vecPush(Vec* vec, void* el);
-
+/* Inserts a new element at the specified position,
+   shifting all elements after it to the right */
+void* vecInsert(Vec* vec, unsigned int index, void* el);
+/* Removes and returns the element at the specified position,
+   shifting all elements after it to the left */
+void* vecRemove(Vec vec, unsigned int index);
 /*
  * Removes the last element of the vector and returns a pointer to it.
  * The element is removed by just decreasing the length of the vector by one,

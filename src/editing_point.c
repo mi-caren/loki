@@ -10,7 +10,7 @@ RESULT_IMPL(EditingPoint)
 
 /* Checks if editing point is at the End Of File */
 static inline bool editingPointIsEOF() {
-    return getRow(editor.editing_point) == saturating_sub(editor.numrows, 1)
+    return getRow(editor.editing_point) == saturating_sub(vecLen(editor.rows), 1)
         && getCol(editor.editing_point) == CURR_ROW.size;
 }
 
@@ -36,7 +36,7 @@ static inline bool currentRowIsFirstRow() {
 }
 
 static inline bool currentRowIsLastRow() {
-    return getRow(editor.editing_point) == editor.numrows - 1;
+    return getRow(editor.editing_point) == vecLen(editor.rows) - 1;
 }
 
 static struct EditorRow* editingPointPrevRow() {
@@ -46,7 +46,7 @@ static struct EditorRow* editingPointPrevRow() {
 
 
 static void editingPointMoveToChar(Direction dir) {
-    if (editor.numrows == 0) {
+    if (vecLen(editor.rows) == 0) {
         return;
     }
 
@@ -65,14 +65,14 @@ static void editingPointMoveToChar(Direction dir) {
             }
             break;
         case Down:
-            if (getRow(editor.editing_point) < saturating_sub(editor.numrows, 1)) {
+            if (getRow(editor.editing_point) < saturating_sub(vecLen(editor.rows), 1)) {
                 incRow(&editor.editing_point);
             }
             break;
         case Right:
             if (getCol(editor.editing_point) < CURR_ROW.size) {
                 incCol(&editor.editing_point);
-            } else if (getRow(editor.editing_point) < saturating_sub(editor.numrows, 1)) {
+            } else if (getRow(editor.editing_point) < saturating_sub(vecLen(editor.rows), 1)) {
                 incRow(&editor.editing_point);
                 setCol(&editor.editing_point, 0);
             }
@@ -169,8 +169,8 @@ void editingPointMove(enum EditorKey key) {
                     setRow(&editor.editing_point, editor.rowoff);
                 } else {
                     setRow(&editor.editing_point, editor.rowoff + editor.view_rows - 1);
-                    if (getRow(editor.editing_point) > editor.numrows)
-                        setRow(&editor.editing_point, editor.numrows);
+                    if (getRow(editor.editing_point) > vecLen(editor.rows))
+                        setRow(&editor.editing_point, vecLen(editor.rows));
                 }
                 int times = editor.view_rows;
                 while (times--) {

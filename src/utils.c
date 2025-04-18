@@ -111,35 +111,90 @@ inline void vecFree(Vec vec) {
     free(VECHEAD(vec));
 }
 
+/* Double the capacity of the vector */
+static Vec _vecGrow(Vec* vec) {
+    size_t sizeof_type = VECHEAD(*vec)->sizeof_type;
+    size_t cap = VECHEAD(*vec)->cap;
+    char* new = (char*)realloc(
+        (void*)VECHEAD(*vec),
+        sizeof(VecHeader) + sizeof_type*cap*2
+    );
+    if (new == NULL)
+        return NULL;
+
+    // If we just took a Vec as parameter: void* _vecGrow(Vec vec)
+    // the operation below could not be possible
+    // and the user would be forced to reassign the variable every time he calls _vecGrow:
+    // myvec = _vecGrow(myvec);
+    *vec = new + sizeof(VecHeader);
+    VECHEAD(*vec)->cap *= 2;
+
+    return vec;
+}
+
 /*
  * Push a new element into the vector.
- * The element must be a void* to le this function.
+ * The element must be a void* to let this function.
  * work with any type
  */
 void* vecPush(Vec* vec, void* el) {
     if (VECHEAD(*vec)->len == VECHEAD(*vec)->cap) {
-        size_t sizeof_type = VECHEAD(*vec)->sizeof_type;
-        size_t cap = VECHEAD(*vec)->cap;
-        // vecPush can realloc the vector to increase its size.
+        // vecPush calls _vecGrow which reallocs the vector to increase its size.
         // For this reason we need a Vec* and not just a Vec.
         // In this way we can modify reference to the vector without needing
         // the user to reassign it.
-        char* new = (char*)realloc((void*)VECHEAD(*vec), sizeof(VecHeader) + sizeof_type*cap*2);
-        if (new == NULL) return NULL;
-
-        // If we just took a Vec as parameter: void* vecPush(Vec vec, void* el)
-        // In the case of a realloc the operation below could not be possible
-        // and the user would be forced to reassign the variable every time hu calls vecPush:
-        // myvec = VECPUSH(myvec, el);
-        *vec = new + sizeof(VecHeader);
-        VECHEAD(*vec)->cap *= 2;
+        if (_vecGrow(vec) == NULL)
+            return NULL;
     }
 
     char* dest = (char*)*vec;
-    memcpy(dest + VECHEAD(*vec)->len * VECHEAD(*vec)->sizeof_type, el, VECHEAD(*vec)->sizeof_type);
+    memcpy(
+        dest + VECHEAD(*vec)->len * VECHEAD(*vec)->sizeof_type,
+        el,
+        VECHEAD(*vec)->sizeof_type
+    );
     VECHEAD(*vec)->len++;
 
     return *vec;
+}
+
+void* vecInsert(Vec* vec, unsigned int index, void* el) {
+    if (index > VECHEAD(*vec)->len)
+        return NULL;
+
+    if (VECHEAD(*vec)->len == VECHEAD(*vec)->cap) {
+        if (_vecGrow(vec) == NULL)
+            return NULL;
+    }
+
+    memmove(
+        (char*)*vec + (index + 1) * VECHEAD(*vec)->sizeof_type,
+        (char*)*vec + index * VECHEAD(*vec)->sizeof_type,
+        VECHEAD(*vec)->sizeof_type * (VECHEAD(*vec)->len - index)
+    );
+    memcpy(
+        (char*)*vec + index * VECHEAD(*vec)->sizeof_type,
+        el,
+        VECHEAD(*vec)->sizeof_type
+    );
+    VECHEAD(*vec)->len++;
+
+    return *vec;
+}
+
+void* vecRemove(Vec vec, unsigned int index) {
+    void* el = vecAt(vec, index);
+    if (el == NULL)
+        return NULL;
+
+    memmove(
+        (char*)vec + index * VECHEAD(vec)->sizeof_type,
+        (char*)vec + (index + 1) * VECHEAD(vec)->sizeof_type,
+        VECHEAD(vec)->sizeof_type * (VECHEAD(vec)->len - index - 1)
+    );
+    VECHEAD(vec)->len--;
+
+    return el;
 }
 
 void* vecPop(Vec vec) {

@@ -7,6 +7,7 @@
 #include "editing_point.h"
 #include "editor/commands.h"
 
+#include "editor_row.h"
 #include "utils/vec.h"
 
 #define LOKI_VERSION     "0.0.1"
@@ -43,10 +44,10 @@ typedef struct Editor {
     unsigned int view_rows;
 
     EditingPoint editing_point;
+    /* x position of rendered view */
     unsigned int rx;
 
-    unsigned int numrows;
-    struct EditorRow* rows;
+    VEC(EditorRow) rows;
 
     unsigned int rowoff;
     unsigned int coloff;

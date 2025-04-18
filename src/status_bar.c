@@ -149,7 +149,13 @@ void infoBarDraw(struct DynamicBuffer *dbuf) {
         editor.dirty ? "(modified)" : ""
     );
     dbuf_append(dbuf, status, len);
-    int len_s2 = snprintf(status, terminal.screencols / 4, "%d/%d lines ", getRow(editor.editing_point) + (editor.numrows > 0 ? 1 : 0), editor.numrows);
+    int len_s2 = snprintf(
+        status,
+        terminal.screencols / 4,
+        "%d/%zu lines ",
+        getRow(editor.editing_point) + (vecLen(editor.rows) > 0 ? 1 : 0),
+        vecLen(editor.rows)
+    );
 
 
     while (len < (int)(terminal.screencols - len_s2)) {
