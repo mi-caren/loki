@@ -1,6 +1,5 @@
-#include <stdio.h>
-
 #include "utils/dbuf.h"
+#include "utils/string.h"
 
 
 void editorProcessKeypress();
@@ -14,6 +13,7 @@ void editorRefreshScreen();
 
 void editorDeleteRow(unsigned int pos);
 void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf);
-int editorInsertRow(unsigned int pos, char *s, size_t len);
-char* editorRowsToString(int* buflen);
+/* s MUST be 0 terminated */
+int editorInsertRow(unsigned int pos, char *s);
+String editorRowsToString();
 void editorDrawRows(struct DynamicBuffer *dbuf);

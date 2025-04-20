@@ -96,10 +96,10 @@ int editorOpen(char *filename) {
         // strip off newline or carriage retur at the end of line
         while (linelen > 0 && (line[linelen - 1] == '\n' ||
                                line[linelen - 1] == '\r')) {
-            linelen--;
+            line[--linelen] = '\0';
         }
 
-        if (editorInsertRow(vecLen(editor.rows), line, linelen) != 0) {
+        if (editorInsertRow(vecLen(editor.rows), line) != 0) {
             retval = -1;
             goto cleanup;
         }

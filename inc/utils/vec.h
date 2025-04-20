@@ -20,11 +20,15 @@
    to a wrong pointer type. */
 #define VEC_POP(TYPE, VEC)      (TYPE*)vecPop(VEC)
 #define VEC_FREE(TYPE, VEC)     vecFree((TYPE)VEC)
+/* TYPE is the type CONTAINED in the vector */
 #define VECFOREACH(TYPE, EL, VEC) \
     for (TYPE* EL = vecBegin(VEC); EL != NULL; EL = vecNext(VEC))
 
 #define VEC_FOREACH_REV(TYPE, EL, VEC) \
     for (TYPE* EL = vecEnd(VEC); EL != NULL; EL = vecPrev(VEC))
+
+#define VEC_FOR(IDX, VEC) \
+    for (size_t IDX = 0; IDX < vecLen(VEC); IDX++)
 
 typedef void* Vec;
 
@@ -76,13 +80,14 @@ void* vecEnd(Vec vec);
 
 void* vecNext(Vec vec);
 void* vecPrev(Vec vec);
+void* vecSetAt(Vec vec, size_t pos);
+
 void* vecCurr(Vec vec);
 void* vecFirst(Vec vec);
 void* vecLast(Vec vec);
 
 void* vecAt(Vec vec, size_t pos);
-size_t vecGetCurrIdx(Vec vec);
-bool vecSetAt(Vec vec, size_t pos);
+size_t vecCurrIdx(Vec vec);
 
 
 #endif

@@ -14,6 +14,7 @@
 #include "status_bar.h"
 #include "terminal.h"
 #include "utils/array.h"
+#include "utils/string.h"
 #include "utils/vec.h"
 
 extern struct Editor editor;
@@ -252,43 +253,36 @@ void editorRefreshScreen() {
     dbuf_free(&dbuf);
 }
 
-char* editorRowsToString(int* buflen) {
-    *buflen = 0;
-    for (unsigned int i = 0; i < vecLen(editor.rows); i++) {
-        *buflen += editor.rows[i].size + 1;
+String editorRowsToString() {
+    size_t buflen = 0;
+    VECFOREACH(EditorRow, row, editor.rows) {
+        buflen += strLen(row->chars) + 1;
     }
 
-    char* buf = malloc(*buflen);
-    if (buf == NULL) {
-        *buflen = 0;
+    String buf = STR_NEW_WITH_CAP(buflen);
+    if (buf == NULL)
         return NULL;
-    }
 
-    char* p = buf;
-    for (unsigned int i = 0; i < vecLen(editor.rows); i++) {
-        memcpy(p, editor.rows[i].chars, editor.rows[i].size);
-        p += editor.rows[i].size;
-        *p = '\n';
-        p++;
+    VECFOREACH(EditorRow, row, editor.rows) {
+        strAppend(&buf, row->chars);
+        strAppendChar(&buf, '\n');
     }
 
     return buf;
 }
 
-int editorInsertRow(unsigned int pos, char *s, size_t len) {
+int editorInsertRow(unsigned int pos, char *s) {
     if (pos > vecLen(editor.rows))
         return -1;
 
+    String chars = strFromStr(s);
     EditorRow row = {
-        .size = len,
-        .chars = malloc(len + 1),
+        .chars = chars,
         .rsize = 0,
         .render = NULL,
         .hl = NULL,
         .search_match_pos = ARRAY_NEW(ArrayUnsignedInt),
     };
-    memcpy(row.chars, s, len);
-    row.chars[len] = '\0';
 
     VEC_INSERT(editor.rows, pos, row);
 

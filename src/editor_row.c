@@ -4,14 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "editing_point.h"
 #include "editor/defs.h"
 #include "editor/utils.h"
+#include "utils/string.h"
+#include "utils/vec.h"
 #include "editor_row.h"
 
-// #define COLOR_SEQ_SIZE 10
-// #define COLOR_SEQ_SIZE 6
 #define PARENTHESIS      "()[]{}"
 #define C_OPERATORS     "+-*/%<>=!|&"
 #define C_SEPARATORS    ",.+-/*=~%<>;:" C_OPERATORS PARENTHESIS
@@ -24,12 +25,13 @@ inline EditorRow* editorRowGet(EditingPoint ep) {
 }
 
 int editorRowResetHighlight(struct EditorRow* row) {
-    if (row->size == 0) return 0;   // realloc sometimes throws double free() error if called with size: 0
+    if (strLen(row->chars) == 0)
+        return 0;   // realloc sometimes throws double free() error if called with size: 0
 
-    Highlight* new = realloc(row->hl, row->size*sizeof(Highlight));
+    Highlight* new = realloc(row->hl, strLen(row->chars)*sizeof(Highlight));
     if (!new) return -1;
     row->hl = new;
-    for (unsigned int i = 0; i < row->size; i++) {
+    for (unsigned int i = 0; i < strLen(row->chars); i++) {
         row->hl[i] = HL_NORMAL;
     }
     return 0;
@@ -48,7 +50,7 @@ static bool isParenthesis(char c) {
 }
 
 const char* C_KEYWORDS[] = {
-    "#include", "#define",
+    "#include", "#define", "#ifdef", "#ifndef", "#endif",
     "extern", "return", "sizeof", "typedef",
     "const", "static", "inline",
     "switch", "case", "default", "if", "else", "goto",
@@ -64,7 +66,7 @@ const char* C_TYPES[] = {
     NULL
 };
 
-void highlightFill(struct EditorRow* row, unsigned int* i, Highlight val, size_t count) {
+void highlightFill(struct EditorRow* row, size_t* i, Highlight val, size_t count) {
     for (size_t k = 0; k < count; k++) {
         row->hl[*i] = val;
         (*i)++;
@@ -83,8 +85,8 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 
     struct EditorRow* row = &editor.rows[filerow];
 
-    for (unsigned int i = 0; i < row->size; i++) {
-        char c = row->chars[i];
+    STR_FOREACH(c, row->chars) {
+        size_t i = strCurrIdx(row->chars);
 
         bool prev_sep = i > 0 ? isSeparator(row->chars[i - 1]) : true;  // beginning of line is considered a separator
         Highlight prev_hl = i > 0 ? row->hl[i - 1] : HL_NORMAL;
@@ -131,6 +133,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
         if (in_comment || in_multiline_comment) {
             if (strncmp(&row->chars[i], multiline_comment_end, strlen(multiline_comment_end)) == 0) {
                 highlightFill(row, &i, HL_COMMENT, strlen(multiline_comment_end));
+                strSetAt(row->chars, i);
                 in_multiline_comment = false;
                 continue;
             } else {
@@ -144,6 +147,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                 continue;
             } else if (strncmp(&row->chars[i], multiline_comment_start, strlen(multiline_comment_start)) == 0) {
                 highlightFill(row, &i, HL_COMMENT, strlen(multiline_comment_start));
+                strSetAt(row->chars, i);
                 in_multiline_comment = true;
                 continue;
             }
@@ -165,6 +169,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 
                 if (strncmp(&row->chars[i], keyword, klen) == 0 && isSeparator(row->chars[i + klen])) {
                     highlightFill(row, &i, HL_KEYWORD, klen);
+                    strSetAt(row->chars, i);
                     break;
                 }
             }
@@ -180,6 +185,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 
                 if (strncmp(&row->chars[i], type, tlen) == 0 && isSeparator(row->chars[i + tlen])) {
                     highlightFill(row, &i, HL_TYPE, tlen);
+                    strSetAt(row->chars, i);
                     break;
                 }
             }
@@ -236,18 +242,21 @@ void editorRowHighlightSelection(unsigned int filerow) {
     if (filerow == editor.rowoff && SELECTION_START < editingPointNew(editor.rowoff, 0))
         in_selection = true;
 
-    for (unsigned int i = 0; i <= row->size; i++) {
+    // I don't use STR_FOR here because I wanto to
+    // loop until i <= strLen(row->chars), while
+    // STR_FOR loops untile i < strLen(row->chars)
+    for (unsigned int i = 0; i <= strLen(row->chars); i++) {
         if (in_selection) {
             if (editingPointNew(filerow, i) == SELECTION_END) {
                 in_selection = false;
-            } else if (i < row->size) {
+            } else if (i < strLen(row->chars)) {
                 row->hl[i] = HL_SELECTION;
             }
         } else {
             EditingPoint curr_ep = editingPointNew(filerow, i);
             if (curr_ep == SELECTION_START && curr_ep != SELECTION_END) {
                 in_selection = true;
-                if (i < row->size)
+                if (i < strLen(row->chars))
                     row->hl[i] = HL_SELECTION;
             }
         }
@@ -276,13 +285,11 @@ int syntaxToColor(Highlight hl) {
     }
 }
 
-int editorRowRender(unsigned int filerow)
-{
+int editorRowRender(unsigned int filerow) {
     struct EditorRow* row = &editor.rows[filerow];
-    unsigned int i;
     unsigned int tabs = 0;
-    for (i = 0; i < row->size; i++) {
-        if (row->chars[i] == '\t') {
+    STR_FOREACH(c, row->chars) {
+        if (c == '\t') {
             tabs++;
         }
     }
@@ -297,7 +304,7 @@ int editorRowRender(unsigned int filerow)
 
     Highlight prev_hl = -1;
     unsigned int hl_escape_seq_size = 0;
-    for (i = 0; i < row->size; i++) {
+    STR_FOR(i, row->chars) {
         if (prev_hl != row->hl[i]) {
             hl_escape_seq_size += COLOR_SEQ_SIZE;
         }
@@ -306,12 +313,12 @@ int editorRowRender(unsigned int filerow)
     }
 
     // eventrully free render if it is not null
-    // this makes the munction more general because it can be called
+    // this makes the function more general because it can be called
     // also to RE-rende a row
     free(row->render);
     row->render = NULL;
     char *new = malloc(
-        row->size + 1
+        strLen(row->chars) + 1
         + tabs*(TAB_SPACE_NUM - 1)
         + hl_escape_seq_size
     );
@@ -323,25 +330,24 @@ int editorRowRender(unsigned int filerow)
 
     unsigned int j = 0;
     int prev_color = -1;
-    for (i = 0; i < row->size; i++) {
-        int color = syntaxToColor(row->hl[i]);
+    STR_FOREACH(c, row->chars) {
+        int color = syntaxToColor(row->hl[vecCurrIdx(row->chars)]);
         int fg = (color >> 8) & 0xff;
         int bg = color & 0xff;
         if (color != prev_color) {
             char buf[16];
             int clen = snprintf(buf, sizeof(buf), "\x1b[%03d;%03dm", fg, bg);
-            // int clen = snprintf(buf, sizeof(buf), "\x1b[%03dm", fg);
             memcpy(&row->render[j], buf, clen);
             j += clen;
         }
         prev_color = color;
 
-        if (row->chars[i] == '\t') {
+        if (c == '\t') {
             unsigned int tab_i;
             for (tab_i = 0; tab_i < TAB_SPACE_NUM; tab_i++)
                 row->render[j++] = ' ';
         } else {
-            row->render[j++] = row->chars[i];
+            row->render[j++] = c;
         }
     }
 
@@ -352,53 +358,25 @@ int editorRowRender(unsigned int filerow)
 }
 
 void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c) {
-    if (pos > row->size)
-        pos = row->size;
+    if (pos > strLen(row->chars))
+        pos = strLen(row->chars);
 
-    int new_space;
-    char insert_char;
     if (c == '\t') {
-        new_space = 4;
-        insert_char = ' ';
+        strInsert(&row->chars, pos, "    ");
     } else {
-        new_space = 1;
-        insert_char = c;
+        strInsertChar(&row->chars, pos, c);
     }
-    row->chars = realloc(row->chars, row->size + new_space + 1);
-    memmove(&row->chars[pos + new_space], &row->chars[pos], row->size - pos + 1);
-    row->size += new_space;
-    // row->chars[pos] = c;
-    memset(&row->chars[pos], insert_char, new_space);
+}
+
+void editorRowDeleteChar(struct EditorRow* row, unsigned int pos) {
+    if (pos >= strLen(row->chars)) return;
+    strRemove(row->chars, pos);
     editorSetDirty();
 }
 
-void editorRowDeleteChar(struct EditorRow* row, unsigned int pos)
-{
-    if (pos >= row->size) return;
-    memmove(&row->chars[pos], &row->chars[pos + 1], row->size - pos);
-    row->size--;
-    editorSetDirty();
-}
-
-void editorRowFree(struct EditorRow* row)
-{
-    free(row->chars);
+void editorRowFree(struct EditorRow* row) {
+    strFree(row->chars);
     free(row->render);
     free(row->hl);
     ARRAY_FREE(&row->search_match_pos);
-}
-
-struct EditorRow* editorRowAppendString(struct EditorRow* row, char* s, size_t len)
-{
-    char* new = realloc(row->chars, row->size + len + 1);
-    if (new == NULL) {
-        return NULL; // error
-    }
-    memcpy(&new[row->size], s, len);
-    row->chars = new;
-    row->size += len;
-    row->chars[row->size] = '\0';
-    editorSetDirty();
-
-    return row;
 }

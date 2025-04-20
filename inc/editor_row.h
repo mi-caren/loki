@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include "editing_point.h"
 #include "utils/array.h"
+#include "utils/string.h"
+#include "utils/string.h"
 
 
 typedef enum {
@@ -21,8 +23,7 @@ typedef enum {
 } Highlight;
 
 typedef struct EditorRow {
-    unsigned int size;
-    char *chars;
+    String chars;
     Highlight* hl;
 
     unsigned int rsize;
@@ -35,7 +36,6 @@ int editorRowRender(unsigned int filerow);
 void editorRowFree(struct EditorRow* row);
 void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c);
 void editorRowDeleteChar(struct EditorRow* row, unsigned int pos);
-struct EditorRow* editorRowAppendString(struct EditorRow* row, char* s, size_t len);
 
 EditorRow* editorRowGet(EditingPoint ep);
 

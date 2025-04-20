@@ -3,6 +3,7 @@
 #include "editor/defs.h"
 #include "editor_row.h"
 #include "utils/result.h"
+#include "utils/string.h"
 
 extern struct Editor editor;
 
@@ -11,7 +12,7 @@ RESULT_IMPL(EditingPoint)
 /* Checks if editing point is at the End Of File */
 static inline bool editingPointIsEOF() {
     return getRow(editor.editing_point) == saturating_sub(vecLen(editor.rows), 1)
-        && getCol(editor.editing_point) == CURR_ROW.size;
+        && getCol(editor.editing_point) == strLen(CURR_ROW.chars);
 }
 
 /* Checks if editing point is at Beginning Of File */
@@ -21,12 +22,8 @@ static inline bool editingPointIsBOF() {
 }
 
 static char editingPointPrevChar() {
-    if (getCol(editor.editing_point) == 0) {
-        if (getRow(editor.editing_point) == 0) {
-            return '\0';
-        }
-        return PREV_ROW.chars[PREV_ROW.size]; // if prev_row is empty it will return the string terminator \0
-    }
+    if (getCol(editor.editing_point) == 0)
+        return '\0';
 
     return CURR_ROW.chars[getCol(editor.editing_point) - 1];
 }
@@ -61,7 +58,7 @@ static void editingPointMoveToChar(Direction dir) {
                 decCol(&editor.editing_point);
             } else if (getRow(editor.editing_point) != 0) {
                 decRow(&editor.editing_point);
-                setCol(&editor.editing_point, CURR_ROW.size);
+                setCol(&editor.editing_point, strLen(CURR_ROW.chars));
             }
             break;
         case Down:
@@ -70,7 +67,7 @@ static void editingPointMoveToChar(Direction dir) {
             }
             break;
         case Right:
-            if (getCol(editor.editing_point) < CURR_ROW.size) {
+            if (getCol(editor.editing_point) < strLen(CURR_ROW.chars)) {
                 incCol(&editor.editing_point);
             } else if (getRow(editor.editing_point) < saturating_sub(vecLen(editor.rows), 1)) {
                 incRow(&editor.editing_point);
@@ -81,8 +78,8 @@ static void editingPointMoveToChar(Direction dir) {
             return;
     }
 
-    if (getCol(editor.editing_point) > CURR_ROW.size) {
-        setCol(&editor.editing_point, CURR_ROW.size);
+    if (getCol(editor.editing_point) > strLen(CURR_ROW.chars)) {
+        setCol(&editor.editing_point, strLen(CURR_ROW.chars));
     }
 }
 
@@ -94,7 +91,7 @@ static void editingPointMoveToWord(Direction dir) {
         editingPointMoveToChar(dir);
 
         if (
-            (getCol(editor.editing_point) == CURR_ROW.size) // stops at the end of the line
+            (getCol(editor.editing_point) == strLen(CURR_ROW.chars)) // stops at the end of the line
             || (getCol(editor.editing_point) == 0) // stops at the beginning of the line
             || (CHAR_IS_STOPCHAR(editingPointPrevChar()) && !CHAR_IS_STOPCHAR(CURR_CHAR)) // stops if prev char if a stop char
         ) return;
@@ -109,8 +106,8 @@ static void editingPointMoveToParagraph(Direction dir) {
         editingPointMoveToChar(dir);
 
         if (
-            editingPointPrevRow()->size == 0
-            && !(CURR_ROW.size == 0)
+            strLen(editingPointPrevRow()->chars) == 0
+            && !(strLen(CURR_ROW.chars) == 0)
         ) return;
     }
 }
@@ -159,7 +156,7 @@ void editingPointMove(enum EditorKey key) {
             setCol(&editor.editing_point, 0);
             break;
         case END_KEY:
-            setCol(&editor.editing_point, CURR_ROW.size);
+            setCol(&editor.editing_point, strLen(CURR_ROW.chars));
             break;
 
         case PAGE_UP:

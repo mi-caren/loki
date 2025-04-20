@@ -129,7 +129,7 @@ static Vec _vecGrow(Vec* vec) {
     *vec = new + sizeof(VecHeader);
     VECHEAD(*vec)->cap *= 2;
 
-    return vec;
+    return *vec;
 }
 
 /*
@@ -183,8 +183,7 @@ void* vecInsert(Vec* vec, unsigned int index, void* el) {
 }
 
 void* vecRemove(Vec vec, unsigned int index) {
-    void* el = vecAt(vec, index);
-    if (el == NULL)
+    if (vecAt(vec, index) == NULL)
         return NULL;
 
     memmove(
@@ -194,7 +193,7 @@ void* vecRemove(Vec vec, unsigned int index) {
     );
     VECHEAD(vec)->len--;
 
-    return el;
+    return vec;
 }
 
 void* vecPop(Vec vec) {
@@ -256,6 +255,10 @@ inline void* vecCurr(Vec vec) {
     return _vecCurrUnchecked(vec);
 }
 
+inline size_t vecCurrIdx(Vec vec) {
+    return VECHEAD(vec)->cur;
+}
+
 inline void* vecFirst(Vec vec) {
     return vec;
 }
@@ -270,13 +273,12 @@ inline void* vecAt(Vec vec, size_t pos) {
     return (char*)vec + pos * VECHEAD(vec)->sizeof_type;
 }
 
-inline bool vecSetAt(Vec vec, size_t pos) {
-    if (pos >= VECHEAD(vec)->len) {
-        return false;
-    }
+inline void* vecSetAt(Vec vec, size_t pos) {
+    if (pos >= VECHEAD(vec)->len)
+        return NULL;
 
     VECHEAD(vec)->cur = pos;
-    return true;
+    return _vecCurrUnchecked(vec);
 }
 
 

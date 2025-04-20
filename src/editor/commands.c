@@ -14,6 +14,7 @@
 #include "editor/utils.h"
 #include "editor/search.h"
 #include "utils/result.h"
+#include "utils/string.h"
 #include "utils/utils.h"
 #include "utils/vec.h"
 #include "editor/commands.h"
@@ -31,7 +32,7 @@ static void _historyPushCmd(VEC(CoreCommand) cmd);
 
 static RESULT(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
     if (vecLen(editor.rows) == 0) {
-        if (editorInsertRow(0, "", 0) == -1)
+        if (editorInsertRow(0, "") == -1)
             return ERROR(EditingPoint, ERR_CORE_INSERT_ROW);
     }
 
@@ -48,13 +49,13 @@ static RESULT(char) _coreDeleteChar(EditingPoint ep) {
     if (vecLen(editor.rows) == 0)
         return ERROR(char, ERR_CORE_DELETE_NO_ROWS);
 
-    if (getRow(ep) >= vecLen(editor.rows) || getCol(ep) > ROW_AT(ep).size)
+    if (getRow(ep) >= vecLen(editor.rows) || getCol(ep) > strLen(ROW_AT(ep).chars))
         return ERROR(char, ERR_CORE_DELETE_CHAR_INVALID_EP);
 
-    if (getCol(ep) == ROW_AT(ep).size) {
+    if (getCol(ep) == strLen(ROW_AT(ep).chars)) {
         EditorRow next_row = ROW_AT(addRows(ep, 1));
-        if (!editorRowAppendString(&ROW_AT(ep), next_row.chars, next_row.size))
-            return ERROR(char, ERR_CORE_APPEND_NEXT_ROW);
+        strAppend(&ROW_AT(ep).chars, next_row.chars);
+        editorSetDirty();
         editorDeleteRow(getRow(ep) + 1);
 
         return OK(char, '\r');
@@ -74,20 +75,19 @@ static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep) {
     // + the number of spaces of current row, to mantain current indentation
     // when inserting a newline
     EditorRow* row = editorRowGet(ep);
-    unsigned int row_slice_size = row->size - getCol(ep);
+    unsigned int row_slice_size = strLen(row->chars) - getCol(ep);
     unsigned int leading_spaces_count = _countLeadingSpacesBeforeCol(row, getCol(ep));
     unsigned int new_row_size =  row_slice_size + leading_spaces_count;
 
-    char* new_row_chars = malloc(new_row_size + 1);
-    if (!new_row_chars)
+    String new_row_chars = STR_NEW_WITH_CAP(new_row_size);
+    if (new_row_chars == NULL)
         goto insert_newline_error;
 
-    memset(new_row_chars, ' ', leading_spaces_count);
-    new_row_chars[leading_spaces_count] = '\0';
-    strncat(new_row_chars, &row->chars[getCol(ep)], row_slice_size);
+    strRepeatAppendChar(&new_row_chars, ' ', leading_spaces_count);
+    strAppend(&new_row_chars, &row->chars[getCol(ep)]);
 
-    int res = editorInsertRow(getRow(ep) + 1, new_row_chars, new_row_size);
-    free(new_row_chars);
+    int res = editorInsertRow(getRow(ep) + 1, new_row_chars);
+    strFree(new_row_chars);
 
     if (res == -1)
         goto insert_newline_error;
@@ -95,8 +95,7 @@ static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep) {
     // fetch row again because calling editorInsertRow
     // calls realloc. The address of row could change
     row = editorRowGet(ep);
-    row->chars[getCol(ep)] = '\0';
-    row->size = getCol(ep);
+    strTruncate(row->chars, getCol(ep));
 
     incRow(&ep);
     setCol(&ep, leading_spaces_count);
@@ -128,6 +127,7 @@ void cmdInsertChar(char c) {
     _historyPushCmd(cmd);
 
     editor.editing_point = ep;
+    editorSetDirty();
 }
 
 void cmdPaste() {
@@ -153,6 +153,7 @@ void cmdPaste() {
     }
 
     _historyPushCmd(cmd);
+    editorSetDirty();
     editor.selecting = false;
 }
 
@@ -254,6 +255,7 @@ bool cmdUndo() {
     editor.editing_point = ccmd->ep;
 
     editor.curr_history_cmd = vecPrev(editor.command_history);
+    editorSetDirty();
     return true;
 }
 
@@ -300,8 +302,8 @@ bool cmdSave() {
         editor.filename = filename;
     }
 
-    int len;
-    char* buf = editorRowsToString(&len);
+    String buf = editorRowsToString();
+    int len = strLen(buf);
     if (buf == NULL) goto end;
 
     int fd = open(editor.filename, O_RDWR | O_CREAT, 0644);
@@ -314,7 +316,7 @@ bool cmdSave() {
 clean_fd:
     close(fd);
 clean_buf:
-    free(buf);
+    strFree(buf);
 end:
     if (ok) {
         messageBarSet("%d bytes written", len);
@@ -386,7 +388,7 @@ bool cmdCopy() {
                 if (!VECPUSH(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
             }
 
-            if (getCol(ep) == editor.rows[getRow(ep)].size) {
+            if (getCol(ep) == strLen(editor.rows[getRow(ep)].chars)) {
                 incRow(&ep);
                 setCol(&ep, 0);
             } else {
