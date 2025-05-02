@@ -283,12 +283,6 @@ int syntaxToColor(Highlight hl) {
 
 int editorRowRender(unsigned int filerow) {
     struct EditorRow* row = &editor.rows[filerow];
-    unsigned int tabs = 0;
-    STR_FOREACH(c, row->chars) {
-        if (c == '\t') {
-            tabs++;
-        }
-    }
 
     _editorRowResetHighlight(row);
     editorRowHighlightSyntax(filerow);
@@ -297,33 +291,8 @@ int editorRowRender(unsigned int filerow) {
     }
     editorRowHighlightSelection(filerow);
 
-    Highlight prev_hl = -1;
-    unsigned int hl_escape_seq_size = 0;
-    VECFOREACH(Highlight, hl, row->hl) {
-        if (prev_hl != *hl) {
-            hl_escape_seq_size += COLOR_SEQ_SIZE;
-        }
+    strEmpty(row->render);
 
-        prev_hl = *hl;
-    }
-
-    // eventrully free render if it is not null
-    // this makes the function more general because it can be called
-    // also to RE-rende a row
-    free(row->render);
-    row->render = NULL;
-    char *new = malloc(
-        strLen(row->chars) + 1
-        + tabs*(TAB_SPACE_NUM - 1)
-        + hl_escape_seq_size
-    );
-
-    if (new == NULL)
-        return -1;
-
-    row->render = new;
-
-    unsigned int j = 0;
     int prev_color = -1;
     STR_FOREACH(c, row->chars) {
         int color = syntaxToColor(row->hl[vecCurrIdx(row->chars)]);
@@ -331,23 +300,17 @@ int editorRowRender(unsigned int filerow) {
         int bg = color & 0xff;
         if (color != prev_color) {
             char buf[16];
-            int clen = snprintf(buf, sizeof(buf), "\x1b[%03d;%03dm", fg, bg);
-            memcpy(&row->render[j], buf, clen);
-            j += clen;
+            snprintf(buf, sizeof(buf), "\x1b[%03d;%03dm", fg, bg);
+            strAppend(&row->render, buf);
         }
         prev_color = color;
 
         if (c == '\t') {
-            unsigned int tab_i;
-            for (tab_i = 0; tab_i < TAB_SPACE_NUM; tab_i++)
-                row->render[j++] = ' ';
+            strRepeatAppendChar(&row->render, ' ', TAB_SPACE_NUM);
         } else {
-            row->render[j++] = c;
+            strAppendChar(&row->render, c);
         }
     }
-
-    row->render[j] = '\0';
-    row->rsize = j;
 
     return 0;
 }
@@ -371,7 +334,7 @@ void editorRowDeleteChar(struct EditorRow* row, unsigned int pos) {
 
 void editorRowFree(struct EditorRow* row) {
     strFree(row->chars);
-    free(row->render);
+    strFree(row->render);
     vecFree(row->hl);
     ARRAY_FREE(&row->search_match_pos);
 }

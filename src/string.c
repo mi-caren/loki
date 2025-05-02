@@ -47,6 +47,11 @@ String strFromStr(char* str) {
     return new_str;
 }
 
+inline void strEmpty(String str) {
+    STR_HEAD(str)->len = 0;
+    str[0] = '\0';
+}
+
 inline size_t strLen(String str) {
     return STR_HEAD(str)->len;
 }

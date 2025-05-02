@@ -278,8 +278,7 @@ int editorInsertRow(unsigned int pos, char *s) {
     String chars = strFromStr(s);
     EditorRow row = {
         .chars = chars,
-        .rsize = 0,
-        .render = NULL,
+        .render = STR_NEW(),
         .hl = VEC_NEW(Highlight),
         .search_match_pos = ARRAY_NEW(ArrayUnsignedInt),
     };
@@ -312,7 +311,7 @@ void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf) {
     int len = sprintf(buf, fmt_string, filerow + 1);
     dbuf_append(dbuf, buf, len);
 
-    if (row->rsize == 0) return;
+    if (strLen(row->render) == 0) return;
 
     unsigned int j = 0;
     unsigned int printable_chars = 0;
@@ -320,7 +319,7 @@ void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf) {
     // I'm assuming that the firts thing in a line is a color escape sequence
     memcpy(first_hl, row->render, COLOR_SEQ_SIZE);
 
-    while (j < row->rsize) {
+    while (j < strLen(row->render)) {
         char c = row->render[j];
 
         if (printable_chars < editor.coloff) {

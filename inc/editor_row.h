@@ -26,8 +26,7 @@ typedef struct EditorRow {
     String chars;
     VEC(Highlight) hl;
 
-    unsigned int rsize;
-    char *render;
+    String render;
 
     ArrayUnsignedInt search_match_pos;
 } EditorRow;
