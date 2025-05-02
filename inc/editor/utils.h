@@ -1,4 +1,3 @@
-#include "utils/dbuf.h"
 #include "utils/string.h"
 
 
@@ -12,8 +11,8 @@ void editorScroll();
 void editorRefreshScreen();
 
 void editorDeleteRow(unsigned int pos);
-void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf);
+void editorDrawRow(unsigned int filerow, String* buf);
 /* s MUST be 0 terminated */
 int editorInsertRow(unsigned int pos, char *s);
 String editorRowsToString();
-void editorDrawRows(struct DynamicBuffer *dbuf);
+void editorDrawRows(String* buf);

@@ -18,7 +18,6 @@
 #include "editor/utils.h"
 #include "terminal.h"
 #include "status_bar.h"
-#include "utils/dbuf.h"
 #include "utils/vec.h"
 #include "utils/result.h"
 #include "utils/utils.h"

@@ -3,10 +3,10 @@
 
 #include <stdbool.h>
 
-#include "utils/dbuf.h"
+#include "utils/string.h"
 
 
-void messageBarDraw(struct DynamicBuffer *dbuf);
+void messageBarDraw(String* buf);
 void messageBarSet(const char *fmt, ...);
 /*
     Draw a prompt in the message bar and takes an input from the user,
@@ -19,7 +19,7 @@ void messageBarSet(const char *fmt, ...);
 char* messageBarPrompt(char* prompt, int (*callback)(char*, int));
 bool messageBarPromptYesNo(char* prompt);
 
-void infoBarDraw(struct DynamicBuffer *dbuf);
+void infoBarDraw(String* dbuf);
 
 
 #endif

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "utils/array.h"
-#include "utils/dbuf.h"
+// #include "utils/dbuf.h"
 #include "utils/result.h"
 #include "utils/vec.h"
 
@@ -15,20 +15,20 @@ RESULT_IMPL(unsigned int)
 RESULT_IMPL(char)
 
 
-void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) {
-    char *new = realloc(dbuf->b, dbuf->len + len);
+// void dbuf_append(struct DynamicBuffer *dbuf, const char *s, int len) {
+//     char *new = realloc(dbuf->b, dbuf->len + len);
 
-    if (new == NULL) {
-        die("dbuf_append/realloc");
-    }
-    memcpy(&new[dbuf->len], s, len);
-    dbuf->b = new;
-    dbuf->len += len;
-}
+//     if (new == NULL) {
+//         die("dbuf_append/realloc");
+//     }
+//     memcpy(&new[dbuf->len], s, len);
+//     dbuf->b = new;
+//     dbuf->len += len;
+// }
 
-void dbuf_free(struct DynamicBuffer *dbuf) {
-    free(dbuf->b);
-}
+// void dbuf_free(struct DynamicBuffer *dbuf) {
+//     free(dbuf->b);
+// }
 
 
 static ArrayVoid* arrayIncSize(ArrayVoid* a, unsigned long type_size) {

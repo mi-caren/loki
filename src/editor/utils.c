@@ -231,26 +231,27 @@ void editorRefreshScreen() {
     editorCxToRx();
     editorScroll();
 
-    struct DynamicBuffer dbuf = DBUF_INIT;
+    String buf = STR_NEW();
+
     // hide cursor while drawing on screen
-    dbuf_append(&dbuf, HIDE_CURSOR_SEQ, HIDE_CURSOR_SEQ_SIZE);
+    strAppend(&buf, HIDE_CURSOR_SEQ);
     // ensure cursor is positioned top-left
-    dbuf_append(&dbuf, MOVE_CURSOR_TO_ORIG_SEQ, MOVE_CURSOR_TO_ORIG_SEQ_SIZE);
+    strAppend(&buf, MOVE_CURSOR_TO_ORIG_SEQ);
 
-    editorDrawRows(&dbuf);
-    infoBarDraw(&dbuf);
-    messageBarDraw(&dbuf);
+    editorDrawRows(&buf);
+    infoBarDraw(&buf);
+    messageBarDraw(&buf);
 
-    char buf[32];
+    char seq_buf[32];
     // move cursor to terminal cursor position
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", getRow(editor.editing_point) - editor.rowoff + 1, editor.rx - editor.coloff + 1);
-    dbuf_append(&dbuf, buf, strlen(buf));
+    snprintf(seq_buf, sizeof(seq_buf), "\x1b[%d;%dH", getRow(editor.editing_point) - editor.rowoff + 1, editor.rx - editor.coloff + 1);
+    strAppend(&buf, seq_buf);
 
     // show cursor
-    dbuf_append(&dbuf, SHOW_CURSOR_SEQ, SHOW_CURSOR_SEQ_SIZE);
+    strAppend(&buf, SHOW_CURSOR_SEQ);
 
-    write(STDOUT_FILENO, dbuf.b, dbuf.len);
-    dbuf_free(&dbuf);
+    write(STDOUT_FILENO, buf, strLen(buf));
+    strFree(buf);
 }
 
 String editorRowsToString() {
@@ -298,7 +299,7 @@ void editorDeleteRow(unsigned int pos) {
 
 
 
-void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf) {
+void editorDrawRow(unsigned int filerow, String* buf) {
     editorRowRender(filerow);
 
     struct EditorRow* row = &editor.rows[filerow];
@@ -307,17 +308,18 @@ void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf) {
     char fmt_string[32];
     sprintf(fmt_string, "\x1b[30;100m%%%dd", rowNumberColumnWidth());
 
-    char buf[32];
-    int len = sprintf(buf, fmt_string, filerow + 1);
-    dbuf_append(dbuf, buf, len);
+    char row_number_buf[32];
+    sprintf(row_number_buf, fmt_string, filerow + 1);
+    strAppend(buf, row_number_buf);
 
     if (strLen(row->render) == 0) return;
 
     unsigned int j = 0;
     unsigned int printable_chars = 0;
-    char first_hl[10];
+    char first_hl[COLOR_SEQ_SIZE + 1];
     // I'm assuming that the firts thing in a line is a color escape sequence
     memcpy(first_hl, row->render, COLOR_SEQ_SIZE);
+    first_hl[COLOR_SEQ_SIZE] = '\0';
 
     while (j < strLen(row->render)) {
         char c = row->render[j];
@@ -332,23 +334,26 @@ void editorDrawRow(unsigned int filerow, struct DynamicBuffer* dbuf) {
             }
             continue;
         } else if (printable_chars == editor.coloff) {
-            dbuf_append(dbuf, first_hl, COLOR_SEQ_SIZE);
+            strAppend(buf, first_hl);
         }
 
         if ((int)(printable_chars - editor.coloff) == terminal.screencols) break;
 
         if (c == '\x1b') {
-            dbuf_append(dbuf, &row->render[j], COLOR_SEQ_SIZE);
+            char seq[COLOR_SEQ_SIZE + 1];
+            memcpy(seq, &row->render[j], COLOR_SEQ_SIZE);
+            seq[COLOR_SEQ_SIZE] = '\0';
+            strAppend(buf, seq);
             j += COLOR_SEQ_SIZE;
         } else {
-            dbuf_append(dbuf, &c, 1);
+            strAppendChar(buf, c);
             printable_chars++;
             j++;
         }
     }
 }
 
-void editorDrawRows(struct DynamicBuffer *dbuf) {
+void editorDrawRows(String* buf) {
     unsigned int y;
     for (y = 0; y < editor.view_rows; y++) {
         unsigned int filerow = y + editor.rowoff;
@@ -362,27 +367,26 @@ void editorDrawRows(struct DynamicBuffer *dbuf) {
 
                 int padding = (terminal.screencols - welcomelen) / 2;
                 if (padding) {
-                    dbuf_append(dbuf, "~", 1);
+                    strAppendChar(buf, '~');
                     padding--;
                 }
-                while (padding--) {
-                    dbuf_append(dbuf, " ", 1);
-                }
-                dbuf_append(dbuf, welcome, welcomelen);
+                strRepeatAppendChar(buf, ' ', padding);
+                strAppend(buf, welcome);
             } else {
-                dbuf_append(dbuf, "~", 1);
+                strAppendChar(buf, '~');
             }
         } else {
-            editorDrawRow(filerow, dbuf);
+            editorDrawRow(filerow, buf);
         }
 
-        dbuf_append(dbuf, "\x1b[039;049m", COLOR_SEQ_SIZE);
+        strAppend(buf, "\x1b[039;049m");
+
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
-        dbuf_append(dbuf, CLEAR_LINE_CURSOR_TO_END_SEQ, CLEAR_LINE_CURSOR_TO_END_SEQ_SIZE);
+        strAppend(buf, CLEAR_LINE_CURSOR_TO_END_SEQ);
 
         if (y < editor.view_rows -1) {
-            dbuf_append(dbuf, "\r\n", 2);
+            strAppend(buf, "\r\n");
         }
     }
 }
