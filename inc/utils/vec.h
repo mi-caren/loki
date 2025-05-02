@@ -6,7 +6,9 @@
 
 /*   VEC   */
 #define VEC(TYPE)                       TYPE*
-#define VECNEW(TYPE)                    vecNew(sizeof(TYPE))
+#define VEC_NEW(TYPE)                   vecNew(sizeof(TYPE), 0)
+#define VEC_NEW_WITH_CAP(TYPE, CAP)     vecNew(sizeof(TYPE), CAP)
+#define VEC_REPEAT_APPEND(VEC, EL, N)   vecRepeatAppend((void**)&VEC, &EL, N)
 #define VECPUSH(VEC, EL)                vecPush((void**)&VEC, &EL)
 #define VEC_INSERT(VEC, INDEX, EL)      vecInsert((Vec*)&VEC, INDEX, &EL)
 #define VECPUSH_CONST(TYPE, VEC, EL)\
@@ -32,9 +34,10 @@
 
 typedef void* Vec;
 
-void* vecNew(size_t sizeof_type);
+void* vecNew(size_t sizeof_type, size_t initial_size);
 void vecFree(Vec vec);
 
+Vec vecRepeatAppend(Vec* vec, void* el, size_t n);
 void* vecPush(Vec* vec, void* el);
 /* Inserts a new element at the specified position,
    shifting all elements after it to the right */
@@ -61,7 +64,7 @@ void* vecRemove(Vec vec, unsigned int index);
  * There's the risk of creating error not detected because, by returning a
  * void pointer, that value can be assigned to any pointer.
  * This for example is legal but will probably produce runtime memory errors:
- *      VEC(int) vector = VECNEW(int);
+ *      VEC(int) vector = VEC_NEW(int);
  *      char* c = vecPop(vector);
  * It's even easier to make mistakes if the vector contains pointers.
  * The VEC_POP macro can help spotting errors because will cast the return value

@@ -24,7 +24,7 @@ typedef enum {
 
 typedef struct EditorRow {
     String chars;
-    Highlight* hl;
+    VEC(Highlight) hl;
 
     unsigned int rsize;
     char *render;

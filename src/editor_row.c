@@ -24,17 +24,13 @@ inline EditorRow* editorRowGet(EditingPoint ep) {
     return &editor.rows[getRow(ep)];
 }
 
-int editorRowResetHighlight(struct EditorRow* row) {
+static void _editorRowResetHighlight(struct EditorRow* row) {
     if (strLen(row->chars) == 0)
-        return 0;   // realloc sometimes throws double free() error if called with size: 0
+        return;
 
-    Highlight* new = realloc(row->hl, strLen(row->chars)*sizeof(Highlight));
-    if (!new) return -1;
-    row->hl = new;
-    for (unsigned int i = 0; i < strLen(row->chars); i++) {
-        row->hl[i] = HL_NORMAL;
-    }
-    return 0;
+    vecEmpty(row->hl);
+    Highlight reset_value = HL_NORMAL;
+    VEC_REPEAT_APPEND(row->hl, reset_value, strLen(row->chars));
 }
 
 static bool isSeparator(char c) {
@@ -66,7 +62,7 @@ const char* C_TYPES[] = {
     NULL
 };
 
-void highlightFill(struct EditorRow* row, size_t* i, Highlight val, size_t count) {
+static void _highlightFill(struct EditorRow* row, size_t* i, Highlight val, size_t count) {
     for (size_t k = 0; k < count; k++) {
         row->hl[*i] = val;
         (*i)++;
@@ -132,7 +128,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
         // Highlights comments
         if (in_comment || in_multiline_comment) {
             if (strncmp(&row->chars[i], multiline_comment_end, strlen(multiline_comment_end)) == 0) {
-                highlightFill(row, &i, HL_COMMENT, strlen(multiline_comment_end));
+                _highlightFill(row, &i, HL_COMMENT, strlen(multiline_comment_end));
                 strSetAt(row->chars, i);
                 in_multiline_comment = false;
                 continue;
@@ -146,7 +142,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                 in_comment = true;
                 continue;
             } else if (strncmp(&row->chars[i], multiline_comment_start, strlen(multiline_comment_start)) == 0) {
-                highlightFill(row, &i, HL_COMMENT, strlen(multiline_comment_start));
+                _highlightFill(row, &i, HL_COMMENT, strlen(multiline_comment_start));
                 strSetAt(row->chars, i);
                 in_multiline_comment = true;
                 continue;
@@ -168,7 +164,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                 size_t klen = strlen(keyword);
 
                 if (strncmp(&row->chars[i], keyword, klen) == 0 && isSeparator(row->chars[i + klen])) {
-                    highlightFill(row, &i, HL_KEYWORD, klen);
+                    _highlightFill(row, &i, HL_KEYWORD, klen);
                     strSetAt(row->chars, i);
                     break;
                 }
@@ -184,7 +180,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                 int tlen = strlen(type);
 
                 if (strncmp(&row->chars[i], type, tlen) == 0 && isSeparator(row->chars[i + tlen])) {
-                    highlightFill(row, &i, HL_TYPE, tlen);
+                    _highlightFill(row, &i, HL_TYPE, tlen);
                     strSetAt(row->chars, i);
                     break;
                 }
@@ -294,8 +290,7 @@ int editorRowRender(unsigned int filerow) {
         }
     }
 
-    if (editorRowResetHighlight(row) == -1)
-        return -1;
+    _editorRowResetHighlight(row);
     editorRowHighlightSyntax(filerow);
     if (editor.searching) {
         editorRowHighlightSearchResults(row);
@@ -304,12 +299,12 @@ int editorRowRender(unsigned int filerow) {
 
     Highlight prev_hl = -1;
     unsigned int hl_escape_seq_size = 0;
-    STR_FOR(i, row->chars) {
-        if (prev_hl != row->hl[i]) {
+    VECFOREACH(Highlight, hl, row->hl) {
+        if (prev_hl != *hl) {
             hl_escape_seq_size += COLOR_SEQ_SIZE;
         }
 
-        prev_hl = row->hl[i];
+        prev_hl = *hl;
     }
 
     // eventrully free render if it is not null
@@ -377,6 +372,6 @@ void editorRowDeleteChar(struct EditorRow* row, unsigned int pos) {
 void editorRowFree(struct EditorRow* row) {
     strFree(row->chars);
     free(row->render);
-    free(row->hl);
+    vecFree(row->hl);
     ARRAY_FREE(&row->search_match_pos);
 }

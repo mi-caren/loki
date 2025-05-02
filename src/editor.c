@@ -50,7 +50,7 @@ void editorInit(Editor* ed) {
 
     ed->editing_point = (EditingPoint) 0;
     ed->rx = 0;
-    ed->rows = VECNEW(EditorRow);
+    ed->rows = VEC_NEW(EditorRow);
     ed->rowoff = 0;
     ed->coloff = 0;
     ed->filename = NULL;
@@ -65,7 +65,7 @@ void editorInit(Editor* ed) {
     ed->selection_start = 0;
     ed->copy_buf = NULL;
 
-    ed->command_history = VECNEW(VEC(CoreCommand));
+    ed->command_history = VEC_NEW(VEC(CoreCommand));
     ed->curr_history_cmd = NULL;
 
     int height = terminal.screenrows;

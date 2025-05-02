@@ -280,7 +280,7 @@ int editorInsertRow(unsigned int pos, char *s) {
         .chars = chars,
         .rsize = 0,
         .render = NULL,
-        .hl = NULL,
+        .hl = VEC_NEW(Highlight),
         .search_match_pos = ARRAY_NEW(ArrayUnsignedInt),
     };
 

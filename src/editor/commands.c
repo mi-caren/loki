@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include "editing_point.h"
 #include "editor/keys.h"
@@ -122,7 +123,7 @@ void cmdInsertChar(char c) {
         .ep = editor.editing_point,
         .c = c,
     };
-    VEC(CoreCommand) cmd = VECNEW(CoreCommand);
+    VEC(CoreCommand) cmd = VEC_NEW(CoreCommand);
     VECPUSH(cmd, ccmd);
     _historyPushCmd(cmd);
 
@@ -136,7 +137,7 @@ void cmdPaste() {
         return;
     };
 
-    VEC(CoreCommand) cmd = VECNEW(CoreCommand);
+    VEC(CoreCommand) cmd = VEC_NEW(CoreCommand);
 
     VECFOREACH(char, c, editor.copy_buf) {
         EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(*c, editor.editing_point));
@@ -172,7 +173,7 @@ static bool _editorDeleteSelection() {
     editor.editing_point = SELECTION_END;
     editingPointMove(ARROW_LEFT);
 
-    VEC(CoreCommand) cmd = VECNEW(CoreCommand);
+    VEC(CoreCommand) cmd = VEC_NEW(CoreCommand);
 
     while (editor.editing_point >= selection_start) {
         char c = CATCH(char, _coreDeleteChar(editor.editing_point), err) {
@@ -211,7 +212,7 @@ void cmdDelete(bool del_key) {
             .ep = editor.editing_point,
             .c = c,
         };
-        VEC(CoreCommand) cmd = VECNEW(CoreCommand);
+        VEC(CoreCommand) cmd = VEC_NEW(CoreCommand);
         VECPUSH(cmd, ccmd);
         _historyPushCmd(cmd);
     }
@@ -374,7 +375,7 @@ bool cmdCopy() {
     int err = 0;
     if (editor.selecting) {
         if (editor.copy_buf == NULL) {
-            if (!(editor.copy_buf = VECNEW(char))) goto copy_error;
+            if (!(editor.copy_buf = VEC_NEW(char))) goto copy_error;
         }
 
         vecEmpty(editor.copy_buf);

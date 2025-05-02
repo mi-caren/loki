@@ -93,14 +93,22 @@ typedef struct {
 } VecHeader;
 
 
-void* vecNew(size_t sizeof_type) {
-    char* buf = (char*)malloc(sizeof(VecHeader) + sizeof_type);
+void* vecNew(size_t sizeof_type, size_t initial_size) {
+    if (initial_size == 0) {
+        initial_size = 1;
+    }
 
+    size_t cap = 1;
+    while (cap < initial_size) {
+        cap *= 2;
+    }
+
+    char* buf = (char*)malloc(sizeof(VecHeader) + sizeof_type * cap);
     if (buf == NULL) return NULL;
 
     VecHeader* header = (VecHeader*)buf;
     header->len = 0;
-    header->cap = 1;
+    header->cap = cap;
     header->sizeof_type = sizeof_type;
     header->cur = 0;
 
@@ -128,6 +136,51 @@ static Vec _vecGrow(Vec* vec) {
     // myvec = _vecGrow(myvec);
     *vec = new + sizeof(VecHeader);
     VECHEAD(*vec)->cap *= 2;
+
+    return *vec;
+}
+
+static Vec _vecMakeSpace(Vec* vec, size_t space) {
+    size_t cap = VECHEAD(*vec)->cap;
+    if (cap >= space)
+        return *vec;
+
+    while (cap < space) {
+        cap *= 2;
+    }
+
+    size_t sizeof_type = VECHEAD(*vec)->sizeof_type;
+    char* new = (char*)realloc(
+        (void*)VECHEAD(*vec),
+        sizeof(VecHeader) + sizeof_type*cap
+    );
+    if (new == NULL)
+        return NULL;
+
+    *vec = new + sizeof(VecHeader);
+    VECHEAD(*vec)->cap = cap;
+
+    return *vec;
+}
+
+Vec vecRepeatAppend(Vec* vec, void* el, size_t n) {
+    size_t len = VECHEAD(*vec)->len;
+    size_t total_space = len + n;
+    if (total_space > VECHEAD(*vec)->cap) {
+        if (_vecMakeSpace(vec, total_space) == NULL)
+            return NULL;
+    }
+
+    size_t sizeof_type = VECHEAD(*vec)->sizeof_type;
+    for (size_t i = 0; i < n; i++) {
+        char* dest = (char*)*vec + sizeof_type*(len + i);
+        memcpy(
+            dest,
+            el,
+            sizeof_type
+        );
+    }
+    VECHEAD(*vec)->len += n;
 
     return *vec;
 }

@@ -2,7 +2,6 @@
 #define STRING_H
 
 #include "utils/vec.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -21,6 +20,7 @@ typedef VEC(char) String;
 
 String strNew(size_t initial_size);
 String strFromStr(char* str);
+
 size_t strLen(String str);
 char strBegin(String str);
 char strNext(String str);

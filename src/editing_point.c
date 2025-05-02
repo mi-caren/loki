@@ -1,3 +1,6 @@
+// used in RESULT_IMPL macro
+#include <stdio.h>
+
 #include "editing_point.h"
 #include "editor.h"
 #include "editor/defs.h"

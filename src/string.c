@@ -4,7 +4,6 @@
 
 
 static String _strGrow(String* str);
-static String _strMakeSpace(String* str, size_t space);
 
 #define STR_HEAD(STR)    ((StrHeader*)(STR - sizeof(StrHeader)))
 
@@ -97,6 +96,9 @@ String strInsertChar(String* str, size_t pos, char c) {
 
 static String _strMakeSpace(String* str, size_t space) {
     size_t cap = STR_HEAD(*str)->cap;
+    if (cap >= space)
+        return *str;
+
     while (cap < space) {
         cap *= 2;
     }
