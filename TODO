@@ -1,6 +1,4 @@
 
-* dbuf_free -> check se buf != NULL
-
 
 * Creare struct String
     struct FileLine {
