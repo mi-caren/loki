@@ -1,6 +1,7 @@
-#include "utils/string.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include "utils/string.h"
 
 
 static String _strGrow(String* str);
