@@ -1,4 +1,4 @@
-SHARED_FLAGS = -Wall -Wextra -pedantic -Iinc
+SHARED_FLAGS = -Wall -Wextra -pedantic -Isrc
 CFLAGS = $(SHARED_FLAGS) -g
 
 SRCDIR=src

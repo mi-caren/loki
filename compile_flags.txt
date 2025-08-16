@@ -1,5 +1,5 @@
 -Wall
 -Wextra
 # -pedantic
--Iinc
+-Isrc
 -g
