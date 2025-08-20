@@ -141,7 +141,7 @@
 #define VEC_REALLOC_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _realloc)
 #define VEC_REALLOC_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REALLOC_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, size_t size)
 #define VEC_REALLOC_FUNC_IMPL(TYPE)\
-    static VEC_REALLOC_FUNC_SIGNATURE(TYPE) {\
+    VEC_REALLOC_FUNC_SIGNATURE(TYPE) {\
         if (vec_ptr == NULL) return NULL;\
         Vec(TYPE) new = realloc(\
             *vec_ptr,\
@@ -178,6 +178,16 @@
 
 #define vec_get(TYPE, VEC, IDX)        VEC_GET_FUNC_NAME(TYPE)(VEC, IDX)
 
+/* ********* vec_items *********** */
+#define VEC_ITEMS_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _items)
+#define VEC_ITEMS_FUNC_SIGNATURE(TYPE)       TYPE* VEC_ITEMS_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_ITEMS_FUNC_IMPL(TYPE)\
+    inline VEC_ITEMS_FUNC_SIGNATURE(TYPE) {\
+        return vec->ptr;\
+    }
+
+#define vec_items(TYPE, VEC)        VEC_ITEMS_FUNC_NAME(TYPE)(VEC)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -190,6 +200,7 @@
     VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE);\
     VEC_SET_FUNC_SIGNATURE(TYPE);\
     VEC_GET_FUNC_SIGNATURE(TYPE);\
+    VEC_ITEMS_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
@@ -203,7 +214,8 @@
     VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
     VEC_SET_FUNC_IMPL(TYPE)\
     VEC_GET_FUNC_IMPL(TYPE)\
-    VEC_REALLOC_FUNC_IMPL(TYPE)\
+    VEC_ITEMS_FUNC_IMPL(TYPE)\
+    static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \
     for (TYPE* EL = vec_begin(TYPE, VEC); EL != NULL; EL = vec_next(TYPE, VEC))
