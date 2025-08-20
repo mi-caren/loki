@@ -155,6 +155,18 @@
 
 #define vec_realloc(TYPE, VEC_PTR, SIZE)                 VEC_REALLOC_FUNC_NAME(TYPE)(VEC_PTR, SIZE)
 
+/* ********* vec_set *********** */
+#define VEC_SET_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _set)
+#define VEC_SET_FUNC_SIGNATURE(TYPE)       TYPE* VEC_SET_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE val, size_t idx)
+#define VEC_SET_FUNC_IMPL(TYPE)\
+    VEC_SET_FUNC_SIGNATURE(TYPE) {\
+        if (idx >= vec->len) return NULL;\
+        vec->ptr[idx] = val;\
+        return &vec->ptr[idx];\
+    }
+
+#define vec_set(TYPE, VEC, VAL, IDX)        VEC_SET_FUNC_NAME(TYPE)(VEC, VAL, IDX)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -165,6 +177,7 @@
     VEC_EMPTY_FUNC_SIGNATURE(TYPE);\
     VEC_PUSH_FUNC_SIGNATURE(TYPE);\
     VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE);\
+    VEC_SET_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
@@ -176,6 +189,7 @@
     VEC_EMPTY_FUNC_IMPL(TYPE)\
     VEC_PUSH_FUNC_IMPL(TYPE)\
     VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
+    VEC_SET_FUNC_IMPL(TYPE)\
     VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \
