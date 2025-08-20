@@ -75,18 +75,32 @@
 
 #define vec_curr(TYPE, VEC)                 VEC_CURR_FUNC_NAME(TYPE)(VEC)
 
+/* ********* vec_next *********** */
+#define VEC_NEXT_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _next)
+#define VEC_NEXT_FUNC_SIGNATURE(TYPE)       TYPE* VEC_NEXT_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_NEXT_FUNC_IMPL(TYPE)\
+    VEC_NEXT_FUNC_SIGNATURE(TYPE) {\
+        if (vec->curr >= vec->len - 1) return NULL;\
+        vec->curr++;\
+        return vec_curr(TYPE, vec);\
+    }
+
+#define vec_next(TYPE, VEC)                 VEC_NEXT_FUNC_NAME(TYPE)(VEC)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\
     VEC_BEGIN_FUNC_SIGNATURE(TYPE);\
-    VEC_CURR_FUNC_SIGNATURE(TYPE);
+    VEC_CURR_FUNC_SIGNATURE(TYPE);\
+    VEC_NEXT_FUNC_SIGNATURE(TYPE);
 
 #define VEC_IMPL(TYPE)\
     VEC_STRUCT_DEF(TYPE);\
     VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_BEGIN_FUNC_IMPL(TYPE)\
-    VEC_CURR_FUNC_IMPL(TYPE)
+    VEC_CURR_FUNC_IMPL(TYPE)\
+    VEC_NEXT_FUNC_IMPL(TYPE)
 
 size_t vec_cap_from_size(size_t size);
 
