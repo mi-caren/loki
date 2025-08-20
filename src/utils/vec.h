@@ -111,14 +111,7 @@
 #define vec_push(TYPE, VEC, EL)             VEC_PUSH_FUNC_NAME(TYPE)(&VEC, EL)
 
 /* ********* static vec_grow *********** */
-#define VEC_GROW_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _grow)
-#define VEC_GROW_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_GROW_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr)
-#define VEC_GROW_FUNC_IMPL(TYPE)\
-    static VEC_GROW_FUNC_SIGNATURE(TYPE) {\
-        return vec_realloc(TYPE, vec_ptr, (*vec_ptr)->cap * 2);\
-    }
-
-#define vec_grow(TYPE, VEC_PTR)                 VEC_GROW_FUNC_NAME(TYPE)(VEC_PTR)
+#define vec_grow(TYPE, VEC_PTR)                 vec_realloc(TYPE, VEC_PTR, (*VEC_PTR)->cap * 2)
 
 /* ********* vec_repeat_append *********** */
 #define VEC_REPEAT_APPEND_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _repeat_append)
@@ -142,14 +135,7 @@
 #define vec_repeat_append(TYPE, VEC, EL, N)                 VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(&VEC, EL, N)
 
 /* ********* static vec_make_space *********** */
-#define VEC_MAKE_SPACE_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _make_space)
-#define VEC_MAKE_SPACE_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_MAKE_SPACE_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, size_t space)
-#define VEC_MAKE_SPACE_FUNC_IMPL(TYPE)\
-    static VEC_MAKE_SPACE_FUNC_SIGNATURE(TYPE) {\
-        return vec_realloc(TYPE, vec_ptr, vec_cap_from_size(space));\
-    }
-
-#define vec_make_space(TYPE, VEC_PTR, SPACE)                 VEC_MAKE_SPACE_FUNC_NAME(TYPE)(VEC_PTR, SPACE)
+#define vec_make_space(TYPE, VEC_PTR, SPACE)                 vec_realloc(TYPE, VEC_PTR, vec_cap_from_size(SPACE))
 
 /* ********* static vec_realloc *********** */
 #define VEC_REALLOC_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _realloc)
@@ -181,8 +167,6 @@
     VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
-    static VEC_GROW_FUNC_SIGNATURE(TYPE);\
-    static VEC_MAKE_SPACE_FUNC_SIGNATURE(TYPE);\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
     VEC_STRUCT_DEF(TYPE);\
     VEC_NEW_FUNC_IMPL(TYPE)\
@@ -192,8 +176,6 @@
     VEC_EMPTY_FUNC_IMPL(TYPE)\
     VEC_PUSH_FUNC_IMPL(TYPE)\
     VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
-    VEC_GROW_FUNC_IMPL(TYPE)\
-    VEC_MAKE_SPACE_FUNC_IMPL(TYPE)\
     VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \
