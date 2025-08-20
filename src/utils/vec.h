@@ -4,6 +4,29 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#define Vec(TYPE)\
+    IF_UNSIGNED(TYPE)(\
+        CAT(VEC_, PAREN_CLOSE(TYPE)),\
+        IF_STRUCT(TYPE)(\
+            CAT(VEC_, PAREN_CLOSE(TYPE)),\
+            CAT(Vec, TYPE)\
+        )\
+    )
+
+#define VEC_unsigned                    VEC_UNSIGNED(
+#define VEC_UNSIGNED(TYPE)              PRIMITIVE_CAT(VecUnsigned, TYPE)
+
+#define VEC_struct                      VEC_STRUCT(
+#define VEC_STRUCT(TYPE)                PRIMITIVE_CAT(VecStruct, TYPE)
+
+#define VEC_STRUCT_DEF(TYPE)\
+    typedef struct Vec(TYPE) {\
+        size_t cap;\
+        size_t len;\
+        size_t cur;\
+        TYPE ptr[];\
+    } Vec(TYPE)
+
 /*   VEC   */
 #define VEC(TYPE)                       TYPE*
 #define VEC_NEW(TYPE)                   vecNew(sizeof(TYPE), 0)
