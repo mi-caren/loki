@@ -28,9 +28,8 @@ static void _editorRowResetHighlight(struct EditorRow* row) {
     if (strLen(row->chars) == 0)
         return;
 
-    vecEmpty(row->hl);
-    Highlight reset_value = HL_NORMAL;
-    VEC_REPEAT_APPEND(row->hl, reset_value, strLen(row->chars));
+    vec_empty(Highlight, row->hl);
+    vec_repeat_append(Highlight, row->hl, HL_NORMAL, strLen(row->chars));
 }
 
 static bool isSeparator(char c) {
@@ -64,7 +63,7 @@ const char* C_TYPES[] = {
 
 static void _highlightFill(struct EditorRow* row, size_t* i, Highlight val, size_t count) {
     for (size_t k = 0; k < count; k++) {
-        row->hl[*i] = val;
+        vec_items(Highlight, row->hl)[*i] = val;
         (*i)++;
     }
     (*i)--;
@@ -80,28 +79,29 @@ void editorRowHighlightSyntax(unsigned int filerow) {
     char* multiline_comment_end = "*/";
 
     struct EditorRow* row = &editor.rows[filerow];
+    Highlight* hl = vec_items(Highlight, row->hl);
 
     STR_FOREACH(c, row->chars) {
         size_t i = strCurrIdx(row->chars);
 
         bool prev_sep = i > 0 ? isSeparator(row->chars[i - 1]) : true;  // beginning of line is considered a separator
-        Highlight prev_hl = i > 0 ? row->hl[i - 1] : HL_NORMAL;
+        Highlight prev_hl = i > 0 ? hl[i - 1] : HL_NORMAL;
 
         // Highlights includes
         char* include_match = strstr(row->chars, "#include <");
         if (c == '<' && include_match) {
-            row->hl[i] = HL_STRING;
+            hl[i] = HL_STRING;
             in_string = true;
             continue;
         } else if (c == '>' && include_match) {
-            row->hl[i] = HL_STRING;
+            hl[i] = HL_STRING;
             in_string = false;
             continue;
         }
 
         // Highlights strings
         if (in_string) {
-            row->hl[i] = HL_STRING;
+            hl[i] = HL_STRING;
             if (c == opening_string_quote_type) {
                 // if prev char is backsles, closing quote is escaped
                 // so it means we are still in string
@@ -118,7 +118,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
             continue;
         } else {
             if (!(in_comment || in_multiline_comment) && (c == '\'' || c == '"')) {
-                row->hl[i] = HL_STRING;
+                hl[i] = HL_STRING;
                 in_string = true;
                 opening_string_quote_type = c;
                 continue;
@@ -133,12 +133,12 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                 in_multiline_comment = false;
                 continue;
             } else {
-                row->hl[i] = HL_COMMENT;
+                hl[i] = HL_COMMENT;
             }
             continue;
         } else {
             if (strncmp(&row->chars[i], single_line_comment_start, strlen(single_line_comment_start)) == 0) {
-                row->hl[i] = HL_COMMENT;
+                hl[i] = HL_COMMENT;
                 in_comment = true;
                 continue;
             } else if (strncmp(&row->chars[i], multiline_comment_start, strlen(multiline_comment_start)) == 0) {
@@ -152,7 +152,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 
         // Highlights numbers
         if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) || (c == '.' && prev_hl == HL_NUMBER)) {
-            row->hl[i] = HL_NUMBER;
+            hl[i] = HL_NUMBER;
             continue;
         }
 
@@ -190,16 +190,16 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 
         // Highlights operators
         if (isOperator(c)) {
-            row->hl[i] = HL_OPERATOR;
+            hl[i] = HL_OPERATOR;
             continue;
         }
 
         // Highlights functions
         if (c == '(' && i > 0) {
-            row->hl[i] = HL_PARENTHESIS;
+            hl[i] = HL_PARENTHESIS;
             int j = i - 1;
             while (j >= 0 && !isSeparator(row->chars[j])) {
-                row->hl[j] = HL_FUNCTION;
+                hl[j] = HL_FUNCTION;
                 j--;
             }
             if (j != (int)(i - 1)) continue;
@@ -207,7 +207,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 
         // Highlights parenthesis
         if (isParenthesis(c)) {
-            row->hl[i] = HL_PARENTHESIS;
+            hl[i] = HL_PARENTHESIS;
             continue;
         }
 
@@ -224,7 +224,7 @@ void editorRowHighlightSearchResults(struct EditorRow* row) {
     ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
         unsigned int last_pos = *cur + strlen(editor.search_query);
         for (unsigned int j = *cur; j < last_pos; j++) {
-            row->hl[j] = HL_MATCH;
+            vec_items(Highlight, row->hl)[j] = HL_MATCH;
         }
     }
 }
@@ -234,6 +234,7 @@ void editorRowHighlightSelection(unsigned int filerow) {
 
     static bool in_selection = false;
     struct EditorRow* row = &editor.rows[filerow];
+    Highlight* hl = vec_items(Highlight, row->hl);
 
     if (filerow == editor.rowoff && SELECTION_START < editingPointNew(editor.rowoff, 0))
         in_selection = true;
@@ -246,14 +247,14 @@ void editorRowHighlightSelection(unsigned int filerow) {
             if (editingPointNew(filerow, i) == SELECTION_END) {
                 in_selection = false;
             } else if (i < strLen(row->chars)) {
-                row->hl[i] = HL_SELECTION;
+                hl[i] = HL_SELECTION;
             }
         } else {
             EditingPoint curr_ep = editingPointNew(filerow, i);
             if (curr_ep == SELECTION_START && curr_ep != SELECTION_END) {
                 in_selection = true;
                 if (i < strLen(row->chars))
-                    row->hl[i] = HL_SELECTION;
+                    hl[i] = HL_SELECTION;
             }
         }
     }
@@ -295,7 +296,7 @@ int editorRowRender(unsigned int filerow) {
 
     int prev_color = -1;
     STR_FOREACH(c, row->chars) {
-        int color = syntaxToColor(row->hl[vecCurrIdx(row->chars)]);
+        int color = syntaxToColor(vec_items(Highlight, row->hl)[vecCurrIdx(row->chars)]);
         int fg = (color >> 8) & 0xff;
         int bg = color & 0xff;
         if (color != prev_color) {
@@ -335,7 +336,7 @@ void editorRowDeleteChar(struct EditorRow* row, unsigned int pos) {
 void editorRowFree(struct EditorRow* row) {
     strFree(row->chars);
     strFree(row->render);
-    vecFree(row->hl);
+    free(row->hl);
     ARRAY_FREE(&row->search_match_pos);
 }
 

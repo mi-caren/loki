@@ -27,7 +27,7 @@ VEC_DEFS(Highlight)
 
 typedef struct EditorRow {
     String chars;
-    VEC(Highlight) hl;
+    Vec(Highlight) hl;
 
     String render;
 
