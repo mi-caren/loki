@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "utils.h"
+
 #define VecStructName(TYPE)\
     IF_UNSIGNED(TYPE)(\
         CAT(VEC_, PAREN_CLOSE(TYPE)),\
@@ -36,7 +38,7 @@
     VEC_NEW_FUNC_SIGNATURE(TYPE) {\
         size_t cap = vec_cap_from_size(initial_size);\
 \
-        Vec(TYPE) vec = (char*)malloc(sizeof(VecStructName(TYPE)) + sizeof(TYPE) * cap);\
+        Vec(TYPE) vec = malloc(sizeof(VecStructName(TYPE)) + sizeof(TYPE) * cap);\
         if (vec == NULL) return NULL;\
 \
         vec->cap = cap;\
@@ -58,6 +60,8 @@
     VEC_NEW_FUNC_IMPL(TYPE)
 
 size_t vec_cap_from_size(size_t size);
+
+VEC_DEFS(char)
 
 /*   VEC   */
 #define VEC(TYPE)                       TYPE*

@@ -17,6 +17,8 @@ size_t vec_cap_from_size(size_t size) {
     return cap;
 }
 
+VEC_IMPL(char)
+
 #define VECHEAD(VEC)    ((VecHeader*)((char*)VEC - sizeof(VecHeader)))
 
 typedef struct {
