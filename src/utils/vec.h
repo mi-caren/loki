@@ -130,6 +130,27 @@
 
 #define vec_grow(TYPE, VEC_PTR)                 VEC_GROW_FUNC_NAME(TYPE)(VEC_PTR)
 
+/* ********* vec_repeat_append *********** */
+#define VEC_REPEAT_APPEND_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _repeat_append)
+#define VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, TYPE el, size_t n)
+#define VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
+    VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE) {\
+        size_t total_space = (*vec_ptr)->len + n;\
+        if (total_space > (*vec_ptr)->cap) {\
+            if (vec_make_space(TYPE, vec_ptr, total_space) == NULL)\
+                return NULL;\
+        }\
+\
+        for (size_t i = 0; i < n; i++) {\
+            (*vec_ptr)->ptr[(*vec_ptr)->len + i] = el;\
+        }\
+        (*vec_ptr)->len += n;\
+\
+        return *vec_ptr;\
+    }
+
+#define vec_repeat_append(TYPE, VEC, EL, N)                 VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(&VEC, EL, N)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -138,7 +159,8 @@
     VEC_CURR_FUNC_SIGNATURE(TYPE);\
     VEC_NEXT_FUNC_SIGNATURE(TYPE);\
     VEC_EMPTY_FUNC_SIGNATURE(TYPE);\
-    VEC_PUSH_FUNC_SIGNATURE(TYPE);
+    VEC_PUSH_FUNC_SIGNATURE(TYPE);\
+    VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE);
 
 #define VEC_IMPL(TYPE)\
     static VEC_GROW_FUNC_SIGNATURE(TYPE);\
@@ -149,7 +171,8 @@
     VEC_NEXT_FUNC_IMPL(TYPE)\
     VEC_EMPTY_FUNC_IMPL(TYPE)\
     VEC_PUSH_FUNC_IMPL(TYPE)\
-    VEC_GROW_FUNC_IMPL(TYPE)
+    VEC_GROW_FUNC_IMPL(TYPE)\
+    VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)
 
 #define vec_foreach(TYPE, EL, VEC) \
     for (TYPE* EL = vec_begin(TYPE, VEC); EL != NULL; EL = vec_next(TYPE, VEC))
