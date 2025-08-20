@@ -99,19 +99,36 @@
 
 /* ********* vec_push *********** */
 #define VEC_PUSH_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _push)
-#define VEC_PUSH_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_PUSH_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE el)
+#define VEC_PUSH_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_PUSH_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, TYPE el)
 #define VEC_PUSH_FUNC_IMPL(TYPE)\
     VEC_PUSH_FUNC_SIGNATURE(TYPE) {\
-        if (vec->len == vec->cap) {\
-            if (vec_grow(TYPE, vec) == NULL)\
+        if ((*vec_ptr)->len == (*vec_ptr)->cap) {\
+            if (vec_grow(TYPE, vec_ptr) == NULL)\
                 return NULL;\
         }\
-        vec->ptr[vec->len] = el;\
-        vec->len++;\
-        return vec;\
+        (*vec_ptr)->ptr[(*vec_ptr)->len] = el;\
+        (*vec_ptr)->len++;\
+        return *vec_ptr;\
     }
 
-#define vec_push(TYPE, VEC, EL)             VEC_PUSH_FUNC_NAME(TYPE)(VEC, EL)
+#define vec_push(TYPE, VEC, EL)             VEC_PUSH_FUNC_NAME(TYPE)(&VEC, EL)
+
+/* ********* static vec_grow *********** */
+#define VEC_GROW_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _grow)
+#define VEC_GROW_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_GROW_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr)
+#define VEC_GROW_FUNC_IMPL(TYPE)\
+    static VEC_GROW_FUNC_SIGNATURE(TYPE) {\
+        Vec(TYPE) new = realloc(\
+            *vec_ptr,\
+            sizeof(VecStructName(TYPE)) + sizeof(TYPE) * ((*vec_ptr)->cap) * 2\
+        );\
+        if (new == NULL) return NULL;\
+        *vec_ptr = new;\
+        (*vec_ptr)->cap *= 2;\
+        return *vec_ptr;\
+    }
+
+#define vec_grow(TYPE, VEC_PTR)                 VEC_GROW_FUNC_NAME(TYPE)(VEC_PTR)
 
 
 #define VEC_DEFS(TYPE)\
@@ -124,15 +141,15 @@
     VEC_PUSH_FUNC_SIGNATURE(TYPE);
 
 #define VEC_IMPL(TYPE)\
+    static VEC_GROW_FUNC_SIGNATURE(TYPE);\
     VEC_STRUCT_DEF(TYPE);\
     VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_BEGIN_FUNC_IMPL(TYPE)\
     VEC_CURR_FUNC_IMPL(TYPE)\
     VEC_NEXT_FUNC_IMPL(TYPE)\
     VEC_EMPTY_FUNC_IMPL(TYPE)\
-    VEC_PUSH_FUNC_IMPL(TYPE)
-
-size_t vec_cap_from_size(size_t size);
+    VEC_PUSH_FUNC_IMPL(TYPE)\
+    VEC_GROW_FUNC_IMPL(TYPE)
 
 #define vec_foreach(TYPE, EL, VEC) \
     for (TYPE* EL = vec_begin(TYPE, VEC); EL != NULL; EL = vec_next(TYPE, VEC))
