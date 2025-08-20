@@ -139,7 +139,7 @@ void cmdPaste() {
 
     VEC(CoreCommand) cmd = VEC_NEW(CoreCommand);
 
-    VECFOREACH(char, c, editor.copy_buf) {
+    vec_foreach (char, c, editor.copy_buf) {
         EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(*c, editor.editing_point));
 
         // Insert every CoreCommand into the Editor Command
@@ -375,18 +375,18 @@ bool cmdCopy() {
     int err = 0;
     if (editor.selecting) {
         if (editor.copy_buf == NULL) {
-            if (!(editor.copy_buf = VEC_NEW(char))) goto copy_error;
+            if (!(editor.copy_buf = vec_new(char))) goto copy_error;
         }
 
-        vecEmpty(editor.copy_buf);
+        vec_empty(char, editor.copy_buf);
 
         EditingPoint ep = SELECTION_START;
         while (ep != SELECTION_END) {
             if (CHAR_AT(ep) == '\0') {
                 char c = '\r';
-                if (!VECPUSH(editor.copy_buf, c)) goto copy_error;
+                if (!vec_push(char, editor.copy_buf, c)) goto copy_error;
             } else {
-                if (!VECPUSH(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
+                if (!vec_push(char, editor.copy_buf, CHAR_AT(ep))) goto copy_error;
             }
 
             if (getCol(ep) == strLen(editor.rows[getRow(ep)].chars)) {

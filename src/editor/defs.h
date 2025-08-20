@@ -64,7 +64,7 @@ typedef struct Editor {
 
     bool selecting;
     EditingPoint selection_start;
-    VEC(char) copy_buf;
+    Vec(char) copy_buf;
 
     /*
      * The history of the executed Editor Commands.

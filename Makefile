@@ -42,6 +42,8 @@ $(OBJDIR)/editor_%.o: $(SRCDIR)/editor/%.c
 $(OBJDIR)/utils_%.o: $(SRCDIR)/utils/%.c
 	gcc $(CFLAGS) -c $< -o $@
 
+$(OBJDIR)/utils_pre_%.c: $(SRCDIR)/utils/%.c
+	$(CC) $(CFLAGS) -E $< -o $@
 
 
 clean:
