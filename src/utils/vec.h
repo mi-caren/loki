@@ -154,6 +154,8 @@
 #define vec_foreach(TYPE, EL, VEC) \
     for (TYPE* EL = vec_begin(TYPE, VEC); EL != NULL; EL = vec_next(TYPE, VEC))
 
+size_t vec_cap_from_size(size_t size);
+
 VEC_DEFS(char)
 
 /*   VEC   */

@@ -4,7 +4,7 @@
 
 #include "utils/vec.h"
 
-static size_t vec_cap_from_size(size_t size) {
+size_t vec_cap_from_size(size_t size) {
     if (size == 0) {
         size = 1;
     }

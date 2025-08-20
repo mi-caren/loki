@@ -338,3 +338,5 @@ void editorRowFree(struct EditorRow* row) {
     vecFree(row->hl);
     ARRAY_FREE(&row->search_match_pos);
 }
+
+VEC_IMPL(Highlight)

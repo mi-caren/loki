@@ -6,6 +6,7 @@
 #include "utils/array.h"
 #include "utils/string.h"
 #include "utils/string.h"
+#include "utils/vec.h"
 
 
 typedef enum {
@@ -21,6 +22,8 @@ typedef enum {
     HL_MATCH,
     HL_SELECTION,
 } Highlight;
+
+VEC_DEFS(Highlight)
 
 typedef struct EditorRow {
     String chars;
