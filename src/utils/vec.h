@@ -38,14 +38,11 @@
 #define VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_NEW_FUNC_SIGNATURE(TYPE) {\
         size_t cap = vec_cap_from_size(initial_size);\
-\
         Vec(TYPE) vec = malloc(sizeof(VecStructName(TYPE)) + sizeof(TYPE) * cap);\
         if (vec == NULL) return NULL;\
-\
         vec->cap = cap;\
         vec->len = 0;\
         vec->curr = 0;\
-\
         return vec;\
     }
 
@@ -169,6 +166,24 @@
 
 #define vec_make_space(TYPE, VEC_PTR, SPACE)                 VEC_MAKE_SPACE_FUNC_NAME(TYPE)(VEC_PTR, SPACE)
 
+/* ********* static vec_realloc *********** */
+#define VEC_REALLOC_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _realloc)
+#define VEC_REALLOC_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REALLOC_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, size_t size)
+#define VEC_REALLOC_FUNC_IMPL(TYPE)\
+    static VEC_REALLOC_FUNC_SIGNATURE(TYPE) {\
+        if (vec_ptr == NULL) return NULL;\
+        Vec(TYPE) new = realloc(\
+            *vec_ptr,\
+            sizeof(VecStructName(TYPE)) + sizeof(TYPE) * size\
+        );\
+        if (new == NULL) return NULL;\
+        *vec_ptr = new;\
+        (*vec_ptr)->cap = size;\
+        return *vec_ptr;\
+    }
+
+#define vec_realloc(TYPE, VEC_PTR, SIZE)                 VEC_REALLOC_FUNC_NAME(TYPE)(VEC_PTR, SIZE)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -178,11 +193,12 @@
     VEC_NEXT_FUNC_SIGNATURE(TYPE);\
     VEC_EMPTY_FUNC_SIGNATURE(TYPE);\
     VEC_PUSH_FUNC_SIGNATURE(TYPE);\
-    VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE);
+    VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
     static VEC_GROW_FUNC_SIGNATURE(TYPE);\
     static VEC_MAKE_SPACE_FUNC_SIGNATURE(TYPE);\
+    static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
     VEC_STRUCT_DEF(TYPE);\
     VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_BEGIN_FUNC_IMPL(TYPE)\
@@ -192,7 +208,8 @@
     VEC_PUSH_FUNC_IMPL(TYPE)\
     VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
     VEC_GROW_FUNC_IMPL(TYPE)\
-    VEC_MAKE_SPACE_FUNC_IMPL(TYPE)
+    VEC_MAKE_SPACE_FUNC_IMPL(TYPE)\
+    VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \
     for (TYPE* EL = vec_begin(TYPE, VEC); EL != NULL; EL = vec_next(TYPE, VEC))
