@@ -167,6 +167,17 @@
 
 #define vec_set(TYPE, VEC, VAL, IDX)        VEC_SET_FUNC_NAME(TYPE)(VEC, VAL, IDX)
 
+/* ********* vec_get *********** */
+#define VEC_GET_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _get)
+#define VEC_GET_FUNC_SIGNATURE(TYPE)       TYPE* VEC_GET_FUNC_NAME(TYPE)(Vec(TYPE) vec, size_t idx)
+#define VEC_GET_FUNC_IMPL(TYPE)\
+    VEC_GET_FUNC_SIGNATURE(TYPE) {\
+        if (idx >= vec->len) return NULL;\
+        return &vec->ptr[idx];\
+    }
+
+#define vec_get(TYPE, VEC, IDX)        VEC_GET_FUNC_NAME(TYPE)(VEC, IDX)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -178,6 +189,7 @@
     VEC_PUSH_FUNC_SIGNATURE(TYPE);\
     VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE);\
     VEC_SET_FUNC_SIGNATURE(TYPE);\
+    VEC_GET_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
@@ -190,6 +202,7 @@
     VEC_PUSH_FUNC_IMPL(TYPE)\
     VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
     VEC_SET_FUNC_IMPL(TYPE)\
+    VEC_GET_FUNC_IMPL(TYPE)\
     VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \
