@@ -56,23 +56,37 @@
 #define VEC_BEGIN_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _begin)
 #define VEC_BEGIN_FUNC_SIGNATURE(TYPE)      TYPE* VEC_BEGIN_FUNC_NAME(TYPE)(Vec(TYPE) vec)
 #define VEC_BEGIN_FUNC_IMPL(TYPE)\
-    inline VEC_BEGIN_FUNC_SIGNATURE(TYPE) {\
+    VEC_BEGIN_FUNC_SIGNATURE(TYPE) {\
         vec->curr = 0;\
         return vec_curr(TYPE, vec);\
     }
 
 #define vec_begin(TYPE, VEC)                VEC_BEGIN_FUNC_NAME(TYPE)(VEC)
 
+/* ********* vec_curr *********** */
+#define VEC_CURR_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _curr)
+#define VEC_CURR_FUNC_SIGNATURE(TYPE)       TYPE* VEC_CURR_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_CURR_FUNC_IMPL(TYPE)\
+    VEC_CURR_FUNC_SIGNATURE(TYPE) {\
+        if (vec->len == 0) return NULL;\
+        if (vec->curr >= vec->len) return NULL;\
+        return &vec->ptr[vec->curr];\
+    }
+
+#define vec_curr(TYPE, VEC)                 VEC_CURR_FUNC_NAME(TYPE)(VEC)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\
-    VEC_BEGIN_FUNC_SIGNATURE(TYPE)\
+    VEC_BEGIN_FUNC_SIGNATURE(TYPE);\
+    VEC_CURR_FUNC_SIGNATURE(TYPE);
 
 #define VEC_IMPL(TYPE)\
     VEC_STRUCT_DEF(TYPE);\
     VEC_NEW_FUNC_IMPL(TYPE)\
-    VEC_BEGIN_FUNC_IMPL(TYPE)
+    VEC_BEGIN_FUNC_IMPL(TYPE)\
+    VEC_CURR_FUNC_IMPL(TYPE)
 
 size_t vec_cap_from_size(size_t size);
 
