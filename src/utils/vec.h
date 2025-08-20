@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define Vec(TYPE)\
+#define VecStructName(TYPE)\
     IF_UNSIGNED(TYPE)(\
         CAT(VEC_, PAREN_CLOSE(TYPE)),\
         IF_STRUCT(TYPE)(\
@@ -19,13 +19,45 @@
 #define VEC_struct                      VEC_STRUCT(
 #define VEC_STRUCT(TYPE)                PRIMITIVE_CAT(VecStruct, TYPE)
 
+#define VEC_STRUCT_DECL(TYPE)   typedef struct VecStructName(TYPE) VecStructName(TYPE)
 #define VEC_STRUCT_DEF(TYPE)\
-    typedef struct Vec(TYPE) {\
+    typedef struct VecStructName(TYPE) {\
         size_t cap;\
         size_t len;\
         size_t cur;\
         TYPE ptr[];\
-    } Vec(TYPE)
+    } VecStructName(TYPE)
+
+#define Vec(TYPE)                       VecStructName(TYPE)*
+
+#define VEC_NEW_FUNC_NAME(TYPE)         CAT(VecStructName(TYPE), _new)
+#define VEC_NEW_FUNC_SIGNATURE(TYPE)    Vec(TYPE) VEC_NEW_FUNC_NAME(TYPE)(size_t initial_size)
+#define VEC_NEW_FUNC_IMPL(TYPE)\
+    VEC_NEW_FUNC_SIGNATURE(TYPE) {\
+        size_t cap = vec_cap_from_size(initial_size);\
+\
+        Vec(TYPE) vec = (char*)malloc(sizeof(VecStructName(TYPE)) + sizeof(TYPE) * cap);\
+        if (vec == NULL) return NULL;\
+\
+        vec->cap = cap;\
+        vec->len = 0;\
+        vec->cur = 0;\
+\
+        return vec;\
+    }
+
+#define vec_new(TYPE)                   VEC_NEW_FUNC_NAME(TYPE)(1)
+#define vec_new_with_cap(TYPE, CAP)     VEC_NEW_FUNC_NAME(TYPE)(CAP)
+
+#define VEC_DEFS(TYPE)\
+    VEC_STRUCT_DECL(TYPE);\
+    VEC_NEW_FUNC_SIGNATURE(TYPE);
+
+#define VEC_IMPL(TYPE)\
+    VEC_STRUCT_DEF(TYPE);\
+    VEC_NEW_FUNC_IMPL(TYPE)
+
+size_t vec_cap_from_size(size_t size);
 
 /*   VEC   */
 #define VEC(TYPE)                       TYPE*
