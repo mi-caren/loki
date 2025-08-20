@@ -26,12 +26,13 @@
     typedef struct VecStructName(TYPE) {\
         size_t cap;\
         size_t len;\
-        size_t cur;\
+        size_t curr;\
         TYPE ptr[];\
     } VecStructName(TYPE)
 
 #define Vec(TYPE)                       VecStructName(TYPE)*
 
+/* ********* vec_new *********** */
 #define VEC_NEW_FUNC_NAME(TYPE)         CAT(VecStructName(TYPE), _new)
 #define VEC_NEW_FUNC_SIGNATURE(TYPE)    Vec(TYPE) VEC_NEW_FUNC_NAME(TYPE)(size_t initial_size)
 #define VEC_NEW_FUNC_IMPL(TYPE)\
@@ -43,7 +44,7 @@
 \
         vec->cap = cap;\
         vec->len = 0;\
-        vec->cur = 0;\
+        vec->curr = 0;\
 \
         return vec;\
     }
@@ -51,15 +52,32 @@
 #define vec_new(TYPE)                   VEC_NEW_FUNC_NAME(TYPE)(1)
 #define vec_new_with_cap(TYPE, CAP)     VEC_NEW_FUNC_NAME(TYPE)(CAP)
 
+/* ********* vec_begin *********** */
+#define VEC_BEGIN_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _begin)
+#define VEC_BEGIN_FUNC_SIGNATURE(TYPE)      TYPE* VEC_BEGIN_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_BEGIN_FUNC_IMPL(TYPE)\
+    inline VEC_BEGIN_FUNC_SIGNATURE(TYPE) {\
+        vec->curr = 0;\
+        return vec_curr(TYPE, vec);\
+    }
+
+#define vec_begin(TYPE, VEC)                VEC_BEGIN_FUNC_NAME(TYPE)(VEC)
+
+
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
-    VEC_NEW_FUNC_SIGNATURE(TYPE);
+    VEC_NEW_FUNC_SIGNATURE(TYPE);\
+    VEC_BEGIN_FUNC_SIGNATURE(TYPE)\
 
 #define VEC_IMPL(TYPE)\
     VEC_STRUCT_DEF(TYPE);\
-    VEC_NEW_FUNC_IMPL(TYPE)
+    VEC_NEW_FUNC_IMPL(TYPE)\
+    VEC_BEGIN_FUNC_IMPL(TYPE)
 
 size_t vec_cap_from_size(size_t size);
+
+#define vec_foreach(TYPE, EL, VEC) \
+    for (TYPE* EL = vec_begin(TYPE, VEC); EL != NULL; EL = vec_next(TYPE, VEC))
 
 VEC_DEFS(char)
 
