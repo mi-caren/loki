@@ -115,14 +115,7 @@
 #define VEC_GROW_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_GROW_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr)
 #define VEC_GROW_FUNC_IMPL(TYPE)\
     static VEC_GROW_FUNC_SIGNATURE(TYPE) {\
-        Vec(TYPE) new = realloc(\
-            *vec_ptr,\
-            sizeof(VecStructName(TYPE)) + sizeof(TYPE) * ((*vec_ptr)->cap) * 2\
-        );\
-        if (new == NULL) return NULL;\
-        *vec_ptr = new;\
-        (*vec_ptr)->cap *= 2;\
-        return *vec_ptr;\
+        return vec_realloc(TYPE, vec_ptr, (*vec_ptr)->cap * 2);\
     }
 
 #define vec_grow(TYPE, VEC_PTR)                 VEC_GROW_FUNC_NAME(TYPE)(VEC_PTR)
@@ -153,15 +146,7 @@
 #define VEC_MAKE_SPACE_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_MAKE_SPACE_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, size_t space)
 #define VEC_MAKE_SPACE_FUNC_IMPL(TYPE)\
     static VEC_MAKE_SPACE_FUNC_SIGNATURE(TYPE) {\
-        size_t cap = vec_cap_from_size(space);\
-        Vec(TYPE) new = realloc(\
-            *vec_ptr,\
-            sizeof(VecStructName(TYPE)) + sizeof(TYPE) * cap\
-        );\
-        if (new == NULL) return NULL;\
-        *vec_ptr = new;\
-        (*vec_ptr)->cap = cap;\
-        return *vec_ptr;\
+        return vec_realloc(TYPE, vec_ptr, vec_cap_from_size(space));\
     }
 
 #define vec_make_space(TYPE, VEC_PTR, SPACE)                 VEC_MAKE_SPACE_FUNC_NAME(TYPE)(VEC_PTR, SPACE)
