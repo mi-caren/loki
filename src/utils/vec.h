@@ -97,6 +97,22 @@
 
 #define vec_empty(TYPE, VEC)                 VEC_EMPTY_FUNC_NAME(TYPE)(VEC)
 
+/* ********* vec_push *********** */
+#define VEC_PUSH_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _push)
+#define VEC_PUSH_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_PUSH_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE el)
+#define VEC_PUSH_FUNC_IMPL(TYPE)\
+    VEC_PUSH_FUNC_SIGNATURE(TYPE) {\
+        if (vec->len == vec->cap) {\
+            if (vec_grow(TYPE, vec) == NULL)\
+                return NULL;\
+        }\
+        vec->ptr[vec->len] = el;\
+        vec->len++;\
+        return vec;\
+    }
+
+#define vec_push(TYPE, VEC, EL)             VEC_PUSH_FUNC_NAME(TYPE)(VEC, EL)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -104,7 +120,8 @@
     VEC_BEGIN_FUNC_SIGNATURE(TYPE);\
     VEC_CURR_FUNC_SIGNATURE(TYPE);\
     VEC_NEXT_FUNC_SIGNATURE(TYPE);\
-    VEC_EMPTY_FUNC_SIGNATURE(TYPE);
+    VEC_EMPTY_FUNC_SIGNATURE(TYPE);\
+    VEC_PUSH_FUNC_SIGNATURE(TYPE);
 
 #define VEC_IMPL(TYPE)\
     VEC_STRUCT_DEF(TYPE);\
@@ -112,7 +129,8 @@
     VEC_BEGIN_FUNC_IMPL(TYPE)\
     VEC_CURR_FUNC_IMPL(TYPE)\
     VEC_NEXT_FUNC_IMPL(TYPE)\
-    VEC_EMPTY_FUNC_IMPL(TYPE)
+    VEC_EMPTY_FUNC_IMPL(TYPE)\
+    VEC_PUSH_FUNC_IMPL(TYPE)
 
 size_t vec_cap_from_size(size_t size);
 
