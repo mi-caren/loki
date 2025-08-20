@@ -87,20 +87,32 @@
 
 #define vec_next(TYPE, VEC)                 VEC_NEXT_FUNC_NAME(TYPE)(VEC)
 
+/* ********* vec_empty *********** */
+#define VEC_EMPTY_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _empty)
+#define VEC_EMPTY_FUNC_SIGNATURE(TYPE)       void VEC_EMPTY_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_EMPTY_FUNC_IMPL(TYPE)\
+    inline VEC_EMPTY_FUNC_SIGNATURE(TYPE) {\
+        vec->len = 0;\
+    }
+
+#define vec_empty(TYPE, VEC)                 VEC_EMPTY_FUNC_NAME(TYPE)(VEC)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\
     VEC_BEGIN_FUNC_SIGNATURE(TYPE);\
     VEC_CURR_FUNC_SIGNATURE(TYPE);\
-    VEC_NEXT_FUNC_SIGNATURE(TYPE);
+    VEC_NEXT_FUNC_SIGNATURE(TYPE);\
+    VEC_EMPTY_FUNC_SIGNATURE(TYPE);
 
 #define VEC_IMPL(TYPE)\
     VEC_STRUCT_DEF(TYPE);\
     VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_BEGIN_FUNC_IMPL(TYPE)\
     VEC_CURR_FUNC_IMPL(TYPE)\
-    VEC_NEXT_FUNC_IMPL(TYPE)
+    VEC_NEXT_FUNC_IMPL(TYPE)\
+    VEC_EMPTY_FUNC_IMPL(TYPE)
 
 size_t vec_cap_from_size(size_t size);
 
