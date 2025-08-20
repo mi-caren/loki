@@ -5,23 +5,6 @@
 
 /* *********** RESULT *********** */
 
-#define IS_EMPTY(ARGS)                      APPEND_0_AND_TAKE_SECOND(PRIMITIVE_CAT(CAT_EMPTY_, ARGS))
-#define CAT_EMPTY_                          ~, 1,
-
-#define IS_UNSIGNED(TYPE)                   APPEND_0_AND_TAKE_SECOND(CAT(CAT_UNSIGNED_, TYPE))
-#define IS_STRUCT(TYPE)                     APPEND_0_AND_TAKE_SECOND(CAT(CAT_STRUCT_, TYPE))
-#define IS_VOID(TYPE)                       APPEND_0_AND_TAKE_SECOND(CAT(CAT_VOID_, TYPE))
-#define CAT_UNSIGNED_unsigned               ~, 1,
-#define CAT_STRUCT_struct                   ~, 1,
-#define CAT_VOID_void                       ~, 1,
-
-#define IF_UNSIGNED(TYPE)                   CAT(IF_, IS_UNSIGNED(TYPE))
-#define IF_STRUCT(TYPE)                     CAT(IF_, IS_STRUCT(TYPE))
-#define IF_VOID(TYPE)                       CAT(IF_, IS_VOID(TYPE))
-#define IF_EMPTY(ARGS)                      CAT(IF_, IS_EMPTY(ARGS))
-
-
-
 typedef int Error;
 
 #define RESULT(TYPE)\
