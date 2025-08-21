@@ -221,6 +221,23 @@
 
 #define vec_insert(TYPE, VEC, EL, POS)             VEC_INSERT_FUNC_NAME(TYPE)(&VEC, EL, POS)
 
+/* ********* vec_remove *********** */
+#define VEC_REMOVE_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _remove)
+#define VEC_REMOVE_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REMOVE_FUNC_NAME(TYPE)(Vec(TYPE) vec, size_t pos)
+#define VEC_REMOVE_FUNC_IMPL(TYPE)\
+    VEC_REMOVE_FUNC_SIGNATURE(TYPE) {\
+        if (pos >= vec->len) return NULL;\
+        memmove(\
+            &vec->ptr[pos],\
+            &vec->ptr[pos+1],\
+            sizeof(TYPE) * (vec->len - pos - 1)\
+        );\
+        vec->len--;\
+        return vec;\
+    }
+
+#define vec_remove(TYPE, VEC, POS)        VEC_REMOVE_FUNC_NAME(TYPE)(VEC, POS)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -236,6 +253,7 @@
     VEC_ITEMS_FUNC_SIGNATURE(TYPE);\
     VEC_LEN_FUNC_SIGNATURE(TYPE);\
     VEC_INSERT_FUNC_SIGNATURE(TYPE);\
+    VEC_REMOVE_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
@@ -252,6 +270,7 @@
     VEC_ITEMS_FUNC_IMPL(TYPE)\
     VEC_LEN_FUNC_IMPL(TYPE)\
     VEC_INSERT_FUNC_IMPL(TYPE)\
+    VEC_REMOVE_FUNC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \

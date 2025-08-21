@@ -11,7 +11,7 @@ extern struct Editor editor;
 
 bool searchResultNext() {
     // impossible to find a match with 0 rows or without a search query
-    if (vecLen(editor.rows) == 0 || editor.search_query == NULL)
+    if (vec_len(EditorRow, editor.rows) == 0 || editor.search_query == NULL)
         return false;
 
     // clear selection in case user was highlighting something
@@ -20,7 +20,7 @@ bool searchResultNext() {
     messageBarSet("Searching (ESC to cancel): %s", editor.search_query);
 
     unsigned int cy = getRow(editor.editing_point);
-    EditorRow* row = &editor.rows[cy];
+    EditorRow* row = vec_get(EditorRow, editor.rows, cy);
     // First search in current line
     ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
         if (*cur > getCol(editor.editing_point)) {
@@ -31,8 +31,8 @@ bool searchResultNext() {
     }
 
     // Then search from next line to last line
-    for (cy++; cy < vecLen(editor.rows); cy++) {
-        row = &editor.rows[cy];
+    for (cy++; cy < vec_len(EditorRow, editor.rows); cy++) {
+        row = vec_get(EditorRow, editor.rows, cy);
         if (row->search_match_pos.len > 0) {
             setRow(&editor.editing_point, cy);
             setCol(&editor.editing_point, row->search_match_pos.ptr[0]);
@@ -42,7 +42,7 @@ bool searchResultNext() {
 
     // Then search from first line to current line
     for (cy = 0; cy <= getRow(editor.editing_point); cy++) {
-        row = &editor.rows[cy];
+        row = vec_get(EditorRow, editor.rows, cy);
         if (row->search_match_pos.len > 0) {
             setRow(&editor.editing_point, cy);
             setCol(&editor.editing_point, row->search_match_pos.ptr[0]);
@@ -55,7 +55,7 @@ bool searchResultNext() {
 
 bool searchResultPrev() {
     // impossible to find a match with 0 rows or without a search query
-    if (vecLen(editor.rows) == 0 || editor.search_query == NULL)
+    if (vec_len(EditorRow, editor.rows) == 0 || editor.search_query == NULL)
         return false;
 
     // clear selection in case user was highlighting something
@@ -64,7 +64,7 @@ bool searchResultPrev() {
     messageBarSet("Searching (ESC to cancel): %s", editor.search_query);
 
     int cy = getRow(editor.editing_point);
-    EditorRow* row = &editor.rows[cy];
+    EditorRow* row = vec_get(EditorRow, editor.rows, cy);
     // First search in current line
     ARRAY_FOR_EACH_UINT_REV(&row->search_match_pos) {
         if (*cur < getCol(editor.editing_point)) {
@@ -76,7 +76,7 @@ bool searchResultPrev() {
 
     // Then search from prev line to first line
     for (cy--; cy >= 0; cy--) {
-        row = &editor.rows[cy];
+        row = vec_get(EditorRow, editor.rows, cy);
         if (row->search_match_pos.len > 0) {
             setRow(&editor.editing_point, cy);
             setCol(&editor.editing_point, row->search_match_pos.ptr[row->search_match_pos.len - 1]);
@@ -85,8 +85,8 @@ bool searchResultPrev() {
     }
 
     // Then search from last line to current line
-    for (cy = vecLen(editor.rows) - 1; cy >= (int)getRow(editor.editing_point); cy--) {
-        row = &editor.rows[cy];
+    for (cy = vec_len(EditorRow, editor.rows) - 1; cy >= (int)getRow(editor.editing_point); cy--) {
+        row = vec_get(EditorRow, editor.rows, cy);
         if (row->search_match_pos.len > 0) {
             setRow(&editor.editing_point, cy);
             setCol(&editor.editing_point, row->search_match_pos.ptr[row->search_match_pos.len - 1]);
@@ -100,10 +100,10 @@ bool searchResultPrev() {
 int editorSearch(char* query) {
     editor.search_query = query;
 
-    for (unsigned int i = 0; i < vecLen(editor.rows); i++) {
+    for (unsigned int i = 0; i < vec_len(EditorRow, editor.rows); i++) {
         char* match = NULL;
         int last_pos = 0;
-        EditorRow* row = &editor.rows[i];
+        EditorRow* row = vec_get(EditorRow, editor.rows, i);
         ARRAY_EMPTY(&row->search_match_pos);
 
         while ((match = strstr(&row->chars[last_pos], query)) != NULL) {

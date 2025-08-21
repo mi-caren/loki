@@ -21,7 +21,7 @@ extern struct Editor editor;
 
 
 inline EditorRow* editorRowGet(EditingPoint ep) {
-    return &editor.rows[getRow(ep)];
+    return vec_get(EditorRow, editor.rows, getRow(ep));
 }
 
 static void _editorRowResetHighlight(EditorRow* row) {
@@ -78,7 +78,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
     char* multiline_comment_start = "/*";
     char* multiline_comment_end = "*/";
 
-    EditorRow* row = &editor.rows[filerow];
+    EditorRow* row = vec_get(EditorRow, editor.rows, filerow);
     Highlight* hl = vec_items(Highlight, row->hl);
 
     STR_FOREACH(c, row->chars) {
@@ -233,7 +233,7 @@ void editorRowHighlightSelection(unsigned int filerow) {
     if (!editor.selecting) return;
 
     static bool in_selection = false;
-    EditorRow* row = &editor.rows[filerow];
+    EditorRow* row = vec_get(EditorRow, editor.rows, filerow);
     Highlight* hl = vec_items(Highlight, row->hl);
 
     if (filerow == editor.rowoff && SELECTION_START < editingPointNew(editor.rowoff, 0))
@@ -283,7 +283,7 @@ int syntaxToColor(Highlight hl) {
 }
 
 int editorRowRender(unsigned int filerow) {
-    EditorRow* row = &editor.rows[filerow];
+    EditorRow* row = vec_get(EditorRow, editor.rows, filerow);
 
     _editorRowResetHighlight(row);
     editorRowHighlightSyntax(filerow);
@@ -341,3 +341,4 @@ void editorRowFree(EditorRow* row) {
 }
 
 VEC_IMPL(Highlight)
+VEC_IMPL(EditorRow)

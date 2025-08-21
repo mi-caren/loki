@@ -206,7 +206,7 @@ void editorScroll() {
 }
 
 static unsigned int rowNumberColumnWidth() {
-    unsigned int numrows = vecLen(editor.rows);
+    unsigned int numrows = vec_len(EditorRow, editor.rows);
     unsigned int digits = 1;
     while ((numrows /= 10) != 0) {
         digits++;
@@ -220,7 +220,7 @@ void editorCxToRx() {
     editor.rx = rowNumberColumnWidth();
     unsigned int i;
     for (i = 0; i < getCol(editor.editing_point); i++) {
-        if (CURR_ROW.chars[i] == '\t') {
+        if (CURR_ROW->chars[i] == '\t') {
             editor.rx += TAB_SPACE_NUM - 1;
         }
         editor.rx++;
@@ -256,7 +256,7 @@ void editorRefreshScreen() {
 
 String editorRowsToString() {
     size_t buflen = 0;
-    VECFOREACH(EditorRow, row, editor.rows) {
+    vec_foreach (EditorRow, row, editor.rows) {
         buflen += strLen(row->chars) + 1;
     }
 
@@ -264,7 +264,7 @@ String editorRowsToString() {
     if (buf == NULL)
         return NULL;
 
-    VECFOREACH(EditorRow, row, editor.rows) {
+    vec_foreach (EditorRow, row, editor.rows) {
         strAppend(&buf, row->chars);
         strAppendChar(&buf, '\n');
     }
@@ -273,7 +273,7 @@ String editorRowsToString() {
 }
 
 int editorInsertRow(unsigned int pos, char *s) {
-    if (pos > vecLen(editor.rows))
+    if (pos > vec_len(EditorRow, editor.rows))
         return -1;
 
     String chars = strFromStr(s);
@@ -284,16 +284,16 @@ int editorInsertRow(unsigned int pos, char *s) {
         .search_match_pos = ARRAY_NEW(ArrayUnsignedInt),
     };
 
-    VEC_INSERT(editor.rows, pos, row);
+    vec_insert(EditorRow, editor.rows, row, pos);
 
     return 0;
 }
 
 void editorDeleteRow(unsigned int pos) {
-    if (pos >= vecLen(editor.rows)) return;
+    if (pos >= vec_len(EditorRow, editor.rows)) return;
 
-    editorRowFree(&editor.rows[pos]);
-    vecRemove(editor.rows, pos);
+    editorRowFree(vec_get(EditorRow, editor.rows, pos));
+    vec_remove(EditorRow, editor.rows, pos);
     editorSetDirty();
 }
 
@@ -302,7 +302,7 @@ void editorDeleteRow(unsigned int pos) {
 void editorDrawRow(unsigned int filerow, String* buf) {
     editorRowRender(filerow);
 
-    EditorRow* row = &editor.rows[filerow];
+    EditorRow* row = vec_get(EditorRow, editor.rows, filerow);
 
     // Line number
     char fmt_string[32];
@@ -357,8 +357,8 @@ void editorDrawRows(String* buf) {
     unsigned int y;
     for (y = 0; y < editor.view_rows; y++) {
         unsigned int filerow = y + editor.rowoff;
-        if (filerow >= vecLen(editor.rows)) {
-            if (vecLen(editor.rows) == 0 && y == editor.view_rows / 3) {
+        if (filerow >= vec_len(EditorRow, editor.rows)) {
+            if (vec_len(EditorRow, editor.rows) == 0 && y == editor.view_rows / 3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome, sizeof(welcome), "Loki editor -- version %s", LOKI_VERSION);
                 if (welcomelen > terminal.screencols) {

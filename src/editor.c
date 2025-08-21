@@ -49,7 +49,7 @@ void editorInit(Editor* ed) {
 
     ed->editing_point = (EditingPoint) 0;
     ed->rx = 0;
-    ed->rows = VEC_NEW(EditorRow);
+    ed->rows = vec_new(EditorRow);
     ed->rowoff = 0;
     ed->coloff = 0;
     ed->filename = NULL;
@@ -98,7 +98,7 @@ int editorOpen(char *filename) {
             line[--linelen] = '\0';
         }
 
-        if (editorInsertRow(vecLen(editor.rows), line) != 0) {
+        if (editorInsertRow(vec_len(EditorRow, editor.rows), line) != 0) {
             retval = -1;
             goto cleanup;
         }

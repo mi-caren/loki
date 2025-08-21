@@ -32,7 +32,7 @@ static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep);
 static void _historyPushCmd(VEC(CoreCommand) cmd);
 
 static RESULT(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
-    if (vecLen(editor.rows) == 0) {
+    if (vec_len(EditorRow, editor.rows) == 0) {
         if (editorInsertRow(0, "") == -1)
             return ERROR(EditingPoint, ERR_CORE_INSERT_ROW);
     }
@@ -40,22 +40,22 @@ static RESULT(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
     if (c == '\r')
         return _coreInsertNewline(ep);
 
-    editorRowInsertChar(&ROW_AT(ep), getCol(ep), c);
+    editorRowInsertChar(ROW_AT(ep), getCol(ep), c);
     setCol(&ep, getCol(ep) + (c == '\t' ? 4 : 1));
 
     return OK(EditingPoint, ep);
 }
 
 static RESULT(char) _coreDeleteChar(EditingPoint ep) {
-    if (vecLen(editor.rows) == 0)
+    if (vec_len(EditorRow, editor.rows) == 0)
         return ERROR(char, ERR_CORE_DELETE_NO_ROWS);
 
-    if (getRow(ep) >= vecLen(editor.rows) || getCol(ep) > strLen(ROW_AT(ep).chars))
+    if (getRow(ep) >= vec_len(EditorRow, editor.rows) || getCol(ep) > strLen(ROW_AT(ep)->chars))
         return ERROR(char, ERR_CORE_DELETE_CHAR_INVALID_EP);
 
-    if (getCol(ep) == strLen(ROW_AT(ep).chars)) {
-        EditorRow next_row = ROW_AT(addRows(ep, 1));
-        strAppend(&ROW_AT(ep).chars, next_row.chars);
+    if (getCol(ep) == strLen(ROW_AT(ep)->chars)) {
+        EditorRow* next_row = ROW_AT(addRows(ep, 1));
+        strAppend(&ROW_AT(ep)->chars, next_row->chars);
         editorSetDirty();
         editorDeleteRow(getRow(ep) + 1);
 
@@ -63,7 +63,7 @@ static RESULT(char) _coreDeleteChar(EditingPoint ep) {
     }
 
     char c = CHAR_AT(ep);
-    editorRowDeleteChar(&ROW_AT(ep), getCol(ep));
+    editorRowDeleteChar(ROW_AT(ep), getCol(ep));
     return OK(char, c);
 }
 
@@ -389,7 +389,7 @@ bool cmdCopy() {
                 if (!vec_push(char, editor.copy_buf, CHAR_AT(ep))) goto copy_error;
             }
 
-            if (getCol(ep) == strLen(editor.rows[getRow(ep)].chars)) {
+            if (getCol(ep) == strLen(vec_get(EditorRow, editor.rows, getRow(ep))->chars)) {
                 incRow(&ep);
                 setCol(&ep, 0);
             } else {

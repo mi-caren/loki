@@ -7,18 +7,18 @@
 #include "editing_point.h"
 #include "editor/commands.h"
 
-#include "editor_row.h"
+#include "editor_row.h"     // provides Vec(EditorRow)
 #include "utils/vec.h"
 
 #define LOKI_VERSION     "0.0.1"
 
-#define CURR_ROW                editor.rows[getRow(editor.editing_point)]
-#define NEXT_ROW                editor.rows[getRow(editor.editing_point) + 1]
-#define PREV_ROW                editor.rows[getRow(editor.editing_point) - 1]
-#define ROW_AT(EDITING_POINT)   editor.rows[getRow(EDITING_POINT)]
+#define CURR_ROW                vec_get(EditorRow, editor.rows, getRow(editor.editing_point))
+#define NEXT_ROW                vec_get(EditorRow, editor.rows, getRow(editor.editing_point) + 1)
+#define PREV_ROW                vec_get(EditorRow, editor.rows, getRow(editor.editing_point) - 1)
+#define ROW_AT(EDITING_POINT)   vec_get(EditorRow, editor.rows, getRow(EDITING_POINT))
 
-#define CURR_CHAR               CURR_ROW.chars[getCol(editor.editing_point)]
-#define CHAR_AT(EDITING_POINT)  editor.rows[getRow(EDITING_POINT)].chars[getCol(EDITING_POINT)]
+#define CURR_CHAR               CURR_ROW->chars[getCol(editor.editing_point)]
+#define CHAR_AT(EDITING_POINT)  vec_get(EditorRow, editor.rows, getRow(EDITING_POINT))->chars[getCol(EDITING_POINT)]
 
 #define STATUS_BAR_ROW          ( editor.view_rows + 1 )
 
@@ -47,7 +47,7 @@ typedef struct Editor {
     /* x position of rendered view */
     unsigned int rx;
 
-    VEC(EditorRow) rows;
+    Vec(EditorRow) rows;
 
     unsigned int rowoff;
     unsigned int coloff;

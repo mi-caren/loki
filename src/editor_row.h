@@ -34,6 +34,8 @@ typedef struct {
     ArrayUnsignedInt search_match_pos;
 } EditorRow;
 
+VEC_DEFS(EditorRow)
+
 int editorRowRender(unsigned int filerow);
 void editorRowFree(EditorRow* row);
 void editorRowInsertChar(EditorRow* row, unsigned int pos, char c);
