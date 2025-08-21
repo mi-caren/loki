@@ -27,7 +27,7 @@
         size_t cap;\
         size_t len;\
         size_t curr;\
-        TYPE ptr[];\
+        TYPE* ptr;\
     } VecType(TYPE)
 
 #define Vec(TYPE)                       VecType(TYPE)*
@@ -37,12 +37,18 @@
 #define VEC_NEW_FUNC_SIGNATURE(TYPE)    Vec(TYPE) VEC_NEW_FUNC_NAME(TYPE)(size_t initial_size)
 #define VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_NEW_FUNC_SIGNATURE(TYPE) {\
-        size_t cap = vec_cap_from_size(initial_size);\
-        Vec(TYPE) vec = malloc(sizeof(VecType(TYPE)) + sizeof(TYPE) * cap);\
+        Vec(TYPE) vec = malloc(sizeof(VecType(TYPE)));\
         if (vec == NULL) return NULL;\
+        size_t cap = vec_cap_from_size(initial_size);\
+        TYPE* ptr = malloc(sizeof(TYPE) * cap);\
+        if (ptr == NULL) {\
+            free(vec);\
+            return NULL;\
+        }\
         vec->cap = cap;\
         vec->len = 0;\
         vec->curr = 0;\
+        vec->ptr = ptr;\
         return vec;\
     }
 
@@ -96,64 +102,64 @@
 
 /* ********* vec_push *********** */
 #define VEC_PUSH_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _push)
-#define VEC_PUSH_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_PUSH_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, TYPE el)
+#define VEC_PUSH_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_PUSH_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE el)
 #define VEC_PUSH_FUNC_IMPL(TYPE)\
     VEC_PUSH_FUNC_SIGNATURE(TYPE) {\
-        if ((*vec_ptr)->len == (*vec_ptr)->cap) {\
-            if (vec_grow(TYPE, vec_ptr) == NULL)\
+        if (vec->len == vec->cap) {\
+            if (vec_grow(TYPE, vec) == NULL)\
                 return NULL;\
         }\
-        (*vec_ptr)->ptr[(*vec_ptr)->len] = el;\
-        (*vec_ptr)->len++;\
-        return *vec_ptr;\
+        vec->ptr[vec->len] = el;\
+        vec->len++;\
+        return vec;\
     }
 
-#define vec_push(TYPE, VEC, EL)             VEC_PUSH_FUNC_NAME(TYPE)(&VEC, EL)
+#define vec_push(TYPE, VEC, EL)             VEC_PUSH_FUNC_NAME(TYPE)(VEC, EL)
 
 /* ********* static vec_grow *********** */
-#define vec_grow(TYPE, VEC_PTR)                 vec_realloc(TYPE, VEC_PTR, (*VEC_PTR)->cap * 2)
+#define vec_grow(TYPE, VEC)                 vec_realloc(TYPE, VEC, VEC->cap * 2)
 
 /* ********* vec_repeat_append *********** */
 #define VEC_REPEAT_APPEND_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _repeat_append)
-#define VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, TYPE el, size_t n)
+#define VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE el, size_t n)
 #define VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
     VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE) {\
-        size_t total_space = (*vec_ptr)->len + n;\
-        if (total_space > (*vec_ptr)->cap) {\
-            if (vec_make_space(TYPE, vec_ptr, total_space) == NULL)\
+        size_t total_space = vec->len + n;\
+        if (total_space > vec->cap) {\
+            if (vec_make_space(TYPE, vec, total_space) == NULL)\
                 return NULL;\
         }\
 \
         for (size_t i = 0; i < n; i++) {\
-            (*vec_ptr)->ptr[(*vec_ptr)->len + i] = el;\
+            vec->ptr[vec->len + i] = el;\
         }\
-        (*vec_ptr)->len += n;\
+        vec->len += n;\
 \
-        return *vec_ptr;\
+        return vec;\
     }
 
-#define vec_repeat_append(TYPE, VEC, EL, N)                 VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(&VEC, EL, N)
+#define vec_repeat_append(TYPE, VEC, EL, N)                 VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(VEC, EL, N)
 
 /* ********* static vec_make_space *********** */
-#define vec_make_space(TYPE, VEC_PTR, SPACE)                 vec_realloc(TYPE, VEC_PTR, vec_cap_from_size(SPACE))
+#define vec_make_space(TYPE, VEC, SPACE)                 vec_realloc(TYPE, VEC, vec_cap_from_size(SPACE))
 
 /* ********* static vec_realloc *********** */
 #define VEC_REALLOC_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _realloc)
-#define VEC_REALLOC_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REALLOC_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, size_t size)
+#define VEC_REALLOC_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REALLOC_FUNC_NAME(TYPE)(Vec(TYPE) vec, size_t size)
 #define VEC_REALLOC_FUNC_IMPL(TYPE)\
     VEC_REALLOC_FUNC_SIGNATURE(TYPE) {\
-        if (vec_ptr == NULL) return NULL;\
-        Vec(TYPE) new = realloc(\
-            *vec_ptr,\
-            sizeof(VecType(TYPE)) + sizeof(TYPE) * size\
+        if (vec == NULL || vec->ptr == NULL) return NULL;\
+        TYPE* new = realloc(\
+            vec->ptr,\
+            sizeof(TYPE) * size\
         );\
         if (new == NULL) return NULL;\
-        *vec_ptr = new;\
-        (*vec_ptr)->cap = size;\
-        return *vec_ptr;\
+        vec->ptr = new;\
+        vec->cap = size;\
+        return vec;\
     }
 
-#define vec_realloc(TYPE, VEC_PTR, SIZE)                 VEC_REALLOC_FUNC_NAME(TYPE)(VEC_PTR, SIZE)
+#define vec_realloc(TYPE, VEC, SIZE)                 VEC_REALLOC_FUNC_NAME(TYPE)(VEC, SIZE)
 
 /* ********* vec_set *********** */
 #define VEC_SET_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _set)
@@ -200,26 +206,26 @@
 
 /* ********* vec_insert *********** */
 #define VEC_INSERT_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _insert)
-#define VEC_INSERT_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_INSERT_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, TYPE el, size_t pos)
+#define VEC_INSERT_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_INSERT_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE el, size_t pos)
 #define VEC_INSERT_FUNC_IMPL(TYPE)\
     VEC_INSERT_FUNC_SIGNATURE(TYPE) {\
-        if (pos > (*vec_ptr)->len)\
+        if (pos > vec->len)\
             return NULL;\
-        if ((*vec_ptr)->len == (*vec_ptr)->cap) {\
-            if (vec_grow(TYPE, vec_ptr) == NULL)\
+        if (vec->len == vec->cap) {\
+            if (vec_grow(TYPE, vec) == NULL)\
                 return NULL;\
         }\
         memmove(\
-            &(*vec_ptr)->ptr[pos+1],\
-            &(*vec_ptr)->ptr[pos],\
-            sizeof(TYPE) * ((*vec_ptr)->len - pos)\
+            &vec->ptr[pos+1],\
+            &vec->ptr[pos],\
+            sizeof(TYPE) * (vec->len - pos)\
         );\
-        (*vec_ptr)->ptr[pos] = el;\
-        (*vec_ptr)->len++;\
-        return *vec_ptr;\
+        vec->ptr[pos] = el;\
+        vec->len++;\
+        return vec;\
     }
 
-#define vec_insert(TYPE, VEC, EL, POS)             VEC_INSERT_FUNC_NAME(TYPE)(&VEC, EL, POS)
+#define vec_insert(TYPE, VEC, EL, POS)             VEC_INSERT_FUNC_NAME(TYPE)(VEC, EL, POS)
 
 /* ********* vec_remove *********** */
 #define VEC_REMOVE_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _remove)
