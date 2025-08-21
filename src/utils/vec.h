@@ -238,6 +238,17 @@
 
 #define vec_remove(TYPE, VEC, POS)        VEC_REMOVE_FUNC_NAME(TYPE)(VEC, POS)
 
+/* ********* vec_last *********** */
+#define VEC_LAST_FUNC_NAME(TYPE)           CAT(VecType(TYPE), _last)
+#define VEC_LAST_FUNC_SIGNATURE(TYPE)      TYPE* VEC_LAST_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_LAST_FUNC_IMPL(TYPE)\
+    VEC_LAST_FUNC_SIGNATURE(TYPE) {\
+        if (vec->len == 0) return NULL;\
+        return &vec->ptr[vec->len - 1];\
+    }
+
+#define vec_last(TYPE, VEC)                VEC_LAST_FUNC_NAME(TYPE)(VEC)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -254,6 +265,7 @@
     VEC_LEN_FUNC_SIGNATURE(TYPE);\
     VEC_INSERT_FUNC_SIGNATURE(TYPE);\
     VEC_REMOVE_FUNC_SIGNATURE(TYPE);\
+    VEC_LAST_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
@@ -271,6 +283,7 @@
     VEC_LEN_FUNC_IMPL(TYPE)\
     VEC_INSERT_FUNC_IMPL(TYPE)\
     VEC_REMOVE_FUNC_IMPL(TYPE)\
+    VEC_LAST_FUNC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \
