@@ -65,6 +65,18 @@
 
 #define vec_begin(TYPE, VEC)                VEC_BEGIN_FUNC_NAME(TYPE)(VEC)
 
+/* ********* vec_end *********** */
+#define VEC_END_FUNC_NAME(TYPE)           CAT(VecType(TYPE), _end)
+#define VEC_END_FUNC_SIGNATURE(TYPE)      TYPE* VEC_END_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_END_FUNC_IMPL(TYPE)\
+    VEC_END_FUNC_SIGNATURE(TYPE) {\
+        if (vec->len == 0) return NULL;\
+        vec->curr = vec->len - 1;\
+        return vec_curr(TYPE, vec);\
+    }
+
+#define vec_end(TYPE, VEC)                VEC_END_FUNC_NAME(TYPE)(VEC)
+
 /* ********* vec_curr *********** */
 #define VEC_CURR_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _curr)
 #define VEC_CURR_FUNC_SIGNATURE(TYPE)       TYPE* VEC_CURR_FUNC_NAME(TYPE)(Vec(TYPE) vec)
@@ -285,6 +297,7 @@
     VEC_STRUCT_DEF(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\
     VEC_BEGIN_FUNC_SIGNATURE(TYPE);\
+    VEC_END_FUNC_SIGNATURE(TYPE);\
     VEC_CURR_FUNC_SIGNATURE(TYPE);\
     VEC_NEXT_FUNC_SIGNATURE(TYPE);\
     VEC_EMPTY_FUNC_SIGNATURE(TYPE);\
@@ -304,6 +317,7 @@
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
     VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_BEGIN_FUNC_IMPL(TYPE)\
+    VEC_END_FUNC_IMPL(TYPE)\
     VEC_CURR_FUNC_IMPL(TYPE)\
     VEC_NEXT_FUNC_IMPL(TYPE)\
     VEC_EMPTY_FUNC_IMPL(TYPE)\
