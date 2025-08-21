@@ -270,6 +270,17 @@
 
 #define vec_pop(TYPE, VEC)                VEC_POP_FUNC_NAME(TYPE)(VEC)
 
+/* ********* vec_free *********** */
+#define VEC_FREE_FUNC_NAME(TYPE)           CAT(VecType(TYPE), _free)
+#define VEC_FREE_FUNC_SIGNATURE(TYPE)      void VEC_FREE_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_FREE_FUNC_IMPL(TYPE)\
+    VEC_FREE_FUNC_SIGNATURE(TYPE) {\
+        free(vec->items);\
+        free(vec);\
+    }
+
+#define vec_free(TYPE, VEC)                VEC_FREE_FUNC_NAME(TYPE)(VEC)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -288,6 +299,7 @@
     VEC_REMOVE_FUNC_SIGNATURE(TYPE);\
     VEC_LAST_FUNC_SIGNATURE(TYPE);\
     VEC_POP_FUNC_SIGNATURE(TYPE);\
+    VEC_FREE_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
@@ -307,6 +319,7 @@
     VEC_REMOVE_FUNC_IMPL(TYPE)\
     VEC_LAST_FUNC_IMPL(TYPE)\
     VEC_POP_FUNC_IMPL(TYPE)\
+    VEC_FREE_FUNC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \
