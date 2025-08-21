@@ -334,8 +334,11 @@
     VEC_FREE_FUNC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
-#define vec_foreach(TYPE, EL, VEC) \
+#define VEC_FOREACH(TYPE, EL, VEC) \
     for (TYPE* EL = vec_begin(TYPE, VEC); EL != NULL; EL = vec_next(TYPE, VEC))
+
+#define VEC_FOREACH_REV(TYPE, EL, VEC) \
+    for (TYPE* EL = vec_end(TYPE, VEC); EL != NULL; EL = vec_prev(TYPE, VEC))
 
 size_t vec_cap_from_size(size_t size);
 
@@ -360,11 +363,11 @@ VEC_DEFS(char)
 #define VEC_POP(TYPE, VEC)      (TYPE*)vecPop(VEC)
 #define VEC_FREE(TYPE, VEC)     vecFree((TYPE)VEC)
 /* TYPE is the type CONTAINED in the vector */
-#define VECFOREACH(TYPE, EL, VEC) \
-    for (TYPE* EL = vecBegin(VEC); EL != NULL; EL = vecNext(VEC))
+// #define VECFOREACH(TYPE, EL, VEC) \
+//     for (TYPE* EL = vecBegin(VEC); EL != NULL; EL = vecNext(VEC))
 
-#define VEC_FOREACH_REV(TYPE, EL, VEC) \
-    for (TYPE* EL = vecEnd(VEC); EL != NULL; EL = vecPrev(VEC))
+// #define VEC_FOREACH_REV(TYPE, EL, VEC) \
+//     for (TYPE* EL = vecEnd(VEC); EL != NULL; EL = vecPrev(VEC))
 
 #define VEC_FOR(IDX, VEC) \
     for (size_t IDX = 0; IDX < vecLen(VEC); IDX++)
