@@ -21,9 +21,8 @@
 #define VEC_struct                      VEC_STRUCT(
 #define VEC_STRUCT(TYPE)                PRIMITIVE_CAT(VecStruct, TYPE)
 
-#define VEC_STRUCT_DECL(TYPE)   typedef struct VecType(TYPE) VecType(TYPE)
 #define VEC_STRUCT_DEF(TYPE)\
-    typedef struct VecType(TYPE) {\
+    typedef struct {\
         size_t cap;\
         size_t len;\
         size_t curr;\
@@ -283,7 +282,7 @@
 
 
 #define VEC_DEFS(TYPE)\
-    VEC_STRUCT_DECL(TYPE);\
+    VEC_STRUCT_DEF(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\
     VEC_BEGIN_FUNC_SIGNATURE(TYPE);\
     VEC_CURR_FUNC_SIGNATURE(TYPE);\
@@ -303,7 +302,6 @@
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
-    VEC_STRUCT_DEF(TYPE);\
     VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_BEGIN_FUNC_IMPL(TYPE)\
     VEC_CURR_FUNC_IMPL(TYPE)\
