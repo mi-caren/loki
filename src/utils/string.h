@@ -1,11 +1,9 @@
 #ifndef STRING_H
 #define STRING_H
 
-#include "utils/vec.h"
-#include <stdlib.h>
 #include <unistd.h>
 
-typedef VEC(char) String;
+typedef char* String;
 
 
 #define STR_NEW()                   strNew(0)
