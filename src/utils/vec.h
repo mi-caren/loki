@@ -278,6 +278,17 @@
 
 #define vec_last(TYPE, VEC)                VEC_LAST_FUNC_NAME(TYPE)(VEC)
 
+/* ********* vec_first *********** */
+#define VEC_FIRST_FUNC_NAME(TYPE)           CAT(VecType(TYPE), _first)
+#define VEC_FIRST_FUNC_SIGNATURE(TYPE)      TYPE* VEC_FIRST_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_FIRST_FUNC_IMPL(TYPE)\
+    VEC_FIRST_FUNC_SIGNATURE(TYPE) {\
+        if (vec->len == 0) return NULL;\
+        return &vec->items[0];\
+    }
+
+#define vec_first(TYPE, VEC)                VEC_FIRST_FUNC_NAME(TYPE)(VEC)
+
 /* ********* vec_pop *********** */
 #define VEC_POP_FUNC_NAME(TYPE)           CAT(VecType(TYPE), _pop)
 #define VEC_POP_FUNC_SIGNATURE(TYPE)      TYPE* VEC_POP_FUNC_NAME(TYPE)(Vec(TYPE) vec)
@@ -323,6 +334,7 @@
     VEC_INSERT_FUNC_SIGNATURE(TYPE);\
     VEC_REMOVE_FUNC_SIGNATURE(TYPE);\
     VEC_LAST_FUNC_SIGNATURE(TYPE);\
+    VEC_FIRST_FUNC_SIGNATURE(TYPE);\
     VEC_POP_FUNC_SIGNATURE(TYPE);\
     VEC_FREE_FUNC_SIGNATURE(TYPE);\
 
@@ -344,6 +356,7 @@
     VEC_INSERT_FUNC_IMPL(TYPE)\
     VEC_REMOVE_FUNC_IMPL(TYPE)\
     VEC_LAST_FUNC_IMPL(TYPE)\
+    VEC_FIRST_FUNC_IMPL(TYPE)\
     VEC_POP_FUNC_IMPL(TYPE)\
     VEC_FREE_FUNC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
