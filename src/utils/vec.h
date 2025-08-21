@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-#define VecStructName(TYPE)\
+#define VecType(TYPE)\
     IF_UNSIGNED(TYPE)(\
         CAT(VEC_, PAREN_CLOSE(TYPE)),\
         IF_STRUCT(TYPE)(\
@@ -21,24 +21,24 @@
 #define VEC_struct                      VEC_STRUCT(
 #define VEC_STRUCT(TYPE)                PRIMITIVE_CAT(VecStruct, TYPE)
 
-#define VEC_STRUCT_DECL(TYPE)   typedef struct VecStructName(TYPE) VecStructName(TYPE)
+#define VEC_STRUCT_DECL(TYPE)   typedef struct VecType(TYPE) VecType(TYPE)
 #define VEC_STRUCT_DEF(TYPE)\
-    typedef struct VecStructName(TYPE) {\
+    typedef struct VecType(TYPE) {\
         size_t cap;\
         size_t len;\
         size_t curr;\
         TYPE ptr[];\
-    } VecStructName(TYPE)
+    } VecType(TYPE)
 
-#define Vec(TYPE)                       VecStructName(TYPE)*
+#define Vec(TYPE)                       VecType(TYPE)*
 
 /* ********* vec_new *********** */
-#define VEC_NEW_FUNC_NAME(TYPE)         CAT(VecStructName(TYPE), _new)
+#define VEC_NEW_FUNC_NAME(TYPE)         CAT(VecType(TYPE), _new)
 #define VEC_NEW_FUNC_SIGNATURE(TYPE)    Vec(TYPE) VEC_NEW_FUNC_NAME(TYPE)(size_t initial_size)
 #define VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_NEW_FUNC_SIGNATURE(TYPE) {\
         size_t cap = vec_cap_from_size(initial_size);\
-        Vec(TYPE) vec = malloc(sizeof(VecStructName(TYPE)) + sizeof(TYPE) * cap);\
+        Vec(TYPE) vec = malloc(sizeof(VecType(TYPE)) + sizeof(TYPE) * cap);\
         if (vec == NULL) return NULL;\
         vec->cap = cap;\
         vec->len = 0;\
@@ -50,7 +50,7 @@
 #define vec_new_with_cap(TYPE, CAP)     VEC_NEW_FUNC_NAME(TYPE)(CAP)
 
 /* ********* vec_begin *********** */
-#define VEC_BEGIN_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _begin)
+#define VEC_BEGIN_FUNC_NAME(TYPE)           CAT(VecType(TYPE), _begin)
 #define VEC_BEGIN_FUNC_SIGNATURE(TYPE)      TYPE* VEC_BEGIN_FUNC_NAME(TYPE)(Vec(TYPE) vec)
 #define VEC_BEGIN_FUNC_IMPL(TYPE)\
     VEC_BEGIN_FUNC_SIGNATURE(TYPE) {\
@@ -61,7 +61,7 @@
 #define vec_begin(TYPE, VEC)                VEC_BEGIN_FUNC_NAME(TYPE)(VEC)
 
 /* ********* vec_curr *********** */
-#define VEC_CURR_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _curr)
+#define VEC_CURR_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _curr)
 #define VEC_CURR_FUNC_SIGNATURE(TYPE)       TYPE* VEC_CURR_FUNC_NAME(TYPE)(Vec(TYPE) vec)
 #define VEC_CURR_FUNC_IMPL(TYPE)\
     VEC_CURR_FUNC_SIGNATURE(TYPE) {\
@@ -73,7 +73,7 @@
 #define vec_curr(TYPE, VEC)                 VEC_CURR_FUNC_NAME(TYPE)(VEC)
 
 /* ********* vec_next *********** */
-#define VEC_NEXT_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _next)
+#define VEC_NEXT_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _next)
 #define VEC_NEXT_FUNC_SIGNATURE(TYPE)       TYPE* VEC_NEXT_FUNC_NAME(TYPE)(Vec(TYPE) vec)
 #define VEC_NEXT_FUNC_IMPL(TYPE)\
     VEC_NEXT_FUNC_SIGNATURE(TYPE) {\
@@ -85,7 +85,7 @@
 #define vec_next(TYPE, VEC)                 VEC_NEXT_FUNC_NAME(TYPE)(VEC)
 
 /* ********* vec_empty *********** */
-#define VEC_EMPTY_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _empty)
+#define VEC_EMPTY_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _empty)
 #define VEC_EMPTY_FUNC_SIGNATURE(TYPE)       void VEC_EMPTY_FUNC_NAME(TYPE)(Vec(TYPE) vec)
 #define VEC_EMPTY_FUNC_IMPL(TYPE)\
     inline VEC_EMPTY_FUNC_SIGNATURE(TYPE) {\
@@ -95,7 +95,7 @@
 #define vec_empty(TYPE, VEC)                 VEC_EMPTY_FUNC_NAME(TYPE)(VEC)
 
 /* ********* vec_push *********** */
-#define VEC_PUSH_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _push)
+#define VEC_PUSH_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _push)
 #define VEC_PUSH_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_PUSH_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, TYPE el)
 #define VEC_PUSH_FUNC_IMPL(TYPE)\
     VEC_PUSH_FUNC_SIGNATURE(TYPE) {\
@@ -114,7 +114,7 @@
 #define vec_grow(TYPE, VEC_PTR)                 vec_realloc(TYPE, VEC_PTR, (*VEC_PTR)->cap * 2)
 
 /* ********* vec_repeat_append *********** */
-#define VEC_REPEAT_APPEND_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _repeat_append)
+#define VEC_REPEAT_APPEND_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _repeat_append)
 #define VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, TYPE el, size_t n)
 #define VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
     VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE) {\
@@ -138,14 +138,14 @@
 #define vec_make_space(TYPE, VEC_PTR, SPACE)                 vec_realloc(TYPE, VEC_PTR, vec_cap_from_size(SPACE))
 
 /* ********* static vec_realloc *********** */
-#define VEC_REALLOC_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _realloc)
+#define VEC_REALLOC_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _realloc)
 #define VEC_REALLOC_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REALLOC_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, size_t size)
 #define VEC_REALLOC_FUNC_IMPL(TYPE)\
     VEC_REALLOC_FUNC_SIGNATURE(TYPE) {\
         if (vec_ptr == NULL) return NULL;\
         Vec(TYPE) new = realloc(\
             *vec_ptr,\
-            sizeof(VecStructName(TYPE)) + sizeof(TYPE) * size\
+            sizeof(VecType(TYPE)) + sizeof(TYPE) * size\
         );\
         if (new == NULL) return NULL;\
         *vec_ptr = new;\
@@ -156,7 +156,7 @@
 #define vec_realloc(TYPE, VEC_PTR, SIZE)                 VEC_REALLOC_FUNC_NAME(TYPE)(VEC_PTR, SIZE)
 
 /* ********* vec_set *********** */
-#define VEC_SET_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _set)
+#define VEC_SET_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _set)
 #define VEC_SET_FUNC_SIGNATURE(TYPE)       TYPE* VEC_SET_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE val, size_t idx)
 #define VEC_SET_FUNC_IMPL(TYPE)\
     VEC_SET_FUNC_SIGNATURE(TYPE) {\
@@ -168,7 +168,7 @@
 #define vec_set(TYPE, VEC, VAL, IDX)        VEC_SET_FUNC_NAME(TYPE)(VEC, VAL, IDX)
 
 /* ********* vec_get *********** */
-#define VEC_GET_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _get)
+#define VEC_GET_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _get)
 #define VEC_GET_FUNC_SIGNATURE(TYPE)       TYPE* VEC_GET_FUNC_NAME(TYPE)(Vec(TYPE) vec, size_t idx)
 #define VEC_GET_FUNC_IMPL(TYPE)\
     VEC_GET_FUNC_SIGNATURE(TYPE) {\
@@ -179,7 +179,7 @@
 #define vec_get(TYPE, VEC, IDX)        VEC_GET_FUNC_NAME(TYPE)(VEC, IDX)
 
 /* ********* vec_items *********** */
-#define VEC_ITEMS_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _items)
+#define VEC_ITEMS_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _items)
 #define VEC_ITEMS_FUNC_SIGNATURE(TYPE)       TYPE* VEC_ITEMS_FUNC_NAME(TYPE)(Vec(TYPE) vec)
 #define VEC_ITEMS_FUNC_IMPL(TYPE)\
     inline VEC_ITEMS_FUNC_SIGNATURE(TYPE) {\
@@ -189,7 +189,7 @@
 #define vec_items(TYPE, VEC)        VEC_ITEMS_FUNC_NAME(TYPE)(VEC)
 
 /* ********* vec_len *********** */
-#define VEC_LEN_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _len)
+#define VEC_LEN_FUNC_NAME(TYPE)           CAT(VecType(TYPE), _len)
 #define VEC_LEN_FUNC_SIGNATURE(TYPE)      size_t VEC_LEN_FUNC_NAME(TYPE)(Vec(TYPE) vec)
 #define VEC_LEN_FUNC_IMPL(TYPE)\
     inline VEC_LEN_FUNC_SIGNATURE(TYPE) {\
@@ -199,7 +199,7 @@
 #define vec_len(TYPE, VEC)                VEC_LEN_FUNC_NAME(TYPE)(VEC)
 
 /* ********* vec_insert *********** */
-#define VEC_INSERT_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _insert)
+#define VEC_INSERT_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _insert)
 #define VEC_INSERT_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_INSERT_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, TYPE el, size_t pos)
 #define VEC_INSERT_FUNC_IMPL(TYPE)\
     VEC_INSERT_FUNC_SIGNATURE(TYPE) {\
@@ -222,7 +222,7 @@
 #define vec_insert(TYPE, VEC, EL, POS)             VEC_INSERT_FUNC_NAME(TYPE)(&VEC, EL, POS)
 
 /* ********* vec_remove *********** */
-#define VEC_REMOVE_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _remove)
+#define VEC_REMOVE_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _remove)
 #define VEC_REMOVE_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REMOVE_FUNC_NAME(TYPE)(Vec(TYPE) vec, size_t pos)
 #define VEC_REMOVE_FUNC_IMPL(TYPE)\
     VEC_REMOVE_FUNC_SIGNATURE(TYPE) {\
