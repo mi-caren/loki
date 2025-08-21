@@ -198,6 +198,29 @@
 
 #define vec_len(TYPE, VEC)                VEC_LEN_FUNC_NAME(TYPE)(VEC)
 
+/* ********* vec_insert *********** */
+#define VEC_INSERT_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _insert)
+#define VEC_INSERT_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_INSERT_FUNC_NAME(TYPE)(Vec(TYPE)* vec_ptr, TYPE el, size_t pos)
+#define VEC_INSERT_FUNC_IMPL(TYPE)\
+    VEC_INSERT_FUNC_SIGNATURE(TYPE) {\
+        if (pos > (*vec_ptr)->len)\
+            return NULL;\
+        if ((*vec_ptr)->len == (*vec_ptr)->cap) {\
+            if (vec_grow(TYPE, vec_ptr) == NULL)\
+                return NULL;\
+        }\
+        memmove(\
+            &(*vec_ptr)->ptr[pos+1],\
+            &(*vec_ptr)->ptr[pos],\
+            sizeof(TYPE) * ((*vec_ptr)->len - pos)\
+        );\
+        (*vec_ptr)->ptr[pos] = el;\
+        (*vec_ptr)->len++;\
+        return *vec_ptr;\
+    }
+
+#define vec_insert(TYPE, VEC, EL, POS)             VEC_INSERT_FUNC_NAME(TYPE)(&VEC, EL, POS)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -212,6 +235,7 @@
     VEC_GET_FUNC_SIGNATURE(TYPE);\
     VEC_ITEMS_FUNC_SIGNATURE(TYPE);\
     VEC_LEN_FUNC_SIGNATURE(TYPE);\
+    VEC_INSERT_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
@@ -227,6 +251,7 @@
     VEC_GET_FUNC_IMPL(TYPE)\
     VEC_ITEMS_FUNC_IMPL(TYPE)\
     VEC_LEN_FUNC_IMPL(TYPE)\
+    VEC_INSERT_FUNC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \
