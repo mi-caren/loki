@@ -249,6 +249,21 @@
 
 #define vec_last(TYPE, VEC)                VEC_LAST_FUNC_NAME(TYPE)(VEC)
 
+/* ********* vec_pop *********** */
+#define VEC_POP_FUNC_NAME(TYPE)           CAT(VecType(TYPE), _pop)
+#define VEC_POP_FUNC_SIGNATURE(TYPE)      TYPE* VEC_POP_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_POP_FUNC_IMPL(TYPE)\
+    VEC_POP_FUNC_SIGNATURE(TYPE) {\
+        if (vec->len == 0) return NULL;\
+        TYPE* el = vec_last(TYPE, vec);\
+        vec->len--;\
+        if (vec->curr >= vec->len)\
+            vec->curr = vec->len - 1;\
+        return el;\
+    }
+
+#define vec_pop(TYPE, VEC)                VEC_POP_FUNC_NAME(TYPE)(VEC)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -266,6 +281,7 @@
     VEC_INSERT_FUNC_SIGNATURE(TYPE);\
     VEC_REMOVE_FUNC_SIGNATURE(TYPE);\
     VEC_LAST_FUNC_SIGNATURE(TYPE);\
+    VEC_POP_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
@@ -284,6 +300,7 @@
     VEC_INSERT_FUNC_IMPL(TYPE)\
     VEC_REMOVE_FUNC_IMPL(TYPE)\
     VEC_LAST_FUNC_IMPL(TYPE)\
+    VEC_POP_FUNC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \
