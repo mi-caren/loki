@@ -188,6 +188,16 @@
 
 #define vec_items(TYPE, VEC)        VEC_ITEMS_FUNC_NAME(TYPE)(VEC)
 
+/* ********* vec_len *********** */
+#define VEC_LEN_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _len)
+#define VEC_LEN_FUNC_SIGNATURE(TYPE)      size_t VEC_LEN_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_LEN_FUNC_IMPL(TYPE)\
+    inline VEC_LEN_FUNC_SIGNATURE(TYPE) {\
+        return vec->len;\
+    }
+
+#define vec_len(TYPE, VEC)                VEC_LEN_FUNC_NAME(TYPE)(VEC)
+
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DECL(TYPE);\
@@ -201,6 +211,7 @@
     VEC_SET_FUNC_SIGNATURE(TYPE);\
     VEC_GET_FUNC_SIGNATURE(TYPE);\
     VEC_ITEMS_FUNC_SIGNATURE(TYPE);\
+    VEC_LEN_FUNC_SIGNATURE(TYPE);\
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
@@ -215,6 +226,7 @@
     VEC_SET_FUNC_IMPL(TYPE)\
     VEC_GET_FUNC_IMPL(TYPE)\
     VEC_ITEMS_FUNC_IMPL(TYPE)\
+    VEC_LEN_FUNC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 #define vec_foreach(TYPE, EL, VEC) \
