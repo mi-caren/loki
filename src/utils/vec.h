@@ -27,7 +27,7 @@
         size_t cap;\
         size_t len;\
         size_t curr;\
-        TYPE* ptr;\
+        TYPE* items;\
     } VecType(TYPE)
 
 #define Vec(TYPE)                       VecType(TYPE)*
@@ -40,15 +40,15 @@
         Vec(TYPE) vec = malloc(sizeof(VecType(TYPE)));\
         if (vec == NULL) return NULL;\
         size_t cap = vec_cap_from_size(initial_size);\
-        TYPE* ptr = malloc(sizeof(TYPE) * cap);\
-        if (ptr == NULL) {\
+        TYPE* items = malloc(sizeof(TYPE) * cap);\
+        if (items == NULL) {\
             free(vec);\
             return NULL;\
         }\
         vec->cap = cap;\
         vec->len = 0;\
         vec->curr = 0;\
-        vec->ptr = ptr;\
+        vec->items = items;\
         return vec;\
     }
 
@@ -73,7 +73,7 @@
     VEC_CURR_FUNC_SIGNATURE(TYPE) {\
         if (vec->len == 0) return NULL;\
         if (vec->curr >= vec->len) return NULL;\
-        return &vec->ptr[vec->curr];\
+        return &vec->items[vec->curr];\
     }
 
 #define vec_curr(TYPE, VEC)                 VEC_CURR_FUNC_NAME(TYPE)(VEC)
@@ -109,7 +109,7 @@
             if (vec_grow(TYPE, vec) == NULL)\
                 return NULL;\
         }\
-        vec->ptr[vec->len] = el;\
+        vec->items[vec->len] = el;\
         vec->len++;\
         return vec;\
     }
@@ -131,7 +131,7 @@
         }\
 \
         for (size_t i = 0; i < n; i++) {\
-            vec->ptr[vec->len + i] = el;\
+            vec->items[vec->len + i] = el;\
         }\
         vec->len += n;\
 \
@@ -148,13 +148,13 @@
 #define VEC_REALLOC_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REALLOC_FUNC_NAME(TYPE)(Vec(TYPE) vec, size_t size)
 #define VEC_REALLOC_FUNC_IMPL(TYPE)\
     VEC_REALLOC_FUNC_SIGNATURE(TYPE) {\
-        if (vec == NULL || vec->ptr == NULL) return NULL;\
+        if (vec == NULL || vec->items == NULL) return NULL;\
         TYPE* new = realloc(\
-            vec->ptr,\
+            vec->items,\
             sizeof(TYPE) * size\
         );\
         if (new == NULL) return NULL;\
-        vec->ptr = new;\
+        vec->items = new;\
         vec->cap = size;\
         return vec;\
     }
@@ -167,8 +167,8 @@
 #define VEC_SET_FUNC_IMPL(TYPE)\
     VEC_SET_FUNC_SIGNATURE(TYPE) {\
         if (idx >= vec->len) return NULL;\
-        vec->ptr[idx] = val;\
-        return &vec->ptr[idx];\
+        vec->items[idx] = val;\
+        return &vec->items[idx];\
     }
 
 #define vec_set(TYPE, VEC, VAL, IDX)        VEC_SET_FUNC_NAME(TYPE)(VEC, VAL, IDX)
@@ -179,7 +179,7 @@
 #define VEC_GET_FUNC_IMPL(TYPE)\
     VEC_GET_FUNC_SIGNATURE(TYPE) {\
         if (idx >= vec->len) return NULL;\
-        return &vec->ptr[idx];\
+        return &vec->items[idx];\
     }
 
 #define vec_get(TYPE, VEC, IDX)        VEC_GET_FUNC_NAME(TYPE)(VEC, IDX)
@@ -189,7 +189,7 @@
 #define VEC_ITEMS_FUNC_SIGNATURE(TYPE)       TYPE* VEC_ITEMS_FUNC_NAME(TYPE)(Vec(TYPE) vec)
 #define VEC_ITEMS_FUNC_IMPL(TYPE)\
     inline VEC_ITEMS_FUNC_SIGNATURE(TYPE) {\
-        return vec->ptr;\
+        return vec->items;\
     }
 
 #define vec_items(TYPE, VEC)        VEC_ITEMS_FUNC_NAME(TYPE)(VEC)
@@ -216,11 +216,11 @@
                 return NULL;\
         }\
         memmove(\
-            &vec->ptr[pos+1],\
-            &vec->ptr[pos],\
+            &vec->items[pos+1],\
+            &vec->items[pos],\
             sizeof(TYPE) * (vec->len - pos)\
         );\
-        vec->ptr[pos] = el;\
+        vec->items[pos] = el;\
         vec->len++;\
         return vec;\
     }
@@ -234,8 +234,8 @@
     VEC_REMOVE_FUNC_SIGNATURE(TYPE) {\
         if (pos >= vec->len) return NULL;\
         memmove(\
-            &vec->ptr[pos],\
-            &vec->ptr[pos+1],\
+            &vec->items[pos],\
+            &vec->items[pos+1],\
             sizeof(TYPE) * (vec->len - pos - 1)\
         );\
         vec->len--;\
@@ -250,7 +250,7 @@
 #define VEC_LAST_FUNC_IMPL(TYPE)\
     VEC_LAST_FUNC_SIGNATURE(TYPE) {\
         if (vec->len == 0) return NULL;\
-        return &vec->ptr[vec->len - 1];\
+        return &vec->items[vec->len - 1];\
     }
 
 #define vec_last(TYPE, VEC)                VEC_LAST_FUNC_NAME(TYPE)(VEC)
