@@ -24,7 +24,7 @@ inline EditorRow* editorRowGet(EditingPoint ep) {
     return &editor.rows[getRow(ep)];
 }
 
-static void _editorRowResetHighlight(struct EditorRow* row) {
+static void _editorRowResetHighlight(EditorRow* row) {
     if (strLen(row->chars) == 0)
         return;
 
@@ -61,7 +61,7 @@ const char* C_TYPES[] = {
     NULL
 };
 
-static void _highlightFill(struct EditorRow* row, size_t* i, Highlight val, size_t count) {
+static void _highlightFill(EditorRow* row, size_t* i, Highlight val, size_t count) {
     for (size_t k = 0; k < count; k++) {
         vec_items(Highlight, row->hl)[*i] = val;
         (*i)++;
@@ -78,7 +78,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
     char* multiline_comment_start = "/*";
     char* multiline_comment_end = "*/";
 
-    struct EditorRow* row = &editor.rows[filerow];
+    EditorRow* row = &editor.rows[filerow];
     Highlight* hl = vec_items(Highlight, row->hl);
 
     STR_FOREACH(c, row->chars) {
@@ -218,7 +218,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
     }
 }
 
-void editorRowHighlightSearchResults(struct EditorRow* row) {
+void editorRowHighlightSearchResults(EditorRow* row) {
     if (editor.search_query == NULL) return;
 
     ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
@@ -233,7 +233,7 @@ void editorRowHighlightSelection(unsigned int filerow) {
     if (!editor.selecting) return;
 
     static bool in_selection = false;
-    struct EditorRow* row = &editor.rows[filerow];
+    EditorRow* row = &editor.rows[filerow];
     Highlight* hl = vec_items(Highlight, row->hl);
 
     if (filerow == editor.rowoff && SELECTION_START < editingPointNew(editor.rowoff, 0))
@@ -283,7 +283,7 @@ int syntaxToColor(Highlight hl) {
 }
 
 int editorRowRender(unsigned int filerow) {
-    struct EditorRow* row = &editor.rows[filerow];
+    EditorRow* row = &editor.rows[filerow];
 
     _editorRowResetHighlight(row);
     editorRowHighlightSyntax(filerow);
@@ -316,7 +316,7 @@ int editorRowRender(unsigned int filerow) {
     return 0;
 }
 
-void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c) {
+void editorRowInsertChar(EditorRow* row, unsigned int pos, char c) {
     if (pos > strLen(row->chars))
         pos = strLen(row->chars);
 
@@ -327,13 +327,13 @@ void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c) {
     }
 }
 
-void editorRowDeleteChar(struct EditorRow* row, unsigned int pos) {
+void editorRowDeleteChar(EditorRow* row, unsigned int pos) {
     if (pos >= strLen(row->chars)) return;
     strRemove(row->chars, pos);
     editorSetDirty();
 }
 
-void editorRowFree(struct EditorRow* row) {
+void editorRowFree(EditorRow* row) {
     strFree(row->chars);
     strFree(row->render);
     free(row->hl);

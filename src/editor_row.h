@@ -25,7 +25,7 @@ typedef enum {
 
 VEC_DEFS(Highlight)
 
-typedef struct EditorRow {
+typedef struct {
     String chars;
     Vec(Highlight) hl;
 
@@ -35,9 +35,9 @@ typedef struct EditorRow {
 } EditorRow;
 
 int editorRowRender(unsigned int filerow);
-void editorRowFree(struct EditorRow* row);
-void editorRowInsertChar(struct EditorRow* row, unsigned int pos, char c);
-void editorRowDeleteChar(struct EditorRow* row, unsigned int pos);
+void editorRowFree(EditorRow* row);
+void editorRowInsertChar(EditorRow* row, unsigned int pos, char c);
+void editorRowDeleteChar(EditorRow* row, unsigned int pos);
 
 EditorRow* editorRowGet(EditingPoint ep);
 

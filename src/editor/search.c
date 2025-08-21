@@ -20,7 +20,7 @@ bool searchResultNext() {
     messageBarSet("Searching (ESC to cancel): %s", editor.search_query);
 
     unsigned int cy = getRow(editor.editing_point);
-    struct EditorRow* row = &editor.rows[cy];
+    EditorRow* row = &editor.rows[cy];
     // First search in current line
     ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
         if (*cur > getCol(editor.editing_point)) {
@@ -64,7 +64,7 @@ bool searchResultPrev() {
     messageBarSet("Searching (ESC to cancel): %s", editor.search_query);
 
     int cy = getRow(editor.editing_point);
-    struct EditorRow* row = &editor.rows[cy];
+    EditorRow* row = &editor.rows[cy];
     // First search in current line
     ARRAY_FOR_EACH_UINT_REV(&row->search_match_pos) {
         if (*cur < getCol(editor.editing_point)) {
@@ -103,7 +103,7 @@ int editorSearch(char* query) {
     for (unsigned int i = 0; i < vecLen(editor.rows); i++) {
         char* match = NULL;
         int last_pos = 0;
-        struct EditorRow* row = &editor.rows[i];
+        EditorRow* row = &editor.rows[i];
         ARRAY_EMPTY(&row->search_match_pos);
 
         while ((match = strstr(&row->chars[last_pos], query)) != NULL) {

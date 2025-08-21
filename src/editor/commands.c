@@ -25,7 +25,7 @@
 extern struct Editor editor;
 
 
-static unsigned int _countLeadingSpacesBeforeCol(struct EditorRow* row, unsigned int col);
+static unsigned int _countLeadingSpacesBeforeCol(EditorRow* row, unsigned int col);
 static bool _editorDeleteSelection();
 
 static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep);
@@ -271,7 +271,7 @@ bool cmdUndo() {
 
 
 
-static unsigned int _countLeadingSpacesBeforeCol(struct EditorRow* row, unsigned int col) {
+static unsigned int _countLeadingSpacesBeforeCol(EditorRow* row, unsigned int col) {
     unsigned int i = 0;
     while (row->chars[i] == ' ' && i < col) {
         i++;

@@ -302,7 +302,7 @@ void editorDeleteRow(unsigned int pos) {
 void editorDrawRow(unsigned int filerow, String* buf) {
     editorRowRender(filerow);
 
-    struct EditorRow* row = &editor.rows[filerow];
+    EditorRow* row = &editor.rows[filerow];
 
     // Line number
     char fmt_string[32];

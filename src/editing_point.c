@@ -39,7 +39,7 @@ static inline bool currentRowIsLastRow() {
     return getRow(editor.editing_point) == vecLen(editor.rows) - 1;
 }
 
-static struct EditorRow* editingPointPrevRow() {
+static EditorRow* editingPointPrevRow() {
     if (currentRowIsFirstRow()) return &CURR_ROW;
     return &PREV_ROW;
 }
