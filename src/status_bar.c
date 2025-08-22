@@ -158,8 +158,8 @@ void infoBarDraw(String* buf) {
         status,
         terminal.screencols / 4,
         "%d/%zu lines ",
-        getRow(editor.editing_point) + (vec_len(EditorRow, editor.rows) > 0 ? 1 : 0),
-        vec_len(EditorRow, editor.rows)
+        getRow(editor.editing_point) + (editor.rows->len > 0 ? 1 : 0),
+        editor.rows->len
     );
 
 

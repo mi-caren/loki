@@ -206,7 +206,7 @@ void editorScroll() {
 }
 
 static unsigned int rowNumberColumnWidth() {
-    unsigned int numrows = vec_len(EditorRow, editor.rows);
+    unsigned int numrows = editor.rows->len;
     unsigned int digits = 1;
     while ((numrows /= 10) != 0) {
         digits++;
@@ -273,7 +273,7 @@ String editorRowsToString() {
 }
 
 int editorInsertRow(unsigned int pos, char *s) {
-    if (pos > vec_len(EditorRow, editor.rows))
+    if (pos > editor.rows->len)
         return -1;
 
     String chars = strFromStr(s);
@@ -290,7 +290,7 @@ int editorInsertRow(unsigned int pos, char *s) {
 }
 
 void editorDeleteRow(unsigned int pos) {
-    if (pos >= vec_len(EditorRow, editor.rows)) return;
+    if (pos >= editor.rows->len) return;
 
     editorRowFree(vec_get(EditorRow, editor.rows, pos));
     vec_remove(EditorRow, editor.rows, pos);
@@ -357,8 +357,8 @@ void editorDrawRows(String* buf) {
     unsigned int y;
     for (y = 0; y < editor.view_rows; y++) {
         unsigned int filerow = y + editor.rowoff;
-        if (filerow >= vec_len(EditorRow, editor.rows)) {
-            if (vec_len(EditorRow, editor.rows) == 0 && y == editor.view_rows / 3) {
+        if (filerow >= editor.rows->len) {
+            if (editor.rows->len == 0 && y == editor.view_rows / 3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome, sizeof(welcome), "Loki editor -- version %s", LOKI_VERSION);
                 if (welcomelen > terminal.screencols) {

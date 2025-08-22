@@ -97,7 +97,7 @@ int editorOpen(char *filename) {
             line[--linelen] = '\0';
         }
 
-        if (editorInsertRow(vec_len(EditorRow, editor.rows), line) != 0) {
+        if (editorInsertRow(editor.rows->len, line) != 0) {
             retval = -1;
             goto cleanup;
         }
