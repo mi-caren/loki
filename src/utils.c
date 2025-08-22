@@ -66,9 +66,8 @@ DEF_ARRAY_FREE
 
 
 unsigned int saturating_sub(unsigned int n1, unsigned int n2) {
-    int sub = n1 - n2;
-    if (sub < 0) return 0;
-    return (unsigned int)sub;
+    if (n2 > n1) return 0;
+    return n1 -n2;
 }
 
 inline unsigned int umin(unsigned int a, unsigned int b) {
