@@ -11,6 +11,7 @@
 #include "editor/utils.h"
 #include "utils/string.h"
 #include "utils/vec.h"
+#include "utils/vvec.h"
 #include "editor_row.h"
 
 #define PARENTHESIS      "()[]{}"
@@ -296,7 +297,7 @@ int editorRowRender(unsigned int filerow) {
 
     int prev_color = -1;
     STR_FOREACH(c, row->chars) {
-        int color = syntaxToColor(vec_items(Highlight, row->hl)[vecCurrIdx(row->chars)]);
+        int color = syntaxToColor(vec_items(Highlight, row->hl)[vvec_curr_idx(row->chars)]);
         int fg = (color >> 8) & 0xff;
         int bg = color & 0xff;
         if (color != prev_color) {
@@ -336,7 +337,7 @@ void editorRowDeleteChar(EditorRow* row, unsigned int pos) {
 void editorRowFree(EditorRow* row) {
     strFree(row->chars);
     strFree(row->render);
-    free(row->hl);
+    vec_free(Highlight, row->hl);
     ARRAY_FREE(&row->search_match_pos);
 }
 

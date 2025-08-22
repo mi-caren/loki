@@ -24,12 +24,15 @@
 
 extern struct Editor editor;
 
+VEC_IMPL(CoreCommand)
+VEC_IMPL(Command)
+
 
 static unsigned int _countLeadingSpacesBeforeCol(EditorRow* row, unsigned int col);
 static bool _editorDeleteSelection();
 
 static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep);
-static void _historyPushCmd(VEC(CoreCommand) cmd);
+static void _historyPushCmd(Command cmd);
 
 static RESULT(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
     if (vec_len(EditorRow, editor.rows) == 0) {
@@ -123,8 +126,8 @@ void cmdInsertChar(char c) {
         .ep = editor.editing_point,
         .c = c,
     };
-    VEC(CoreCommand) cmd = VEC_NEW(CoreCommand);
-    VECPUSH(cmd, ccmd);
+    Command cmd = vec_new(CoreCommand);
+    vec_push(CoreCommand, cmd, ccmd);
     _historyPushCmd(cmd);
 
     editor.editing_point = ep;
@@ -137,9 +140,9 @@ void cmdPaste() {
         return;
     };
 
-    VEC(CoreCommand) cmd = VEC_NEW(CoreCommand);
+    Command cmd = vec_new(CoreCommand);
 
-    vec_foreach (char, c, editor.copy_buf) {
+    VEC_FOREACH(char, c, editor.copy_buf) {
         EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(*c, editor.editing_point));
 
         // Insert every CoreCommand into the Editor Command
@@ -148,7 +151,7 @@ void cmdPaste() {
             .ep = editor.editing_point,
             .c = *c,
         };
-        VECPUSH(cmd, ccmd);
+        vec_push(CoreCommand, cmd, ccmd);
 
         editor.editing_point = ep;
     }
@@ -173,7 +176,7 @@ static bool _editorDeleteSelection() {
     editor.editing_point = SELECTION_END;
     editingPointMove(ARROW_LEFT);
 
-    VEC(CoreCommand) cmd = VEC_NEW(CoreCommand);
+    Command cmd = vec_new(CoreCommand);
 
     while (editor.editing_point >= selection_start) {
         char c = CATCH(char, _coreDeleteChar(editor.editing_point), err) {
@@ -186,7 +189,7 @@ static bool _editorDeleteSelection() {
             .ep = editor.editing_point,
             .c = c,
         };
-        VECPUSH(cmd, ccmd);
+        vec_push(CoreCommand, cmd, ccmd);
         editingPointMove(ARROW_LEFT);
     }
     editingPointMove(ARROW_RIGHT);
@@ -212,24 +215,24 @@ void cmdDelete(bool del_key) {
             .ep = editor.editing_point,
             .c = c,
         };
-        VEC(CoreCommand) cmd = VEC_NEW(CoreCommand);
-        VECPUSH(cmd, ccmd);
+        Command cmd = vec_new(CoreCommand);
+        vec_push(CoreCommand, cmd, ccmd);
         _historyPushCmd(cmd);
     }
 }
 
 static void _historyFreeTrailingCmds() {
-    while (editor.curr_history_cmd != vecLast(editor.command_history)) {
-        VEC(CoreCommand)* cmd = vecPop(editor.command_history);
-        vecFree(*cmd);
+    while (editor.curr_history_cmd != vec_last(Command, editor.command_history)) {
+        Command* cmd = vec_pop(Command, editor.command_history);
+        vec_free(CoreCommand, *cmd);
     }
 }
 
-static void _historyPushCmd(VEC(CoreCommand) cmd) {
+static void _historyPushCmd(Command cmd) {
     assert(cmd != NULL);
     _historyFreeTrailingCmds();
-    VECPUSH(editor.command_history, cmd);
-    editor.curr_history_cmd = vecEnd(editor.command_history);
+    vec_push(Command, editor.command_history, cmd);
+    editor.curr_history_cmd = vec_end(Command, editor.command_history);
 }
 
 bool cmdUndo() {
@@ -240,9 +243,9 @@ bool cmdUndo() {
     // inside command_history, which is a
     // collection of pointers to commands.
     // we have to dereference to obtain the pointed command.
-    VEC(CoreCommand) cmd = *editor.curr_history_cmd;
+    Command* cmd = editor.curr_history_cmd;
 
-    VEC_FOREACH_REV(CoreCommand, ccmd, cmd) {
+    VEC_FOREACH_REV(CoreCommand, ccmd, *cmd) {
         switch (ccmd->type) {
             case CCMD_INSERT_CHAR:
                 UNWRAP(char, _coreDeleteChar(ccmd->ep));
@@ -252,10 +255,10 @@ bool cmdUndo() {
                 break;
         }
     }
-    CoreCommand* ccmd = vecFirst(cmd);
+    CoreCommand* ccmd = vec_first(CoreCommand, *cmd);
     editor.editing_point = ccmd->ep;
 
-    editor.curr_history_cmd = vecPrev(editor.command_history);
+    editor.curr_history_cmd = vec_prev(Command, editor.command_history);
     editorSetDirty();
     return true;
 }

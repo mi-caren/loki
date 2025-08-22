@@ -38,6 +38,8 @@
 #define COLOR_SEQ_SIZE 10
 #define TAB_SPACE_NUM    4
 
+typedef Vec(CoreCommand) Command;
+VEC_DEFS(Command)
 
 typedef struct Editor {
     /* Number of rows visible on screen */
@@ -73,8 +75,8 @@ typedef struct Editor {
      * Undoing a command means reverting every CoreCommand contained
      * in a row of this vector.
      */
-    VEC(VEC(CoreCommand)) command_history;
-    CoreCommand** curr_history_cmd;
+    Vec(Command) command_history;
+    Command* curr_history_cmd;
 } Editor;
 
 

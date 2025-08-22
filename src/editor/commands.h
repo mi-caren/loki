@@ -8,6 +8,7 @@
 #include "editing_point.h"
 #include "editor/utils.h"
 #include "utils/result.h"
+#include "utils/vec.h"
 
 
 typedef enum {
@@ -29,6 +30,8 @@ typedef struct {
     /* The inserted / deleted char */
     char c;
 } CoreCommand;
+
+VEC_DEFS(CoreCommand)
 
 // typedef Command* CommandPtr;
 

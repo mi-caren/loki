@@ -10,7 +10,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "editor_row.h"
 #include "editing_point.h"
 #include "editor.h"
 #include "editor/defs.h"
@@ -64,7 +63,7 @@ void editorInit(Editor* ed) {
     ed->selection_start = 0;
     ed->copy_buf = NULL;
 
-    ed->command_history = VEC_NEW(VEC(CoreCommand));
+    ed->command_history = vec_new(Command);
     ed->curr_history_cmd = NULL;
 
     int height = terminal.screenrows;
