@@ -242,7 +242,7 @@ inline void* vvec_last(VoidVecType vec) {
     return (char*)vec + (vvec_len(vec) - 1) * VVECHEAD(vec)->sizeof_type;
 }
 
-inline void* vecAt(VoidVecType vec, size_t pos) {
+inline void* vvec_at(VoidVecType vec, size_t pos) {
     if (pos >= vvec_len(vec)) return NULL;
     return (char*)vec + pos * VVECHEAD(vec)->sizeof_type;
 }
