@@ -29,7 +29,8 @@
         TYPE* items;\
     } VecStructName(TYPE)
 
-#define Vec(TYPE)                       VecStructName(TYPE)*
+#define VecType(TYPE)       VecStructName(TYPE)*
+#define Vec(TYPE)           CAT(VecStructName(TYPE), Type)
 
 /* ********* vec_new *********** */
 #define VEC_NEW_FUNC_NAME(TYPE)         CAT(VecStructName(TYPE), _new)
@@ -298,6 +299,7 @@
 
 #define VEC_DEFS(TYPE)\
     VEC_STRUCT_DEF(TYPE);\
+    typedef VecType(TYPE) Vec(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\
     VEC_BEGIN_FUNC_SIGNATURE(TYPE);\
     VEC_END_FUNC_SIGNATURE(TYPE);\
