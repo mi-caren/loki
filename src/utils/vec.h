@@ -207,16 +207,6 @@
 
 #define vec_get(TYPE, VEC, IDX)        VEC_GET_FUNC_NAME(TYPE)(VEC, IDX)
 
-/* ********* vec_items *********** */
-#define VEC_ITEMS_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _items)
-#define VEC_ITEMS_FUNC_SIGNATURE(TYPE)       TYPE* VEC_ITEMS_FUNC_NAME(TYPE)(Vec(TYPE) vec)
-#define VEC_ITEMS_FUNC_IMPL(TYPE)\
-    inline VEC_ITEMS_FUNC_SIGNATURE(TYPE) {\
-        return vec->items;\
-    }
-
-#define vec_items(TYPE, VEC)        VEC_ITEMS_FUNC_NAME(TYPE)(VEC)
-
 /* ********* vec_insert *********** */
 #define VEC_INSERT_FUNC_NAME(TYPE)            CAT(VecType(TYPE), _insert)
 #define VEC_INSERT_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_INSERT_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE el, size_t pos)
@@ -319,7 +309,6 @@
     VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE);\
     VEC_SET_FUNC_SIGNATURE(TYPE);\
     VEC_GET_FUNC_SIGNATURE(TYPE);\
-    VEC_ITEMS_FUNC_SIGNATURE(TYPE);\
     VEC_INSERT_FUNC_SIGNATURE(TYPE);\
     VEC_REMOVE_FUNC_SIGNATURE(TYPE);\
     VEC_LAST_FUNC_SIGNATURE(TYPE);\
@@ -340,7 +329,6 @@
     VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
     VEC_SET_FUNC_IMPL(TYPE)\
     VEC_GET_FUNC_IMPL(TYPE)\
-    VEC_ITEMS_FUNC_IMPL(TYPE)\
     VEC_INSERT_FUNC_IMPL(TYPE)\
     VEC_REMOVE_FUNC_IMPL(TYPE)\
     VEC_LAST_FUNC_IMPL(TYPE)\
