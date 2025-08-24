@@ -56,17 +56,6 @@
 #define vec_new(TYPE)                   VEC_NEW_FUNC_NAME(TYPE)(1)
 #define vec_new_with_cap(TYPE, CAP)     VEC_NEW_FUNC_NAME(TYPE)(CAP)
 
-/* ********* vec_begin *********** */
-#define VEC_BEGIN_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _begin)
-#define VEC_BEGIN_FUNC_SIGNATURE(TYPE)      TYPE* VEC_BEGIN_FUNC_NAME(TYPE)(Vec(TYPE)* const vec)
-#define VEC_BEGIN_FUNC_IMPL(TYPE)\
-    VEC_BEGIN_FUNC_SIGNATURE(TYPE) {\
-        (*vec)->curr = 0;\
-        return vec_curr(TYPE, vec);\
-    }
-
-#define vec_begin(TYPE, VEC)                VEC_BEGIN_FUNC_NAME(TYPE)(VEC)
-
 /* ********* vec_next *********** */
 #define VEC_NEXT_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _next)
 #define VEC_NEXT_FUNC_SIGNATURE(TYPE)       TYPE* VEC_NEXT_FUNC_NAME(TYPE)(Vec(TYPE)* const vec)
@@ -78,18 +67,6 @@
     }
 
 #define vec_next(TYPE, VEC)                 VEC_NEXT_FUNC_NAME(TYPE)(VEC)
-
-/* ********* vec_prev *********** */
-#define VEC_PREV_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _prev)
-#define VEC_PREV_FUNC_SIGNATURE(TYPE)       TYPE* VEC_PREV_FUNC_NAME(TYPE)(Vec(TYPE)* const vec)
-#define VEC_PREV_FUNC_IMPL(TYPE)\
-    VEC_PREV_FUNC_SIGNATURE(TYPE) {\
-        if ((*vec)->curr == 0) return NULL;\
-        (*vec)->curr--;\
-        return vec_curr(TYPE, vec);\
-    }
-
-#define vec_prev(TYPE, VEC)                 VEC_PREV_FUNC_NAME(TYPE)(VEC)
 
 /* ********* vec_empty *********** */
 #define VEC_EMPTY_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _empty)
@@ -319,6 +296,11 @@
         /* END_IMPL */ {\
             if ((*self)->len == 0) return NULL;\
             (*self)->curr = (*self)->len - 1;\
+            return iter_curr(Vec(TYPE), self);\
+        },\
+        /* PREV_IMPL */ {\
+            if ((*self)->curr == 0) return NULL;\
+            (*self)->curr--;\
             return iter_curr(Vec(TYPE), self);\
         }\
     )\
