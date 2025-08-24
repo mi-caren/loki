@@ -307,12 +307,16 @@
     VEC_FREE_FUNC_IMPL(TYPE)\
     ITER_IMPL(\
         Vec(TYPE),\
-        {\
+        /* CURR_IMPL */ {\
             if ((*self)->len == 0) return NULL;\
             if ((*self)->curr >= (*self)->len) return NULL;\
             return &(*self)->items[(*self)->curr];\
         },\
-        {\
+        /* BEGIN_IMPL */ {\
+            (*self)->curr = 0;\
+            return iter_curr(Vec(TYPE), self);\
+        },\
+        /* END_IMPL */ {\
             if ((*self)->len == 0) return NULL;\
             (*self)->curr = (*self)->len - 1;\
             return iter_curr(Vec(TYPE), self);\
