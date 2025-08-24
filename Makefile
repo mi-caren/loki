@@ -24,8 +24,9 @@ loki-zig: $(SRCS)
 	zig build-exe $(SRCS) -I inc --library c -femit-bin=loki
 
 
+release: CFLAGS = $(SHARED_FLAGS) -O3
 release: clean
-	zig build-exe -I inc --library c -O ReleaseSafe $(SRCS) -femit-bin=loki
+release: $(EXE)
 
 test: $(TESTDIR)/*.c
 	zig run -I inc --library c $< $(filter-out $(SRCDIR)/$(EXE).c, $(SRCS))
