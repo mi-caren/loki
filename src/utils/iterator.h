@@ -64,5 +64,8 @@
 #define FOREACH(SELF_TYPE, EL, IT) \
     for (IterItem(SELF_TYPE) EL = iter_begin(SELF_TYPE, IT); EL != NULL; EL = iter_next(SELF_TYPE, IT))
 
+#define FOREACH_REV(SELF_TYPE, EL, IT) \
+    for (IterItem(SELF_TYPE) EL = iter_end(SELF_TYPE, IT); EL != NULL; EL = iter_prev(SELF_TYPE, IT))
+
 
 #endif

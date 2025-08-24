@@ -143,7 +143,7 @@ void cmdPaste() {
 
     Command cmd = vec_new(CoreCommand);
 
-    VEC_FOREACH(char, c, editor.copy_buf) {
+    FOREACH(Vec(char), c, &editor.copy_buf) {
         EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(*c, editor.editing_point));
 
         // Insert every CoreCommand into the Editor Command
@@ -233,7 +233,7 @@ static void _historyPushCmd(Command cmd) {
     assert(cmd != NULL);
     _historyFreeTrailingCmds();
     vec_push(Command, editor.command_history, cmd);
-    editor.curr_history_cmd = vec_end(Command, editor.command_history);
+    editor.curr_history_cmd = iter_end(Vec(Command), &editor.command_history);
 }
 
 bool cmdUndo() {
@@ -246,7 +246,7 @@ bool cmdUndo() {
     // we have to dereference to obtain the pointed command.
     Command* cmd = editor.curr_history_cmd;
 
-    VEC_FOREACH_REV(CoreCommand, ccmd, *cmd) {
+    FOREACH_REV(Vec(CoreCommand), ccmd, cmd) {
         switch (ccmd->type) {
             case CCMD_INSERT_CHAR:
                 UNWRAP(char, _coreDeleteChar(ccmd->ep));
@@ -259,7 +259,7 @@ bool cmdUndo() {
     CoreCommand* ccmd = vec_first(CoreCommand, *cmd);
     editor.editing_point = ccmd->ep;
 
-    editor.curr_history_cmd = vec_prev(Command, editor.command_history);
+    editor.curr_history_cmd = iter_prev(Vec(Command), &editor.command_history);
     editorSetDirty();
     return true;
 }

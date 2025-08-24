@@ -299,12 +299,6 @@
     )\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
-#define VEC_FOREACH(TYPE, EL, VEC) \
-    for (TYPE* EL = vec_begin(TYPE, VEC); EL != NULL; EL = vec_next(TYPE, VEC))
-
-#define VEC_FOREACH_REV(TYPE, EL, VEC) \
-    for (TYPE* EL = vec_end(TYPE, VEC); EL != NULL; EL = vec_prev(TYPE, VEC))
-
 size_t vec_cap_from_size(size_t size);
 
 VEC_DEFS(char)
