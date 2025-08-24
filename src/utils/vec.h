@@ -67,31 +67,6 @@
 
 #define vec_begin(TYPE, VEC)                VEC_BEGIN_FUNC_NAME(TYPE)(VEC)
 
-/* 
-#define VEC_END_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _end)
-#define VEC_END_FUNC_SIGNATURE(TYPE)      TYPE* VEC_END_FUNC_NAME(TYPE)(Vec(TYPE)* const vec)
-#define VEC_END_FUNC_IMPL(TYPE)\
-    VEC_END_FUNC_SIGNATURE(TYPE) {\
-        if ((*vec)->len == 0) return NULL;\
-        (*vec)->curr = (*vec)->len - 1;\
-        return vec_curr(TYPE, vec);\
-    }
-
-#define vec_end(TYPE, VEC)                VEC_END_FUNC_NAME(TYPE)(VEC)
- */
-
-/* ********* vec_curr *********** */
-#define VEC_CURR_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _curr)
-#define VEC_CURR_FUNC_SIGNATURE(TYPE)       TYPE* VEC_CURR_FUNC_NAME(TYPE)(Vec(TYPE)* const vec)
-#define VEC_CURR_FUNC_IMPL(TYPE)\
-    VEC_CURR_FUNC_SIGNATURE(TYPE) {\
-        if ((*vec)->len == 0) return NULL;\
-        if ((*vec)->curr >= (*vec)->len) return NULL;\
-        return &(*vec)->items[(*vec)->curr];\
-    }
-
-#define vec_curr(TYPE, VEC)                 VEC_CURR_FUNC_NAME(TYPE)(VEC)
-
 /* ********* vec_next *********** */
 #define VEC_NEXT_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _next)
 #define VEC_NEXT_FUNC_SIGNATURE(TYPE)       TYPE* VEC_NEXT_FUNC_NAME(TYPE)(Vec(TYPE)* const vec)
@@ -303,11 +278,6 @@
     VEC_STRUCT_DEF(TYPE);\
     typedef VecType(TYPE) Vec(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\
-    VEC_BEGIN_FUNC_SIGNATURE(TYPE);\
-    /* VEC_END_FUNC_SIGNATURE(TYPE); */\
-    VEC_CURR_FUNC_SIGNATURE(TYPE);\
-    VEC_NEXT_FUNC_SIGNATURE(TYPE);\
-    VEC_PREV_FUNC_SIGNATURE(TYPE);\
     VEC_EMPTY_FUNC_SIGNATURE(TYPE);\
     VEC_PUSH_FUNC_SIGNATURE(TYPE);\
     VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE);\
@@ -324,11 +294,6 @@
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
     VEC_NEW_FUNC_IMPL(TYPE)\
-    VEC_BEGIN_FUNC_IMPL(TYPE)\
-    /* VEC_END_FUNC_IMPL(TYPE) */\
-    VEC_CURR_FUNC_IMPL(TYPE)\
-    VEC_NEXT_FUNC_IMPL(TYPE)\
-    VEC_PREV_FUNC_IMPL(TYPE)\
     VEC_EMPTY_FUNC_IMPL(TYPE)\
     VEC_PUSH_FUNC_IMPL(TYPE)\
     VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
@@ -344,8 +309,13 @@
         Vec(TYPE),\
         {\
             if ((*self)->len == 0) return NULL;\
+            if ((*self)->curr >= (*self)->len) return NULL;\
+            return &(*self)->items[(*self)->curr];\
+        },\
+        {\
+            if ((*self)->len == 0) return NULL;\
             (*self)->curr = (*self)->len - 1;\
-            return iter_curr(TYPE, self);\
+            return iter_curr(Vec(TYPE), self);\
         }\
     )\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
