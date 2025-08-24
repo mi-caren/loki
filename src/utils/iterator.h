@@ -5,6 +5,8 @@
 
 #define IteratorType(SELF_TYPE) CAT(SELF_TYPE, Iterator)
 
+#define IterItem(SELF_TYPE)     CAT(IteratorType(SELF_TYPE), Item)
+
 #define ITERATOR_INTERFACE_DEF(SELF_TYPE, ITEM_TYPE)\
     typedef struct {\
         ITEM_TYPE* (*const begin) (SELF_TYPE* const self);\
@@ -24,6 +26,13 @@
 
 
 
+#define ITER_END_FUNC_NAME(SELF_TYPE)       CAT(IteratorType(SELF_TYPE), _end)
+#define ITER_END_FUNC_SIGNATURE(SELF_TYPE)  IterItem(SELF_TYPE) ITER_END_FUNC_NAME(SELF_TYPE)(SELF_TYPE* const self)
+#define ITER_END_FUNC_IMPL(SELF_TYPE)\
+    ITER_END_FUNC_SIGNATURE(SELF_TYPE)
+
+#define iter_end(SELF_TYPE, SELF)           ITER_END_FUNC_NAME(SELF_TYPE)(SELF)
+/* 
 #define ITER_FUNC_NAME(SELF_TYPE)       CAT(SELF_TYPE, _iter)
 #define ITER_FUNC_SIGNATURE(SELF_TYPE)  IterableStructName(SELF_TYPE) ITER_FUNC_NAME(SELF_TYPE)(SELF_TYPE* self)
 #define ITER_FUNC_IMPL(SELF_TYPE, BEGIN_IMPL, END_IMPL, CURR_IMPL, NEXT_IMPL, PREV_IMPL)\
@@ -42,21 +51,21 @@
     }
 
 #define iter(SELF_TYPE, SELF)   ITER_FUNC_NAME(SELF_TYPE)(SELF)
-
+ */
 
 
 #define ITER_DEFS(SELF_TYPE, ITEM_TYPE)\
+    typedef ITEM_TYPE* IterItem(SELF_TYPE);\
     ITERATOR_INTERFACE_DEF(SELF_TYPE, ITEM_TYPE);\
     ITERABLE_DEF(SELF_TYPE, ITEM_TYPE);\
-    ITER_FUNC_SIGNATURE(SELF_TYPE);\
+    ITER_END_FUNC_SIGNATURE(SELF_TYPE);\
 
-#define ITER_IMPL(SELF_TYPE, BEGIN_IMPL, END_IMPL, CURR_IMPL, NEXT_IMPL, PREV_IMPL)\
-    ITER_FUNC_IMPL(SELF_TYPE, BEGIN_IMPL, END_IMPL, CURR_IMPL, NEXT_IMPL, PREV_IMPL)\
+#define ITER_IMPL(SELF_TYPE, END_IMPL)\
+    ITER_END_FUNC_IMPL(SELF_TYPE) END_IMPL\
 
 
 #define FOREACH(SELF_TYPE, EL, IT) \
-    IterableStructName(SELF_TYPE) __iter__ = iter(SELF_TYPE, IT);\
-    for (__auto_type EL = __iter__.iterator->begin(__iter__.self); EL != NULL; EL = __iter__.iterator->next(__iter__.self))
+    for (IterItem(SELF_TYPE) EL = iter_begin(SELF_TYPE, IT); EL != NULL; EL = iter_next(SELF_TYPE, IT))
 
 
 #endif

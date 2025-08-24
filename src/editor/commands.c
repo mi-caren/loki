@@ -143,7 +143,7 @@ void cmdPaste() {
 
     Command cmd = vec_new(CoreCommand);
 
-    FOREACH(Vec(char), c, &editor.copy_buf) {
+    VEC_FOREACH(char, c, editor.copy_buf) {
         EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(*c, editor.editing_point));
 
         // Insert every CoreCommand into the Editor Command

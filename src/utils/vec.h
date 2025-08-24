@@ -67,7 +67,7 @@
 
 #define vec_begin(TYPE, VEC)                VEC_BEGIN_FUNC_NAME(TYPE)(VEC)
 
-/* ********* vec_end *********** */
+/* 
 #define VEC_END_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _end)
 #define VEC_END_FUNC_SIGNATURE(TYPE)      TYPE* VEC_END_FUNC_NAME(TYPE)(Vec(TYPE)* const vec)
 #define VEC_END_FUNC_IMPL(TYPE)\
@@ -78,6 +78,7 @@
     }
 
 #define vec_end(TYPE, VEC)                VEC_END_FUNC_NAME(TYPE)(VEC)
+ */
 
 /* ********* vec_curr *********** */
 #define VEC_CURR_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _curr)
@@ -303,7 +304,7 @@
     typedef VecType(TYPE) Vec(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\
     VEC_BEGIN_FUNC_SIGNATURE(TYPE);\
-    VEC_END_FUNC_SIGNATURE(TYPE);\
+    /* VEC_END_FUNC_SIGNATURE(TYPE); */\
     VEC_CURR_FUNC_SIGNATURE(TYPE);\
     VEC_NEXT_FUNC_SIGNATURE(TYPE);\
     VEC_PREV_FUNC_SIGNATURE(TYPE);\
@@ -324,7 +325,7 @@
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
     VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_BEGIN_FUNC_IMPL(TYPE)\
-    VEC_END_FUNC_IMPL(TYPE)\
+    /* VEC_END_FUNC_IMPL(TYPE) */\
     VEC_CURR_FUNC_IMPL(TYPE)\
     VEC_NEXT_FUNC_IMPL(TYPE)\
     VEC_PREV_FUNC_IMPL(TYPE)\
@@ -339,13 +340,13 @@
     VEC_FIRST_FUNC_IMPL(TYPE)\
     VEC_POP_FUNC_IMPL(TYPE)\
     VEC_FREE_FUNC_IMPL(TYPE)\
-    ITER_FUNC_IMPL(\
+    ITER_IMPL(\
         Vec(TYPE),\
-        VEC_BEGIN_FUNC_NAME(TYPE),\
-        VEC_END_FUNC_NAME(TYPE),\
-        VEC_CURR_FUNC_NAME(TYPE),\
-        VEC_NEXT_FUNC_NAME(TYPE),\
-        VEC_PREV_FUNC_NAME(TYPE)\
+        {\
+            if ((*self)->len == 0) return NULL;\
+            (*self)->curr = (*self)->len - 1;\
+            return iter_curr(TYPE, self);\
+        }\
     )\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
