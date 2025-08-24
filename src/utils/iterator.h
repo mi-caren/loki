@@ -54,4 +54,9 @@
     ITER_FUNC_IMPL(SELF_TYPE, BEGIN_IMPL, END_IMPL, CURR_IMPL, NEXT_IMPL, PREV_IMPL)\
 
 
+#define FOREACH(SELF_TYPE, EL, IT) \
+    IterableStructName(SELF_TYPE) __iter__ = iter(SELF_TYPE, IT);\
+    for (__auto_type EL = __iter__.iterator->begin(__iter__.self); EL != NULL; EL = __iter__.iterator->next(__iter__.self))
+
+
 #endif

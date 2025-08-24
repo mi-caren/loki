@@ -14,6 +14,7 @@
 #include "editor/defs.h"
 #include "editor/utils.h"
 #include "editor/search.h"
+#include "utils/iterator.h"
 #include "utils/result.h"
 #include "utils/string.h"
 #include "utils/utils.h"
@@ -142,7 +143,7 @@ void cmdPaste() {
 
     Command cmd = vec_new(CoreCommand);
 
-    VEC_FOREACH(char, c, editor.copy_buf) {
+    FOREACH(Vec(char), c, &editor.copy_buf) {
         EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(*c, editor.editing_point));
 
         // Insert every CoreCommand into the Editor Command
