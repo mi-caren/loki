@@ -246,7 +246,7 @@ bool cmdUndo() {
     // we have to dereference to obtain the pointed command.
     Command* cmd = editor.curr_history_cmd;
 
-    FOREACH_REV(Vec(CoreCommand), ccmd, cmd) {
+    for (EACH_REV(Vec(CoreCommand), ccmd, cmd)) {
         switch (ccmd->type) {
             case CCMD_INSERT_CHAR:
                 UNWRAP(char, _coreDeleteChar(ccmd->ep));
