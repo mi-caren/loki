@@ -256,7 +256,7 @@ void editorRefreshScreen() {
 
 String editorRowsToString() {
     size_t buflen = 0;
-    FOREACH(Vec(EditorRow), row, &editor.rows) {
+    for (EACH(Vec(EditorRow), row, &editor.rows)) {
         buflen += strLen(row->chars) + 1;
     }
 
@@ -264,7 +264,7 @@ String editorRowsToString() {
     if (buf == NULL)
         return NULL;
 
-    FOREACH(Vec(EditorRow), row, &editor.rows) {
+    for (EACH(Vec(EditorRow), row, &editor.rows)) {
         strAppend(&buf, row->chars);
         strAppendChar(&buf, '\n');
     }
