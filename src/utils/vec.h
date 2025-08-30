@@ -17,6 +17,7 @@
         size_t curr;\
         TYPE* items;\
         const struct VecDriver(TYPE)* drv;\
+        ITER_DRIVER(Vec(TYPE));\
     } Vec(TYPE)
 
 #define VecDriver(TYPE)     CAT(Vec(TYPE), Driver)
@@ -67,6 +68,7 @@
             .free          = VEC_FREE_FUNC_NAME(TYPE),\
         };\
         vec->drv = &vec_driver;\
+        ITER_INIT(Vec(TYPE), vec);\
         return vec;\
     }
 
@@ -77,7 +79,7 @@
 #define VEC_EMPTY_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _empty)
 #define VEC_EMPTY_FUNC_SIGNATURE(TYPE)       void VEC_EMPTY_FUNC_NAME(TYPE)(Vec(TYPE)* self)
 #define VEC_EMPTY_FUNC_IMPL(TYPE)\
-    inline VEC_EMPTY_FUNC_SIGNATURE(TYPE) {\
+    VEC_EMPTY_FUNC_SIGNATURE(TYPE) {\
         self->len = 0;\
     }
 
@@ -258,6 +260,7 @@
 
 #define VEC_DEFS(TYPE)\
     struct VecDriver(TYPE);\
+    struct Iterator(Vec(TYPE));\
     VEC_STRUCT_DEF(TYPE);\
     VEC_DRIVER_DEF(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\
@@ -276,7 +279,6 @@
     VEC_FIRST_FUNC_IMPL(TYPE)\
     VEC_POP_FUNC_IMPL(TYPE)\
     VEC_FREE_FUNC_IMPL(TYPE)\
-    VEC_NEW_FUNC_IMPL(TYPE)\
     ITER_IMPL(\
         Vec(TYPE),\
         /* CURR_IMPL */ {\
@@ -286,24 +288,25 @@
         },\
         /* BEGIN_IMPL */ {\
             self->curr = 0;\
-            return iter_curr(Vec(TYPE), self);\
+            return iter_curr(self);\
         },\
         /* END_IMPL */ {\
             if (self->len == 0) return NULL;\
             self->curr = self->len - 1;\
-            return iter_curr(Vec(TYPE), self);\
+            return iter_curr(self);\
         },\
         /* PREV_IMPL */ {\
             if (self->curr == 0) return NULL;\
             self->curr--;\
-            return iter_curr(Vec(TYPE), self);\
+            return iter_curr(self);\
         },\
         /* NEXT_IMPL */ {\
             if (self->curr >= self->len - 1) return NULL;\
             self->curr++;\
-            return iter_curr(Vec(TYPE), self);\
+            return iter_curr(self);\
         }\
     )\
+    VEC_NEW_FUNC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_IMPL(TYPE)\
 
 size_t vec_cap_from_size(size_t size);

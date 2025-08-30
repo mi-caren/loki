@@ -128,7 +128,7 @@ void cmdInsertChar(char c) {
         .c = c,
     };
     Command cmd = vec_new(CoreCommand);
-    vec_push(CoreCommand, cmd, ccmd);
+    vec_push(cmd, ccmd);
     _historyPushCmd(cmd);
 
     editor.editing_point = ep;
@@ -143,7 +143,7 @@ void cmdPaste() {
 
     Command cmd = vec_new(CoreCommand);
 
-    for (EACH(Vec(char), c, &editor.copy_buf)) {
+    for (EACH(Vec(char), c, editor.copy_buf)) {
         EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(*c, editor.editing_point));
 
         // Insert every CoreCommand into the Editor Command
@@ -152,7 +152,7 @@ void cmdPaste() {
             .ep = editor.editing_point,
             .c = *c,
         };
-        vec_push(CoreCommand, cmd, ccmd);
+        vec_push(cmd, ccmd);
 
         editor.editing_point = ep;
     }
@@ -190,7 +190,7 @@ static bool _editorDeleteSelection() {
             .ep = editor.editing_point,
             .c = c,
         };
-        vec_push(CoreCommand, cmd, ccmd);
+        vec_push(cmd, ccmd);
         editingPointMove(ARROW_LEFT);
     }
     editingPointMove(ARROW_RIGHT);
@@ -217,23 +217,23 @@ void cmdDelete(bool del_key) {
             .c = c,
         };
         Command cmd = vec_new(CoreCommand);
-        vec_push(CoreCommand, cmd, ccmd);
+        vec_push(cmd, ccmd);
         _historyPushCmd(cmd);
     }
 }
 
 static void _historyFreeTrailingCmds() {
-    while (editor.curr_history_cmd != vec_last(Command, editor.command_history)) {
-        Command* cmd = vec_pop(Command, editor.command_history);
-        vec_free(CoreCommand, *cmd);
+    while (editor.curr_history_cmd != vec_last(editor.command_history)) {
+        Command* cmd = vec_pop(editor.command_history);
+        vec_free(*cmd);
     }
 }
 
 static void _historyPushCmd(Command cmd) {
     assert(cmd != NULL);
     _historyFreeTrailingCmds();
-    vec_push(Command, editor.command_history, cmd);
-    editor.curr_history_cmd = iter_end(Vec(Command), &editor.command_history);
+    vec_push(editor.command_history, cmd);
+    editor.curr_history_cmd = iter_end(editor.command_history);
 }
 
 bool cmdUndo() {
@@ -246,7 +246,7 @@ bool cmdUndo() {
     // we have to dereference to obtain the pointed command.
     Command* cmd = editor.curr_history_cmd;
 
-    for (EACH_REV(Vec(CoreCommand), ccmd, cmd)) {
+    for (EACH_REV(Vec(CoreCommand), ccmd, *cmd)) {
         switch (ccmd->type) {
             case CCMD_INSERT_CHAR:
                 UNWRAP(char, _coreDeleteChar(ccmd->ep));
@@ -256,10 +256,10 @@ bool cmdUndo() {
                 break;
         }
     }
-    CoreCommand* ccmd = vec_first(CoreCommand, *cmd);
+    CoreCommand* ccmd = vec_first(*cmd);
     editor.editing_point = ccmd->ep;
 
-    editor.curr_history_cmd = iter_prev(Vec(Command), &editor.command_history);
+    editor.curr_history_cmd = iter_prev(editor.command_history);
     editorSetDirty();
     return true;
 }
@@ -382,18 +382,18 @@ bool cmdCopy() {
             if (!(editor.copy_buf = vec_new(char))) goto copy_error;
         }
 
-        vec_empty(char, editor.copy_buf);
+        vec_empty(editor.copy_buf);
 
         EditingPoint ep = SELECTION_START;
         while (ep != SELECTION_END) {
             if (CHAR_AT(ep) == '\0') {
                 char c = '\r';
-                if (!vec_push(char, editor.copy_buf, c)) goto copy_error;
+                if (!vec_push(editor.copy_buf, c)) goto copy_error;
             } else {
-                if (!vec_push(char, editor.copy_buf, CHAR_AT(ep))) goto copy_error;
+                if (!vec_push(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
             }
 
-            if (getCol(ep) == strLen(vec_get(EditorRow, editor.rows, getRow(ep))->chars)) {
+            if (getCol(ep) == strLen(vec_get(editor.rows, getRow(ep))->chars)) {
                 incRow(&ep);
                 setCol(&ep, 0);
             } else {

@@ -256,7 +256,7 @@ void editorRefreshScreen() {
 
 String editorRowsToString() {
     size_t buflen = 0;
-    for (EACH(Vec(EditorRow), row, &editor.rows)) {
+    for (EACH(Vec(EditorRow), row, editor.rows)) {
         buflen += strLen(row->chars) + 1;
     }
 
@@ -264,7 +264,7 @@ String editorRowsToString() {
     if (buf == NULL)
         return NULL;
 
-    for (EACH(Vec(EditorRow), row, &editor.rows)) {
+    for (EACH(Vec(EditorRow), row, editor.rows)) {
         strAppend(&buf, row->chars);
         strAppendChar(&buf, '\n');
     }
@@ -284,7 +284,7 @@ int editorInsertRow(unsigned int pos, char *s) {
         .search_match_pos = ARRAY_NEW(ArrayUnsignedInt),
     };
 
-    vec_insert(EditorRow, editor.rows, row, pos);
+    vec_insert(editor.rows, row, pos);
 
     return 0;
 }
@@ -292,8 +292,8 @@ int editorInsertRow(unsigned int pos, char *s) {
 void editorDeleteRow(unsigned int pos) {
     if (pos >= editor.rows->len) return;
 
-    editorRowFree(vec_get(EditorRow, editor.rows, pos));
-    vec_remove(EditorRow, editor.rows, pos);
+    editorRowFree(vec_get(editor.rows, pos));
+    vec_remove(editor.rows, pos);
     editorSetDirty();
 }
 
@@ -302,7 +302,7 @@ void editorDeleteRow(unsigned int pos) {
 void editorDrawRow(unsigned int filerow, String* buf) {
     editorRowRender(filerow);
 
-    EditorRow* row = vec_get(EditorRow, editor.rows, filerow);
+    EditorRow* row = vec_get(editor.rows, filerow);
 
     // Line number
     char fmt_string[32];

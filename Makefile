@@ -46,6 +46,9 @@ $(OBJDIR)/utils_%.o: $(SRCDIR)/utils/%.c
 $(OBJDIR)/utils_pre_%.c: $(SRCDIR)/utils/%.c
 	$(CC) $(CFLAGS) -E $< -o $@
 
+$(OBJDIR)/pre_%.c: $(SRCDIR)/%.c
+	$(CC) $(CFLAGS) -E $< -o $@
+
 
 clean:
 	rm -f $(EXE)

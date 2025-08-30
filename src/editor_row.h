@@ -27,7 +27,7 @@ VEC_DEFS(Highlight)
 
 typedef struct {
     String chars;
-    Vec(Highlight) hl;
+    Vec(Highlight)* hl;
 
     String render;
 

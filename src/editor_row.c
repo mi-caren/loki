@@ -22,15 +22,15 @@ extern struct Editor editor;
 
 
 inline EditorRow* editorRowGet(EditingPoint ep) {
-    return vec_get(EditorRow, editor.rows, getRow(ep));
+    return vec_get(editor.rows, getRow(ep));
 }
 
 static void _editorRowResetHighlight(EditorRow* row) {
     if (strLen(row->chars) == 0)
         return;
 
-    vec_empty(Highlight, row->hl);
-    vec_repeat_append(Highlight, row->hl, HL_NORMAL, strLen(row->chars));
+    vec_empty(row->hl);
+    vec_repeat_append(row->hl, HL_NORMAL, strLen(row->chars));
 }
 
 static bool isSeparator(char c) {
@@ -79,7 +79,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
     char* multiline_comment_start = "/*";
     char* multiline_comment_end = "*/";
 
-    EditorRow* row = vec_get(EditorRow, editor.rows, filerow);
+    EditorRow* row = vec_get(editor.rows, filerow);
     Highlight* hl = row->hl->items;
 
     STR_FOREACH(c, row->chars) {
@@ -234,7 +234,7 @@ void editorRowHighlightSelection(unsigned int filerow) {
     if (!editor.selecting) return;
 
     static bool in_selection = false;
-    EditorRow* row = vec_get(EditorRow, editor.rows, filerow);
+    EditorRow* row = vec_get(editor.rows, filerow);
     Highlight* hl = row->hl->items;
 
     if (filerow == editor.rowoff && SELECTION_START < editingPointNew(editor.rowoff, 0))
@@ -284,7 +284,7 @@ int syntaxToColor(Highlight hl) {
 }
 
 int editorRowRender(unsigned int filerow) {
-    EditorRow* row = vec_get(EditorRow, editor.rows, filerow);
+    EditorRow* row = vec_get(editor.rows, filerow);
 
     _editorRowResetHighlight(row);
     editorRowHighlightSyntax(filerow);
@@ -337,7 +337,7 @@ void editorRowDeleteChar(EditorRow* row, unsigned int pos) {
 void editorRowFree(EditorRow* row) {
     strFree(row->chars);
     strFree(row->render);
-    vec_free(Highlight, row->hl);
+    vec_free(row->hl);
     ARRAY_FREE(&row->search_match_pos);
 }
 
