@@ -106,3 +106,10 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
     ad un saplice operazione di inserimento/rimozione di un byte alla volta quando
     in certi casi si può spostare un pezzo di buffer all'interno di una riga o
     eliminare interamente una riga
+
+[] Abilitare compilazione con std c23 che supporta l'inference del tipo
+    con la keyword auto e aggiornare la sintassi.
+
+[] Creare struct che contiene i metodi di Vec e creare unistanza statica
+    Le istanze di vec devono avere un campo che punta a questa istanza statica. In questo modo alle varie macro tipo vec_push non dovrebbe
+    essere necessario passare il tipo del Vec.
