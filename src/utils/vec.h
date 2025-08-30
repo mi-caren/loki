@@ -8,7 +8,7 @@
 #include "utils/generics.h"
 #include "utils/iterator.h"
 
-#define VecStructName(TYPE) GenericName(TYPE, Vec)
+#define Vec(TYPE) GenericName(TYPE, Vec)
 
 #define VEC_STRUCT_DEF(TYPE)\
     typedef struct {\
@@ -16,36 +16,32 @@
         size_t len;\
         size_t curr;\
         TYPE* items;\
-        const VecDriver(TYPE)* const drv;\
-    } VecStructName(TYPE)
+        const struct VecDriver(TYPE)* const drv;\
+    } Vec(TYPE)
 
-#define VecDriver(TYPE)     CAT(VecStructName(TYPE), Driver)
+#define VecDriver(TYPE)     CAT(Vec(TYPE), Driver)
 
 #define VEC_DRIVER_DEF(TYPE)\
-    typedef struct {\
-        void      (*empty)         (Vec(TYPE) self);\
-        Vec(TYPE) (*push)          (Vec(TYPE) self);\
-        TYPE*     (*pop)           (Vec(TYPE) self);\
-        Vec(TYPE) (*repeat_append) (Vec(TYPE) self, TYPE el, size_t n);\
-        Vec(TYPE) (*realloc)       (Vec(TYPE) self, size_t size);\
-        TYPE*     (*set)           (Vec(TYPE) self, TYPE val, size_t idx);\
-        TYPE*     (*get)           (Vec(TYPE) self, size_t idx);\
-        Vec(TYPE) (*insert)        (Vec(TYPE) self, TYPE el, size_t pos);\
-        Vec(TYPE) (*remove)        (Vec(TYPE) self, size_t pos);\
-        TYPE*     (*last)          (Vec(TYPE) self);\
-        TYPE*     (*first)         (Vec(TYPE) self);\
-        void      (*free)          (Vec(TYPE) self);\
-    } VecDriver(TYPE)
-
-#define VecType(TYPE)       VecStructName(TYPE)*
-#define Vec(TYPE)           CAT(VecStructName(TYPE), Type)
+    struct VecDriver(TYPE) {\
+        void       (*empty)         (Vec(TYPE)* self);\
+        Vec(TYPE)* (*push)          (Vec(TYPE)* self);\
+        TYPE*      (*pop)           (Vec(TYPE)* self);\
+        Vec(TYPE)* (*repeat_append) (Vec(TYPE)* self, TYPE el, size_t n);\
+        TYPE*      (*set)           (Vec(TYPE)* self, TYPE val, size_t idx);\
+        TYPE*      (*get)           (Vec(TYPE)* self, size_t idx);\
+        Vec(TYPE)* (*insert)        (Vec(TYPE)* self, TYPE el, size_t pos);\
+        Vec(TYPE)* (*remove)        (Vec(TYPE)* self, size_t pos);\
+        TYPE*      (*last)          (Vec(TYPE)* self);\
+        TYPE*      (*first)         (Vec(TYPE)* self);\
+        void       (*free)          (Vec(TYPE)* self);\
+    }
 
 /* ********* vec_new *********** */
-#define VEC_NEW_FUNC_NAME(TYPE)         CAT(VecStructName(TYPE), _new)
-#define VEC_NEW_FUNC_SIGNATURE(TYPE)    Vec(TYPE) VEC_NEW_FUNC_NAME(TYPE)(size_t initial_size)
+#define VEC_NEW_FUNC_NAME(TYPE)         CAT(Vec(TYPE), _new)
+#define VEC_NEW_FUNC_SIGNATURE(TYPE)    Vec(TYPE)* VEC_NEW_FUNC_NAME(TYPE)(size_t initial_size)
 #define VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_NEW_FUNC_SIGNATURE(TYPE) {\
-        Vec(TYPE) vec = malloc(sizeof(VecStructName(TYPE)));\
+        Vec(TYPE)* vec = malloc(sizeof(Vec(TYPE)));\
         if (vec == NULL) return NULL;\
         size_t cap = vec_cap_from_size(initial_size);\
         TYPE* items = malloc(sizeof(TYPE) * cap);\
@@ -57,6 +53,20 @@
         vec->len = 0;\
         vec->curr = 0;\
         vec->items = items;\
+        static const struct VecDriver(TYPE) vec_driver = {\
+            .empty         = VEC_EMPTY_FUNC_NAME(TYPE),\
+            .push          = VEC_PUSH_FUNC_NAME(TYPE),\
+            .pop           = VEC_POP_FUNC_NAME(TYPE),\
+            .repeat_append = VEC_REPEAT_APPEND_FUNC_NAME(TYPE),\
+            .set           = VEC_SET_FUNC_NAME(TYPE),\
+            .get           = VEC_GET_FUNC_NAME(TYPE),\
+            .insert        = VEC_INSERT_FUNC_NAME(TYPE),\
+            .remove        = VEC_REMOVE_FUNC_NAME(TYPE),\
+            -last          = VEC_LAST_FUNC_NAME(TYPE),\
+            .first         = VEC_FIRST_FUNC_NAME(TYPE),\
+            .free          = VEC_FREE_FUNC_NAME(TYPE),\
+        };\
+        vec->drv = &vec_driver;\
         return vec;\
     }
 
@@ -64,22 +74,22 @@
 #define vec_new_with_cap(TYPE, CAP)     VEC_NEW_FUNC_NAME(TYPE)(CAP)
 
 /* ********* vec_empty *********** */
-#define VEC_EMPTY_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _empty)
-#define VEC_EMPTY_FUNC_SIGNATURE(TYPE)       void VEC_EMPTY_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_EMPTY_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _empty)
+#define VEC_EMPTY_FUNC_SIGNATURE(TYPE)       void VEC_EMPTY_FUNC_NAME(TYPE)(Vec(TYPE)* self)
 #define VEC_EMPTY_FUNC_IMPL(TYPE)\
     inline VEC_EMPTY_FUNC_SIGNATURE(TYPE) {\
-        vec->len = 0;\
+        self->len = 0;\
     }
 
-#define vec_empty(TYPE, VEC)                 VEC_EMPTY_FUNC_NAME(TYPE)(VEC)
+#define vec_empty(SELF)     SELF->drv->empty(SELF)
 
 /* ********* vec_push *********** */
-#define VEC_PUSH_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _push)
-#define VEC_PUSH_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_PUSH_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE el)
+#define VEC_PUSH_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _push)
+#define VEC_PUSH_FUNC_SIGNATURE(TYPE)       Vec(TYPE)* VEC_PUSH_FUNC_NAME(TYPE)(Vec(TYPE)* self, TYPE el)
 #define VEC_PUSH_FUNC_IMPL(TYPE)\
     VEC_PUSH_FUNC_SIGNATURE(TYPE) {\
-        if (vec->len == vec->cap) {\
-            if (vec_grow(TYPE, vec) == NULL)\
+        if (self->len == self->cap) {\
+            if (vec_grow_fn(TYPE, self) == NULL)\
                 return NULL;\
         }\
         vec->items[vec->len] = el;\
@@ -87,38 +97,37 @@
         return vec;\
     }
 
-#define vec_push(TYPE, VEC, EL)             VEC_PUSH_FUNC_NAME(TYPE)(VEC, EL)
+#define vec_push(SELF, EL)             SELF->drv->push(SELF, EL)
 
 /* ********* static vec_grow *********** */
-#define vec_grow(TYPE, VEC)                 vec_realloc(TYPE, VEC, VEC->cap * 2)
+#define vec_grow_fn(TYPE, VEC)                 vec_realloc_fn(TYPE, VEC, VEC->cap * 2)
 
 /* ********* vec_repeat_append *********** */
-#define VEC_REPEAT_APPEND_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _repeat_append)
-#define VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE el, size_t n)
+#define VEC_REPEAT_APPEND_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _repeat_append)
+#define VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE)       Vec(TYPE)* VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(Vec(TYPE)* self, TYPE el, size_t n)
 #define VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
     VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE) {\
         size_t total_space = vec->len + n;\
         if (total_space > vec->cap) {\
-            if (vec_make_space(TYPE, vec, total_space) == NULL)\
+            if (vec_make_space_fn(TYPE, self, total_space) == NULL)\
                 return NULL;\
         }\
 \
         for (size_t i = 0; i < n; i++) {\
-            vec->items[vec->len + i] = el;\
+            self->items[self->len + i] = el;\
         }\
-        vec->len += n;\
-\
-        return vec;\
+        self->len += n;\
+        return self;\
     }
 
-#define vec_repeat_append(TYPE, VEC, EL, N)                 VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(VEC, EL, N)
+#define vec_repeat_append(SELF, EL, N)       SELF->drv->repeat_append(SELF, EL, N)
 
 /* ********* static vec_make_space *********** */
-#define vec_make_space(TYPE, VEC, SPACE)                 vec_realloc(TYPE, VEC, vec_cap_from_size(SPACE))
+#define vec_make_space_fn(TYPE, VEC, SPACE)                 vec_realloc_fn(TYPE, VEC, vec_cap_from_size(SPACE))
 
 /* ********* static vec_realloc *********** */
-#define VEC_REALLOC_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _realloc)
-#define VEC_REALLOC_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REALLOC_FUNC_NAME(TYPE)(Vec(TYPE) vec, size_t size)
+#define VEC_REALLOC_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _realloc)
+#define VEC_REALLOC_FUNC_SIGNATURE(TYPE)       Vec(TYPE)* VEC_REALLOC_FUNC_NAME(TYPE)(Vec(TYPE)* vec, size_t size)
 #define VEC_REALLOC_FUNC_IMPL(TYPE)\
     VEC_REALLOC_FUNC_SIGNATURE(TYPE) {\
         if (vec == NULL || vec->items == NULL) return NULL;\
@@ -132,110 +141,111 @@
         return vec;\
     }
 
-#define vec_realloc(TYPE, VEC, SIZE)                 VEC_REALLOC_FUNC_NAME(TYPE)(VEC, SIZE)
+#define vec_realloc_fn(TYPE, VEC, SIZE)                 VEC_REALLOC_FUNC_NAME(TYPE)(VEC, SIZE)
 
 /* ********* vec_set *********** */
-#define VEC_SET_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _set)
-#define VEC_SET_FUNC_SIGNATURE(TYPE)       TYPE* VEC_SET_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE val, size_t idx)
+#define VEC_SET_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _set)
+#define VEC_SET_FUNC_SIGNATURE(TYPE)       TYPE* VEC_SET_FUNC_NAME(TYPE)(Vec(TYPE)* self, TYPE val, size_t pos)
 #define VEC_SET_FUNC_IMPL(TYPE)\
     VEC_SET_FUNC_SIGNATURE(TYPE) {\
-        if (idx >= vec->len) return NULL;\
-        vec->items[idx] = val;\
-        return &vec->items[idx];\
+        if (pos >= self->len) return NULL;\
+        self->items[pos] = val;\
+        return &self->items[pos];\
     }
 
-#define vec_set(TYPE, VEC, VAL, IDX)        VEC_SET_FUNC_NAME(TYPE)(VEC, VAL, IDX)
+#define vec_set(SELF, VAL, POS)        SELF->drv->set(SELF, VAL, POS)
 
 /* ********* vec_get *********** */
-#define VEC_GET_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _get)
-#define VEC_GET_FUNC_SIGNATURE(TYPE)       TYPE* VEC_GET_FUNC_NAME(TYPE)(Vec(TYPE) vec, size_t idx)
+#define VEC_GET_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _get)
+#define VEC_GET_FUNC_SIGNATURE(TYPE)       TYPE* VEC_GET_FUNC_NAME(TYPE)(Vec(TYPE)* self, size_t pos)
 #define VEC_GET_FUNC_IMPL(TYPE)\
     VEC_GET_FUNC_SIGNATURE(TYPE) {\
-        if (idx >= vec->len) return NULL;\
-        return &vec->items[idx];\
+        if (pos >= self->len) return NULL;\
+        return &self->items[pos];\
     }
 
-#define vec_get(TYPE, VEC, IDX)        VEC_GET_FUNC_NAME(TYPE)(VEC, IDX)
+#define vec_get(SELF, POS)        SELF->drv->get(SELF, POS)
 
 /* ********* vec_insert *********** */
-#define VEC_INSERT_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _insert)
-#define VEC_INSERT_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_INSERT_FUNC_NAME(TYPE)(Vec(TYPE) vec, TYPE el, size_t pos)
+#define VEC_INSERT_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _insert)
+#define VEC_INSERT_FUNC_SIGNATURE(TYPE)       Vec(TYPE)* VEC_INSERT_FUNC_NAME(TYPE)(Vec(TYPE)* self, TYPE el, size_t pos)
 #define VEC_INSERT_FUNC_IMPL(TYPE)\
     VEC_INSERT_FUNC_SIGNATURE(TYPE) {\
-        if (pos > vec->len)\
+        if (pos > self->len)\
             return NULL;\
-        if (vec->len == vec->cap) {\
-            if (vec_grow(TYPE, vec) == NULL)\
+        if (self->len == self->cap) {\
+            if (vec_grow_fn(TYPE, self) == NULL)\
                 return NULL;\
         }\
         memmove(\
-            &vec->items[pos+1],\
-            &vec->items[pos],\
-            sizeof(TYPE) * (vec->len - pos)\
+            &self->items[pos+1],\
+            &self->items[pos],\
+            sizeof(TYPE) * (self->len - pos)\
         );\
-        vec->items[pos] = el;\
-        vec->len++;\
-        return vec;\
+        self->items[pos] = el;\
+        self->len++;\
+        return self;\
     }
 
-#define vec_insert(TYPE, VEC, EL, POS)             VEC_INSERT_FUNC_NAME(TYPE)(VEC, EL, POS)
+#define vec_insert(SELF, EL, POS)             SELF->drv->insert(SELF, EL, POS)
 
 /* ********* vec_remove *********** */
-#define VEC_REMOVE_FUNC_NAME(TYPE)            CAT(VecStructName(TYPE), _remove)
-#define VEC_REMOVE_FUNC_SIGNATURE(TYPE)       Vec(TYPE) VEC_REMOVE_FUNC_NAME(TYPE)(Vec(TYPE) vec, size_t pos)
+#define VEC_REMOVE_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _remove)
+#define VEC_REMOVE_FUNC_SIGNATURE(TYPE)       Vec(TYPE)* VEC_REMOVE_FUNC_NAME(TYPE)(Vec(TYPE)* self, size_t pos)
 #define VEC_REMOVE_FUNC_IMPL(TYPE)\
     VEC_REMOVE_FUNC_SIGNATURE(TYPE) {\
-        if (pos >= vec->len) return NULL;\
+        if (pos >= self->len) return NULL;\
         memmove(\
-            &vec->items[pos],\
-            &vec->items[pos+1],\
-            sizeof(TYPE) * (vec->len - pos - 1)\
+            &self->items[pos],\
+            &self->items[pos+1],\
+            sizeof(TYPE) * (self->len - pos - 1)\
         );\
-        vec->len--;\
-        return vec;\
+        self->len--;\
+        return self;\
     }
 
-#define vec_remove(TYPE, VEC, POS)        VEC_REMOVE_FUNC_NAME(TYPE)(VEC, POS)
+#define vec_remove(SELF, POS)        SELF->drv->remove(SELF, POS)
 
 /* ********* vec_last *********** */
-#define VEC_LAST_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _last)
-#define VEC_LAST_FUNC_SIGNATURE(TYPE)      TYPE* VEC_LAST_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_LAST_FUNC_NAME(TYPE)           CAT(Vec(TYPE), _last)
+#define VEC_LAST_FUNC_SIGNATURE(TYPE)      TYPE* VEC_LAST_FUNC_NAME(TYPE)(Vec(TYPE)* self)
 #define VEC_LAST_FUNC_IMPL(TYPE)\
     VEC_LAST_FUNC_SIGNATURE(TYPE) {\
-        if (vec->len == 0) return NULL;\
-        return &vec->items[vec->len - 1];\
+        if (self->len == 0) return NULL;\
+        return &self->items[self->len - 1];\
     }
 
-#define vec_last(TYPE, VEC)                VEC_LAST_FUNC_NAME(TYPE)(VEC)
+#define vec_last(SELF)                SELF->drv->last(SELF)
+#define vec_last_fn(TYPE, VEC)        VEC_LAST_FUNC_NAME(TYPE)(VEC)
 
 /* ********* vec_first *********** */
-#define VEC_FIRST_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _first)
-#define VEC_FIRST_FUNC_SIGNATURE(TYPE)      TYPE* VEC_FIRST_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_FIRST_FUNC_NAME(TYPE)           CAT(Vec(TYPE), _first)
+#define VEC_FIRST_FUNC_SIGNATURE(TYPE)      TYPE* VEC_FIRST_FUNC_NAME(TYPE)(Vec(TYPE)* self)
 #define VEC_FIRST_FUNC_IMPL(TYPE)\
     VEC_FIRST_FUNC_SIGNATURE(TYPE) {\
-        if (vec->len == 0) return NULL;\
-        return &vec->items[0];\
+        if (self->len == 0) return NULL;\
+        return &self->items[0];\
     }
 
-#define vec_first(TYPE, VEC)                VEC_FIRST_FUNC_NAME(TYPE)(VEC)
+#define vec_first(SELF)                SELF->drv->first(SELF)
 
 /* ********* vec_pop *********** */
-#define VEC_POP_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _pop)
-#define VEC_POP_FUNC_SIGNATURE(TYPE)      TYPE* VEC_POP_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_POP_FUNC_NAME(TYPE)           CAT(Vec(TYPE), _pop)
+#define VEC_POP_FUNC_SIGNATURE(TYPE)      TYPE* VEC_POP_FUNC_NAME(TYPE)(Vec(TYPE)* self)
 #define VEC_POP_FUNC_IMPL(TYPE)\
     VEC_POP_FUNC_SIGNATURE(TYPE) {\
-        if (vec->len == 0) return NULL;\
-        TYPE* el = vec_last(TYPE, vec);\
-        vec->len--;\
-        if (vec->curr >= vec->len)\
-            vec->curr = vec->len - 1;\
+        if (self->len == 0) return NULL;\
+        TYPE* el = vec_last_fn(TYPE, self);\
+        self->len--;\
+        if (self->curr >= self->len)\
+            self->curr = self->len - 1;\
         return el;\
     }
 
-#define vec_pop(TYPE, VEC)                VEC_POP_FUNC_NAME(TYPE)(VEC)
+#define vec_pop(SELF)                SELF->drv->pop(SELF)
 
 /* ********* vec_free *********** */
-#define VEC_FREE_FUNC_NAME(TYPE)           CAT(VecStructName(TYPE), _free)
+#define VEC_FREE_FUNC_NAME(TYPE)           CAT(Vec(TYPE), _free)
 #define VEC_FREE_FUNC_SIGNATURE(TYPE)      void VEC_FREE_FUNC_NAME(TYPE)(Vec(TYPE) vec)
 #define VEC_FREE_FUNC_IMPL(TYPE)\
     VEC_FREE_FUNC_SIGNATURE(TYPE) {\
@@ -243,25 +253,14 @@
         free(vec);\
     }
 
-#define vec_free(TYPE, VEC)                VEC_FREE_FUNC_NAME(TYPE)(VEC)
+#define vec_free(SELF)                SELF->drv->free(SELF)
 
 
 #define VEC_DEFS(TYPE)\
-    VEC_DRIVER_DEF(TYPE);\
+    struct VecDriver(TYPE);\
     VEC_STRUCT_DEF(TYPE);\
-    typedef VecType(TYPE) Vec(TYPE);\
+    VEC_DRIVER_DEF(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\
-    VEC_EMPTY_FUNC_SIGNATURE(TYPE);\
-    VEC_PUSH_FUNC_SIGNATURE(TYPE);\
-    VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE);\
-    VEC_SET_FUNC_SIGNATURE(TYPE);\
-    VEC_GET_FUNC_SIGNATURE(TYPE);\
-    VEC_INSERT_FUNC_SIGNATURE(TYPE);\
-    VEC_REMOVE_FUNC_SIGNATURE(TYPE);\
-    VEC_LAST_FUNC_SIGNATURE(TYPE);\
-    VEC_FIRST_FUNC_SIGNATURE(TYPE);\
-    VEC_POP_FUNC_SIGNATURE(TYPE);\
-    VEC_FREE_FUNC_SIGNATURE(TYPE);\
     ITER_DEFS(Vec(TYPE), TYPE)\
 
 #define VEC_IMPL(TYPE)\
@@ -281,27 +280,27 @@
     ITER_IMPL(\
         Vec(TYPE),\
         /* CURR_IMPL */ {\
-            if ((*self)->len == 0) return NULL;\
-            if ((*self)->curr >= (*self)->len) return NULL;\
-            return &(*self)->items[(*self)->curr];\
+            if (self->len == 0) return NULL;\
+            if (self->curr >= self->len) return NULL;\
+            return &self->items[self->curr];\
         },\
         /* BEGIN_IMPL */ {\
-            (*self)->curr = 0;\
+            self->curr = 0;\
             return iter_curr(Vec(TYPE), self);\
         },\
         /* END_IMPL */ {\
-            if ((*self)->len == 0) return NULL;\
-            (*self)->curr = (*self)->len - 1;\
+            if (self->len == 0) return NULL;\
+            self->curr = self->len - 1;\
             return iter_curr(Vec(TYPE), self);\
         },\
         /* PREV_IMPL */ {\
-            if ((*self)->curr == 0) return NULL;\
-            (*self)->curr--;\
+            if (self->curr == 0) return NULL;\
+            self->curr--;\
             return iter_curr(Vec(TYPE), self);\
         },\
         /* NEXT_IMPL */ {\
-            if ((*self)->curr >= (*self)->len - 1) return NULL;\
-            (*self)->curr++;\
+            if (self->curr >= self->len - 1) return NULL;\
+            self->curr++;\
             return iter_curr(Vec(TYPE), self);\
         }\
     )\
