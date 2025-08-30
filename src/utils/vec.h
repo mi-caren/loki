@@ -16,7 +16,7 @@
         size_t len;\
         size_t curr;\
         TYPE* items;\
-        const struct VecDriver(TYPE)* const drv;\
+        const struct VecDriver(TYPE)* drv;\
     } Vec(TYPE)
 
 #define VecDriver(TYPE)     CAT(Vec(TYPE), Driver)
@@ -24,7 +24,7 @@
 #define VEC_DRIVER_DEF(TYPE)\
     struct VecDriver(TYPE) {\
         void       (*empty)         (Vec(TYPE)* self);\
-        Vec(TYPE)* (*push)          (Vec(TYPE)* self);\
+        Vec(TYPE)* (*push)          (Vec(TYPE)* self, TYPE el);\
         TYPE*      (*pop)           (Vec(TYPE)* self);\
         Vec(TYPE)* (*repeat_append) (Vec(TYPE)* self, TYPE el, size_t n);\
         TYPE*      (*set)           (Vec(TYPE)* self, TYPE val, size_t idx);\
@@ -62,7 +62,7 @@
             .get           = VEC_GET_FUNC_NAME(TYPE),\
             .insert        = VEC_INSERT_FUNC_NAME(TYPE),\
             .remove        = VEC_REMOVE_FUNC_NAME(TYPE),\
-            -last          = VEC_LAST_FUNC_NAME(TYPE),\
+            .last          = VEC_LAST_FUNC_NAME(TYPE),\
             .first         = VEC_FIRST_FUNC_NAME(TYPE),\
             .free          = VEC_FREE_FUNC_NAME(TYPE),\
         };\
@@ -81,7 +81,7 @@
         self->len = 0;\
     }
 
-#define vec_empty(SELF)     SELF->drv->empty(SELF)
+#define vec_empty(SELF)     (SELF)->drv->empty(SELF)
 
 /* ********* vec_push *********** */
 #define VEC_PUSH_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _push)
@@ -92,12 +92,12 @@
             if (vec_grow_fn(TYPE, self) == NULL)\
                 return NULL;\
         }\
-        vec->items[vec->len] = el;\
-        vec->len++;\
-        return vec;\
+        self->items[self->len] = el;\
+        self->len++;\
+        return self;\
     }
 
-#define vec_push(SELF, EL)             SELF->drv->push(SELF, EL)
+#define vec_push(SELF, EL)             (SELF)->drv->push(SELF, EL)
 
 /* ********* static vec_grow *********** */
 #define vec_grow_fn(TYPE, VEC)                 vec_realloc_fn(TYPE, VEC, VEC->cap * 2)
@@ -107,8 +107,8 @@
 #define VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE)       Vec(TYPE)* VEC_REPEAT_APPEND_FUNC_NAME(TYPE)(Vec(TYPE)* self, TYPE el, size_t n)
 #define VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
     VEC_REPEAT_APPEND_FUNC_SIGNATURE(TYPE) {\
-        size_t total_space = vec->len + n;\
-        if (total_space > vec->cap) {\
+        size_t total_space = self->len + n;\
+        if (total_space > self->cap) {\
             if (vec_make_space_fn(TYPE, self, total_space) == NULL)\
                 return NULL;\
         }\
@@ -120,7 +120,7 @@
         return self;\
     }
 
-#define vec_repeat_append(SELF, EL, N)       SELF->drv->repeat_append(SELF, EL, N)
+#define vec_repeat_append(SELF, EL, N)       (SELF)->drv->repeat_append(SELF, EL, N)
 
 /* ********* static vec_make_space *********** */
 #define vec_make_space_fn(TYPE, VEC, SPACE)                 vec_realloc_fn(TYPE, VEC, vec_cap_from_size(SPACE))
@@ -153,7 +153,7 @@
         return &self->items[pos];\
     }
 
-#define vec_set(SELF, VAL, POS)        SELF->drv->set(SELF, VAL, POS)
+#define vec_set(SELF, VAL, POS)        (SELF)->drv->set(SELF, VAL, POS)
 
 /* ********* vec_get *********** */
 #define VEC_GET_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _get)
@@ -164,7 +164,7 @@
         return &self->items[pos];\
     }
 
-#define vec_get(SELF, POS)        SELF->drv->get(SELF, POS)
+#define vec_get(SELF, POS)        (SELF)->drv->get(SELF, POS)
 
 /* ********* vec_insert *********** */
 #define VEC_INSERT_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _insert)
@@ -187,7 +187,7 @@
         return self;\
     }
 
-#define vec_insert(SELF, EL, POS)             SELF->drv->insert(SELF, EL, POS)
+#define vec_insert(SELF, EL, POS)             (SELF)->drv->insert(SELF, EL, POS)
 
 /* ********* vec_remove *********** */
 #define VEC_REMOVE_FUNC_NAME(TYPE)            CAT(Vec(TYPE), _remove)
@@ -204,7 +204,7 @@
         return self;\
     }
 
-#define vec_remove(SELF, POS)        SELF->drv->remove(SELF, POS)
+#define vec_remove(SELF, POS)        (SELF)->drv->remove(SELF, POS)
 
 /* ********* vec_last *********** */
 #define VEC_LAST_FUNC_NAME(TYPE)           CAT(Vec(TYPE), _last)
@@ -215,7 +215,7 @@
         return &self->items[self->len - 1];\
     }
 
-#define vec_last(SELF)                SELF->drv->last(SELF)
+#define vec_last(SELF)                (SELF)->drv->last(SELF)
 #define vec_last_fn(TYPE, VEC)        VEC_LAST_FUNC_NAME(TYPE)(VEC)
 
 /* ********* vec_first *********** */
@@ -227,7 +227,7 @@
         return &self->items[0];\
     }
 
-#define vec_first(SELF)                SELF->drv->first(SELF)
+#define vec_first(SELF)                (SELF)->drv->first(SELF)
 
 /* ********* vec_pop *********** */
 #define VEC_POP_FUNC_NAME(TYPE)           CAT(Vec(TYPE), _pop)
@@ -242,18 +242,18 @@
         return el;\
     }
 
-#define vec_pop(SELF)                SELF->drv->pop(SELF)
+#define vec_pop(SELF)                (SELF)->drv->pop(SELF)
 
 /* ********* vec_free *********** */
 #define VEC_FREE_FUNC_NAME(TYPE)           CAT(Vec(TYPE), _free)
-#define VEC_FREE_FUNC_SIGNATURE(TYPE)      void VEC_FREE_FUNC_NAME(TYPE)(Vec(TYPE) vec)
+#define VEC_FREE_FUNC_SIGNATURE(TYPE)      void VEC_FREE_FUNC_NAME(TYPE)(Vec(TYPE)* self)
 #define VEC_FREE_FUNC_IMPL(TYPE)\
     VEC_FREE_FUNC_SIGNATURE(TYPE) {\
-        free(vec->items);\
-        free(vec);\
+        free(self->items);\
+        free(self);\
     }
 
-#define vec_free(SELF)                SELF->drv->free(SELF)
+#define vec_free(SELF)                (SELF)->drv->free(SELF)
 
 
 #define VEC_DEFS(TYPE)\
@@ -265,7 +265,6 @@
 
 #define VEC_IMPL(TYPE)\
     static VEC_REALLOC_FUNC_SIGNATURE(TYPE);\
-    VEC_NEW_FUNC_IMPL(TYPE)\
     VEC_EMPTY_FUNC_IMPL(TYPE)\
     VEC_PUSH_FUNC_IMPL(TYPE)\
     VEC_REPEAT_APPEND_FUNC_IMPL(TYPE)\
@@ -277,6 +276,7 @@
     VEC_FIRST_FUNC_IMPL(TYPE)\
     VEC_POP_FUNC_IMPL(TYPE)\
     VEC_FREE_FUNC_IMPL(TYPE)\
+    VEC_NEW_FUNC_IMPL(TYPE)\
     ITER_IMPL(\
         Vec(TYPE),\
         /* CURR_IMPL */ {\
