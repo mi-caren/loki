@@ -5,22 +5,10 @@
 #include <stdlib.h>
 
 #include "utils.h"
+#include "utils/generics.h"
 #include "utils/iterator.h"
 
-#define VecStructName(TYPE)\
-    IF_UNSIGNED(TYPE)(\
-        CAT(VEC_, PAREN_CLOSE(TYPE)),\
-        IF_STRUCT(TYPE)(\
-            CAT(VEC_, PAREN_CLOSE(TYPE)),\
-            CAT(Vec, TYPE)\
-        )\
-    )
-
-#define VEC_unsigned                    VEC_UNSIGNED(
-#define VEC_UNSIGNED(TYPE)              PRIMITIVE_CAT(VecUnsigned, TYPE)
-
-#define VEC_struct                      VEC_STRUCT(
-#define VEC_STRUCT(TYPE)                PRIMITIVE_CAT(VecStruct, TYPE)
+#define VecStructName(TYPE) GenericName(TYPE, Vec)
 
 #define VEC_STRUCT_DEF(TYPE)\
     typedef struct {\
@@ -28,7 +16,26 @@
         size_t len;\
         size_t curr;\
         TYPE* items;\
+        const VecDriver(TYPE)* const drv;\
     } VecStructName(TYPE)
+
+#define VecDriver(TYPE)     CAT(VecStructName(TYPE), Driver)
+
+#define VEC_DRIVER_DEF(TYPE)\
+    typedef struct {\
+        void      (*empty)         (Vec(TYPE) self);\
+        Vec(TYPE) (*push)          (Vec(TYPE) self);\
+        TYPE*     (*pop)           (Vec(TYPE) self);\
+        Vec(TYPE) (*repeat_append) (Vec(TYPE) self, TYPE el, size_t n);\
+        Vec(TYPE) (*realloc)       (Vec(TYPE) self, size_t size);\
+        TYPE*     (*set)           (Vec(TYPE) self, TYPE val, size_t idx);\
+        TYPE*     (*get)           (Vec(TYPE) self, size_t idx);\
+        Vec(TYPE) (*insert)        (Vec(TYPE) self, TYPE el, size_t pos);\
+        Vec(TYPE) (*remove)        (Vec(TYPE) self, size_t pos);\
+        TYPE*     (*last)          (Vec(TYPE) self);\
+        TYPE*     (*first)         (Vec(TYPE) self);\
+        void      (*free)          (Vec(TYPE) self);\
+    } VecDriver(TYPE)
 
 #define VecType(TYPE)       VecStructName(TYPE)*
 #define Vec(TYPE)           CAT(VecStructName(TYPE), Type)
@@ -240,6 +247,7 @@
 
 
 #define VEC_DEFS(TYPE)\
+    VEC_DRIVER_DEF(TYPE);\
     VEC_STRUCT_DEF(TYPE);\
     typedef VecType(TYPE) Vec(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\

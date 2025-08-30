@@ -26,6 +26,7 @@
 #define PAREN_CLOSE(A)                      A)
 #define APPEND_0_AND_TAKE_SECOND(...)       SECOND_ARG(__VA_ARGS__, 0)
 #define SECOND_ARG(A, B, ...)               B
+#define CAT_COMMA(A, B)                     A, B
 
 #define IF_1(A, B)                          A
 #define IF_0(A, B)                          B
