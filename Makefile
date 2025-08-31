@@ -1,4 +1,4 @@
-SHARED_FLAGS = -Wall -Wextra -pedantic -Isrc
+SHARED_FLAGS = -Wall -Wextra -pedantic -Isrc --std=c23
 CFLAGS = $(SHARED_FLAGS) -g
 
 SRCDIR=src
@@ -18,7 +18,7 @@ OBJS = $(ROOT_OBJS) $(EDITOR_OBJS) $(UTILS_OBJS)
 EXE = loki
 
 loki: $(OBJDIR) $(OBJS)
-	$(CC) $(OBJS) -o loki
+	gcc $(OBJS) -o loki
 
 loki-zig: $(SRCS)
 	zig build-exe $(SRCS) -I inc --library c -femit-bin=loki

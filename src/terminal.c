@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "terminal.h"
@@ -31,7 +32,10 @@ RESULT(void) terminalEnableRawMode() {
         return ERROR(void, ERR_TERM_READ_ATTR);
 
     struct termios raw = terminal.orig_termios;
-    cfmakeraw(&raw);
+    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+    raw.c_oflag &= ~(OPOST);
+    raw.c_cflag |= (CS8);
+    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
     // Impostiamo il numero minimo di carrateri
     // per il read noncanonical, in modo che read non ritorni
     // subito ma aspetti che un carattere venga passato

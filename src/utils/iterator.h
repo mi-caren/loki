@@ -80,11 +80,11 @@
     ITER_NEXT_FUNC_IMPL(ITERABLE)  NEXT_IMPL\
 
 
-#define EACH(ITERABLE, EL, IT) \
-    IterItem(ITERABLE)* EL = iter_begin(IT); EL != NULL; EL = iter_next(IT)
+#define EACH(EL, IT) \
+    auto EL = iter_begin(IT); EL != NULL; EL = iter_next(IT)
 
-#define EACH_REV(ITERABLE, EL, IT) \
-    IterItem(ITERABLE)* EL = iter_end(IT); EL != NULL; EL = iter_prev(IT)
+#define EACH_REV(EL, IT) \
+    auto EL = iter_end(IT); EL != NULL; EL = iter_prev(IT)
 
 
 #endif

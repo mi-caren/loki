@@ -1,3 +1,7 @@
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -143,7 +147,7 @@ void cmdPaste() {
 
     Command cmd = vec_new(CoreCommand);
 
-    for (EACH(Vec(char), c, editor.copy_buf)) {
+    for (EACH(c, editor.copy_buf)) {
         EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(*c, editor.editing_point));
 
         // Insert every CoreCommand into the Editor Command
@@ -246,7 +250,7 @@ bool cmdUndo() {
     // we have to dereference to obtain the pointed command.
     Command* cmd = editor.curr_history_cmd;
 
-    for (EACH_REV(Vec(CoreCommand), ccmd, *cmd)) {
+    for (EACH_REV(ccmd, *cmd)) {
         switch (ccmd->type) {
             case CCMD_INSERT_CHAR:
                 UNWRAP(char, _coreDeleteChar(ccmd->ep));

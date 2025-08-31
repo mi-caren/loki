@@ -2,4 +2,5 @@
 -Wextra
 # -pedantic
 -Isrc
+--std=c23
 -g
