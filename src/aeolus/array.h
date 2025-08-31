@@ -1,7 +1,7 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
-#include "utils/utils.h"
+#include "utils.h"
 
 /* *********** ARRAY ******************** */
 #define CAPITAL(TYPE)   CAT(CAPITAL_, TYPE)

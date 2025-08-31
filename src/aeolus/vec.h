@@ -5,8 +5,8 @@
 #include <stdlib.h>
 
 #include "utils.h"
-#include "utils/generics.h"
-#include "utils/iterator.h"
+#include "generics.h"
+#include "iterator.h"
 
 #define Vec(TYPE) GenericName(TYPE, Vec)
 

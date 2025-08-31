@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include "editor/keys.h"
-#include "utils/result.h"
+#include "aeolus/result.h"
 
 
 #define EDITING_POINT_BIT_SIZE (32)

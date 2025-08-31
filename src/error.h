@@ -1,7 +1,7 @@
 #ifndef LOKI_ERROR_H
 #define LOKI_ERROR_H
 
-#include "utils/result.h"
+#include "aeolus/result.h"
 
 typedef enum {
     SUCCESS = OK_CODE,

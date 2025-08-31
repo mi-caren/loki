@@ -17,9 +17,9 @@
 #include "editor/utils.h"
 #include "terminal.h"
 #include "status_bar.h"
-#include "utils/vec.h"
-#include "utils/result.h"
-#include "utils/utils.h"
+#include "aeolus/vec.h"
+#include "aeolus/result.h"
+#include "aeolus/utils.h"
 
 
 struct Editor editor;

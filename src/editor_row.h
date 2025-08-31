@@ -3,10 +3,10 @@
 
 #include <unistd.h>
 #include "editing_point.h"
-#include "utils/array.h"
-#include "utils/string.h"
-#include "utils/string.h"
-#include "utils/vec.h"
+#include "aeolus/array.h"
+#include "aeolus/string.h"
+#include "aeolus/string.h"
+#include "aeolus/vec.h"
 
 
 typedef enum {

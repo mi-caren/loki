@@ -5,8 +5,8 @@
 #include "editor.h"
 #include "editor/defs.h"
 #include "editor_row.h"
-#include "utils/result.h"
-#include "utils/string.h"
+#include "aeolus/result.h"
+#include "aeolus/string.h"
 
 extern struct Editor editor;
 

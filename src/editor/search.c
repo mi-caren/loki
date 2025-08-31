@@ -2,7 +2,7 @@
 #include "editor/utils.h"
 #include "editor_row.h"
 #include "status_bar.h"
-#include "utils/array.h"
+#include "aeolus/array.h"
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>

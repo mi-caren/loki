@@ -7,8 +7,8 @@
 
 #include "editing_point.h"
 #include "editor/utils.h"
-#include "utils/result.h"
-#include "utils/vec.h"
+#include "aeolus/result.h"
+#include "aeolus/vec.h"
 
 
 typedef enum {

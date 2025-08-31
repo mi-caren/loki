@@ -9,9 +9,9 @@
 #include "editing_point.h"
 #include "editor/defs.h"
 #include "editor/utils.h"
-#include "utils/string.h"
-#include "utils/vec.h"
-#include "utils/vvec.h"
+#include "aeolus/string.h"
+#include "aeolus/vec.h"
+#include "aeolus/vvec.h"
 #include "editor_row.h"
 
 #define PARENTHESIS      "()[]{}"

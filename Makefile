@@ -1,30 +1,32 @@
 CC = gcc
 
-CPPFLAGS = -MMD -Isrc
-SHARED_FLAGS = -Wall -Wextra -pedantic --std=c23
-CFLAGS = $(SHARED_FLAGS) -g
-
 SRCDIR=src
 BUILDDIR=build
 TESTDIR = tests
 
+CPPFLAGS = -MMD -Isrc
+SHARED_FLAGS = -Wall -Wextra -pedantic --std=c23
+CFLAGS = $(SHARED_FLAGS) -g
+LDFLAGS = -L./$(BUILDDIR) -laeolus
+
 SRCS = $(wildcard $(SRCDIR)/*.c $(SRCDIR)/*/*.c)
 ROOT_SRCS = $(wildcard $(SRCDIR)/*.c)
 EDITOR_SRCS = $(wildcard $(SRCDIR)/editor/*.c)
-UTILS_SRCS = $(wildcard $(SRCDIR)/utils/*.c)
 
 ROOT_OBJS = $(patsubst $(SRCDIR)/%.c, $(BUILDDIR)/%.o, $(ROOT_SRCS))
 EDITOR_OBJS = $(patsubst $(SRCDIR)/editor/%.c, $(BUILDDIR)/editor_%.o, $(EDITOR_SRCS))
-UTILS_OBJS = $(patsubst $(SRCDIR)/utils/%.c, $(BUILDDIR)/utils_%.o, $(UTILS_SRCS))
-OBJS = $(ROOT_OBJS) $(EDITOR_OBJS) $(UTILS_OBJS)
+OBJS = $(ROOT_OBJS) $(EDITOR_OBJS)
 
-DEPS = $(OBJS:.o=.d)
+# lib aeolus
+AEOLUS_SRCS = $(wildcard $(SRCDIR)/aeolus/*.c)
+AEOLUS_OBJS = $(patsubst $(SRCDIR)/aeolus/%.c, $(BUILDDIR)/aeolus_%.o, $(AEOLUS_SRCS))
+LIBS = $(BUILDDIR)/libaeolus.a
 
--include $(DEPS)
+DEPS = $(OBJS:.o=.d) $(AEOLUS_OBJS:.o=.d)
 
 
-loki: $(BUILDDIR) $(OBJS)
-	$(CC) $(OBJS) -o $@
+loki: $(BUILDDIR) $(OBJS) $(LIBS)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
 
 $(BUILDDIR):
@@ -36,8 +38,12 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 $(BUILDDIR)/editor_%.o: $(SRCDIR)/editor/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/utils_%.o: $(SRCDIR)/utils/%.c
+$(BUILDDIR)/aeolus_%.o: $(SRCDIR)/aeolus/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+
+$(BUILDDIR)/libaeolus.a: $(AEOLUS_OBJS)
+	ar rcs $@ $^
 
 
 .PHONY: release
@@ -64,3 +70,5 @@ test: $(TESTDIR)/*.c
 clean:
 	rm -f $(EXE)
 	rm -f $(BUILDDIR)/*
+
+-include $(DEPS)

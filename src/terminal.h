@@ -3,7 +3,7 @@
 
 #include <termios.h>
 
-#include "utils/result.h"
+#include "aeolus/result.h"
 
 #define WRITE_SEQ(SEQ)                          write(STDOUT_FILENO, SEQ##_SEQ, SEQ##_SEQ_SIZE)
 

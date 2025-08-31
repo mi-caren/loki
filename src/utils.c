@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "utils/array.h"
-#include "utils/result.h"
+#include "aeolus/array.h"
+#include "aeolus/result.h"
 
 static Error __try_error__ = OK_CODE;
 

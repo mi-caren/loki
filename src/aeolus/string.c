@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utils/string.h"
+#include "aeolus/string.h"
 
 
 static String _strGrow(String* str);

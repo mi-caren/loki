@@ -1,7 +1,7 @@
 #ifndef RESULT_H
 #define RESULT_H
 
-#include "utils/utils.h"
+#include "utils.h"
 
 /* *********** RESULT *********** */
 

@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #include "terminal.h"
-#include "utils/result.h"
+#include "aeolus/result.h"
 #include "error.h"
 
 Terminal terminal;
