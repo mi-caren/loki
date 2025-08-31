@@ -1,5 +1,5 @@
 loki
 valgrind.txt
-bin
+build
 tests/bin
 test.txt
