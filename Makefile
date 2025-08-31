@@ -1,6 +1,7 @@
 CC = gcc
 
-SHARED_FLAGS = -Wall -Wextra -pedantic -Isrc --std=c23
+CPPFLAGS = -MMD -Isrc
+SHARED_FLAGS = -Wall -Wextra -pedantic --std=c23
 CFLAGS = $(SHARED_FLAGS) -g
 
 SRCDIR=src
@@ -17,24 +18,29 @@ EDITOR_OBJS = $(patsubst $(SRCDIR)/editor/%.c, $(BUILDDIR)/editor_%.o, $(EDITOR_
 UTILS_OBJS = $(patsubst $(SRCDIR)/utils/%.c, $(BUILDDIR)/utils_%.o, $(UTILS_SRCS))
 OBJS = $(ROOT_OBJS) $(EDITOR_OBJS) $(UTILS_OBJS)
 
+DEPS = $(OBJS:.o=.d)
+
+-include $(DEPS)
+
 
 loki: $(BUILDDIR) $(OBJS)
-	$(CC) $(OBJS) -o loki
+	$(CC) $(OBJS) -o $@
 
 
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) -c $^ -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)/editor_%.o: $(SRCDIR)/editor/%.c
-	$(CC) $(CFLAGS) -c $^ -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR)/utils_%.o: $(SRCDIR)/utils/%.c
-	$(CC) $(CFLAGS) -c $^ -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 
+.PHONY: release
 release: CFLAGS = $(SHARED_FLAGS) -O3
 release: clean
 release: loki
@@ -49,10 +55,12 @@ $(BUILDDIR)/pre_%.c: $(SRCDIR)/%.c
 # ------------------------------
 
 
+.PHONY: test
 test: $(TESTDIR)/*.c
 	zig run -I inc --library c $< $(filter-out $(SRCDIR)/loki.c, $(SRCS))
 
 
+.PHONY: clean
 clean:
 	rm -f $(EXE)
 	rm -f $(BUILDDIR)/*
