@@ -15,6 +15,7 @@ LIBS = build/libaeolus.a
 
 DEPS = $(OBJS:.o=.d) $(AEOLUS_OBJS:.o=.d)
 
+all: CPPFLAGS += -DNDEBUG
 all: CFLAGS += -O3
 all: loki
 
