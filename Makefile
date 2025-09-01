@@ -1,74 +1,73 @@
-CC = gcc
+include config.mk
 
-SRCDIR=src
-BUILDDIR=build
-TESTDIR = tests
+SRCS = $(wildcard src/*.c src/*/*.c)
+ROOT_SRCS = $(wildcard src/*.c)
+EDITOR_SRCS = $(wildcard src/editor/*.c)
 
-CPPFLAGS = -MMD -Isrc
-SHARED_FLAGS = -Wall -Wextra -pedantic --std=c23
-CFLAGS = $(SHARED_FLAGS) -g
-LDFLAGS = -L./$(BUILDDIR) -laeolus
-
-SRCS = $(wildcard $(SRCDIR)/*.c $(SRCDIR)/*/*.c)
-ROOT_SRCS = $(wildcard $(SRCDIR)/*.c)
-EDITOR_SRCS = $(wildcard $(SRCDIR)/editor/*.c)
-
-ROOT_OBJS = $(patsubst $(SRCDIR)/%.c, $(BUILDDIR)/%.o, $(ROOT_SRCS))
-EDITOR_OBJS = $(patsubst $(SRCDIR)/editor/%.c, $(BUILDDIR)/editor_%.o, $(EDITOR_SRCS))
+ROOT_OBJS = $(patsubst src/%.c, build/%.o, $(ROOT_SRCS))
+EDITOR_OBJS = $(patsubst src/editor/%.c, build/editor_%.o, $(EDITOR_SRCS))
 OBJS = $(ROOT_OBJS) $(EDITOR_OBJS)
 
 # lib aeolus
-AEOLUS_SRCS = $(wildcard $(SRCDIR)/aeolus/*.c)
-AEOLUS_OBJS = $(patsubst $(SRCDIR)/aeolus/%.c, $(BUILDDIR)/aeolus_%.o, $(AEOLUS_SRCS))
-LIBS = $(BUILDDIR)/libaeolus.a
+AEOLUS_SRCS = $(wildcard src/aeolus/*.c)
+AEOLUS_OBJS = $(patsubst src/aeolus/%.c, build/aeolus_%.o, $(AEOLUS_SRCS))
+LIBS = build/libaeolus.a
 
 DEPS = $(OBJS:.o=.d) $(AEOLUS_OBJS:.o=.d)
 
+all: CFLAGS += -O3
+all: loki
 
-loki: $(BUILDDIR) $(OBJS) $(LIBS)
+debug: CFLAGS += -g
+debug: loki
+
+
+loki: build $(OBJS) $(LIBS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
+build:
+	mkdir -p build
 
-$(BUILDDIR):
-	mkdir -p $(BUILDDIR)
-
-$(BUILDDIR)/%.o: $(SRCDIR)/%.c
+build/%.o: src/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/editor_%.o: $(SRCDIR)/editor/%.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
-
-$(BUILDDIR)/aeolus_%.o: $(SRCDIR)/aeolus/%.c
+build/editor_%.o: src/editor/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 
-$(BUILDDIR)/libaeolus.a: $(AEOLUS_OBJS)
-	ar rcs $@ $^
+# ----- libaeolus -----
+build/aeolus_%.o: src/aeolus/%.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+build/libaeolus.a: $(AEOLUS_OBJS)
+	$(AR) rcs $@ $^
+# ---------------------
 
 
-.PHONY: release
-release: CFLAGS = $(SHARED_FLAGS) -O3
-release: clean
-release: loki
+install: loki
+	mkdir -p $(INSTALL_DIR)
+	cp -f loki $(INSTALL_DIR)/bin
 
+uninstall:
+	rm -f $(INSTALL_DIR)/bin/loki
 
 # ----- Just preprocessing -----
-$(BUILDDIR)/utils_pre_%.c: $(SRCDIR)/utils/%.c
+build/utils_pre_%.c: src/utils/%.c
 	$(CC) $(CFLAGS) -E $< -o $@
 
-$(BUILDDIR)/pre_%.c: $(SRCDIR)/%.c
+build/pre_%.c: src/%.c
 	$(CC) $(CFLAGS) -E $< -o $@
 # ------------------------------
 
 
-.PHONY: test
-test: $(TESTDIR)/*.c
-	zig run -I inc --library c $< $(filter-out $(SRCDIR)/loki.c, $(SRCS))
+test: tests/*.c
+	zig run -I inc --library c $< $(filter-out src/loki.c, $(SRCS))
 
 
-.PHONY: clean
 clean:
 	rm -f $(EXE)
-	rm -f $(BUILDDIR)/*
+	rm -f build/*
 
 -include $(DEPS)
+
+.PHONY: all debug test clean
