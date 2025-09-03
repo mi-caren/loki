@@ -1,5 +1,9 @@
 include config.mk
 
+CPPFLAGS = -MMD -Isrc
+CFLAGS = -Wall -Wextra -pedantic --std=c23
+LDFLAGS = .L$(LIB_DIR) -laeolus
+
 SRCS = $(wildcard src/*.c src/*/*.c)
 ROOT_SRCS = $(wildcard src/*.c)
 EDITOR_SRCS = $(wildcard src/editor/*.c)
@@ -15,10 +19,12 @@ LIBS = build/libaeolus.a
 
 DEPS = $(OBJS:.o=.d) $(AEOLUS_OBJS:.o=.d)
 
-all: CPPFLAGS += -DNDEBUG
-all: CFLAGS += -O3
-all: loki
+.PHONY: release
+release: CPPFLAGS += -DNDEBUG
+release: CFLAGS += -O3
+release: loki
 
+.PHONY: debug
 debug: CFLAGS += -g
 debug: loki
 
@@ -45,10 +51,12 @@ build/libaeolus.a: $(AEOLUS_OBJS)
 # ---------------------
 
 
+.PHONY: install
 install: loki
 	mkdir -p $(INSTALL_DIR)
 	cp -f loki $(INSTALL_DIR)/bin
 
+.PHONY: uninstall
 uninstall:
 	rm -f $(INSTALL_DIR)/bin/loki
 
@@ -61,14 +69,14 @@ build/pre_%.c: src/%.c
 # ------------------------------
 
 
+.PHONY: test
 test: tests/*.c
 	zig run -I inc --library c $< $(filter-out src/loki.c, $(SRCS))
 
 
+.PHONY: clean
 clean:
 	rm -f $(EXE)
 	rm -f build/*
 
 -include $(DEPS)
-
-.PHONY: all debug test clean
