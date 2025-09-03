@@ -17,3 +17,4 @@ size_t vec_cap_from_size(size_t size) {
 }
 
 VEC_IMPL(char)
+VEC_IMPL(unsigned int)

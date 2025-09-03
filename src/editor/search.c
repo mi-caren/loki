@@ -1,8 +1,8 @@
+#include "aeolus/vec.h"
 #include "editor/defs.h"
 #include "editor/utils.h"
 #include "editor_row.h"
 #include "status_bar.h"
-#include "aeolus/array.h"
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,9 +22,9 @@ bool searchResultNext() {
     unsigned int cy = getRow(editor.editing_point);
     EditorRow* row = vec_get(editor.rows, cy);
     // First search in current line
-    ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
-        if (*cur > getCol(editor.editing_point)) {
-            setCol(&editor.editing_point, *cur);
+    for (EACH(pos, row->search_match_pos)) {
+        if (*pos > getCol(editor.editing_point)) {
+            setCol(&editor.editing_point, *pos);
             setRow(&editor.editing_point, cy);
             return true;
         }
@@ -33,9 +33,9 @@ bool searchResultNext() {
     // Then search from next line to last line
     for (cy++; cy < editor.rows->len; cy++) {
         row = vec_get(editor.rows, cy);
-        if (row->search_match_pos.len > 0) {
+        if (row->search_match_pos->len > 0) {
             setRow(&editor.editing_point, cy);
-            setCol(&editor.editing_point, row->search_match_pos.ptr[0]);
+            setCol(&editor.editing_point, *vec_first(row->search_match_pos));
             return true;
         }
     }
@@ -43,9 +43,9 @@ bool searchResultNext() {
     // Then search from first line to current line
     for (cy = 0; cy <= getRow(editor.editing_point); cy++) {
         row = vec_get(editor.rows, cy);
-        if (row->search_match_pos.len > 0) {
+        if (row->search_match_pos->len > 0) {
             setRow(&editor.editing_point, cy);
-            setCol(&editor.editing_point, row->search_match_pos.ptr[0]);
+            setCol(&editor.editing_point, *vec_first(row->search_match_pos));
             return true;
         }
     }
@@ -66,9 +66,9 @@ bool searchResultPrev() {
     int cy = getRow(editor.editing_point);
     EditorRow* row = vec_get(editor.rows, cy);
     // First search in current line
-    ARRAY_FOR_EACH_UINT_REV(&row->search_match_pos) {
-        if (*cur < getCol(editor.editing_point)) {
-            setCol(&editor.editing_point, *cur);
+    for (EACH(pos, row->search_match_pos)) {
+        if (*pos < getCol(editor.editing_point)) {
+            setCol(&editor.editing_point, *pos);
             setRow(&editor.editing_point, cy);
             return true;
         }
@@ -77,9 +77,9 @@ bool searchResultPrev() {
     // Then search from prev line to first line
     for (cy--; cy >= 0; cy--) {
         row = vec_get(editor.rows, cy);
-        if (row->search_match_pos.len > 0) {
+        if (row->search_match_pos->len > 0) {
             setRow(&editor.editing_point, cy);
-            setCol(&editor.editing_point, row->search_match_pos.ptr[row->search_match_pos.len - 1]);
+            setCol(&editor.editing_point, *vec_last(row->search_match_pos));
             return true;
         }
     }
@@ -87,9 +87,9 @@ bool searchResultPrev() {
     // Then search from last line to current line
     for (cy = editor.rows->len - 1; cy >= (int)getRow(editor.editing_point); cy--) {
         row = vec_get(editor.rows, cy);
-        if (row->search_match_pos.len > 0) {
+        if (row->search_match_pos->len > 0) {
             setRow(&editor.editing_point, cy);
-            setCol(&editor.editing_point, row->search_match_pos.ptr[row->search_match_pos.len - 1]);
+            setCol(&editor.editing_point, *vec_last(row->search_match_pos));
             return true;
         }
     }
@@ -104,11 +104,11 @@ int editorSearch(char* query) {
         char* match = NULL;
         int last_pos = 0;
         EditorRow* row = vec_get(editor.rows, i);
-        ARRAY_EMPTY(&row->search_match_pos);
+        vec_empty(row->search_match_pos);
 
         while ((match = strstr(&row->chars[last_pos], query)) != NULL) {
             unsigned int match_pos = match - row->chars;
-            if (!arrayPushUnsignedInt(&row->search_match_pos, match_pos)) {
+            if (!vec_push(row->search_match_pos, match_pos)) {
                 messageBarSet("Unable to push match result");
                 return -1;
             }

@@ -1,14 +1,5 @@
 
 
-* Creare struct String
-    struct FileLine {
-        char* chars;
-        int len;
-    }
-
-    Specifica per le linee di testo nel file aperto
-
-
 * Creare struct EditorFile
 
     struct EditorFile {

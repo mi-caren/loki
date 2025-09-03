@@ -61,11 +61,11 @@ uninstall:
 	rm -f $(INSTALL_DIR)/loki
 
 # ----- Just preprocessing -----
-build/utils_pre_%.c: src/utils/%.c
-	$(CC) $(CFLAGS) -E $< -o $@
+build/aeolus_pre_%.c: src/aeolus/%.c
+	$(CC) $(CFLAGS) -g -E $< -o $@
 
 build/pre_%.c: src/%.c
-	$(CC) $(CFLAGS) -E $< -o $@
+	$(CC) $(CFLAGS) -g -E $< -o $@
 # ------------------------------
 
 

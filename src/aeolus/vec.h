@@ -22,6 +22,7 @@
 
 #define VecDriver(TYPE)     CAT(Vec(TYPE), Driver)
 
+
 #define VEC_DRIVER_DEF(TYPE)\
     struct VecDriver(TYPE) {\
         void       (*empty)         (Vec(TYPE)* self);\
@@ -312,6 +313,7 @@
 size_t vec_cap_from_size(size_t size);
 
 VEC_DEFS(char)
+VEC_DEFS(unsigned int)
 
 
 #endif

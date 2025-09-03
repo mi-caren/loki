@@ -13,7 +13,6 @@
 #include "editor_row.h"
 #include "status_bar.h"
 #include "terminal.h"
-#include "aeolus/array.h"
 #include "aeolus/string.h"
 #include "aeolus/vec.h"
 
@@ -281,7 +280,7 @@ int editorInsertRow(unsigned int pos, char *s) {
         .chars = chars,
         .render = STR_NEW(),
         .hl = vec_new(Highlight),
-        .search_match_pos = ARRAY_NEW(ArrayUnsignedInt),
+        .search_match_pos = vec_new(unsigned int),
     };
 
     vec_insert(editor.rows, row, pos);

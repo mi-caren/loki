@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "aeolus/iterator.h"
 #include "editing_point.h"
 #include "editor/defs.h"
 #include "editor/utils.h"
@@ -222,9 +223,9 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 void editorRowHighlightSearchResults(EditorRow* row) {
     if (editor.search_query == NULL) return;
 
-    ARRAY_FOR_EACH_UINT(&row->search_match_pos) {
-        unsigned int last_pos = *cur + strlen(editor.search_query);
-        for (unsigned int j = *cur; j < last_pos; j++) {
+    for (EACH(pos, row->search_match_pos)) {
+        unsigned int last_pos = *pos + strlen(editor.search_query);
+        for (unsigned int j = *pos; j < last_pos; j++) {
             row->hl->items[j] = HL_MATCH;
         }
     }
@@ -338,7 +339,7 @@ void editorRowFree(EditorRow* row) {
     strFree(row->chars);
     strFree(row->render);
     vec_free(row->hl);
-    ARRAY_FREE(&row->search_match_pos);
+    vec_free(row->search_match_pos);
 }
 
 VEC_IMPL(Highlight)

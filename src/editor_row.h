@@ -2,8 +2,8 @@
 #define EDITOR_ROW_H
 
 #include <unistd.h>
+#include "aeolus/utils.h"
 #include "editing_point.h"
-#include "aeolus/array.h"
 #include "aeolus/string.h"
 #include "aeolus/string.h"
 #include "aeolus/vec.h"
@@ -31,7 +31,7 @@ typedef struct {
 
     String render;
 
-    ArrayUnsignedInt search_match_pos;
+    Vec(unsigned int)* search_match_pos;
 } EditorRow;
 
 VEC_DEFS(EditorRow)

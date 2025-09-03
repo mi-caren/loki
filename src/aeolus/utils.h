@@ -22,7 +22,7 @@
 #define DEFER(A)                            A EMPTY()
 #define EXPAND(...)                         __VA_ARGS__
 #define PRIMITIVE_CAT(A, ...)               A##__VA_ARGS__
-#define CAT(A, B)                           PRIMITIVE_CAT(A, B)
+#define CAT(A, ...)                         PRIMITIVE_CAT(A, __VA_ARGS__)
 #define PAREN_CLOSE(A)                      A)
 #define APPEND_0_AND_TAKE_SECOND(...)       SECOND_ARG(__VA_ARGS__, 0)
 #define SECOND_ARG(A, B, ...)               B
