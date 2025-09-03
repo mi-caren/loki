@@ -2,7 +2,7 @@ include config.mk
 
 CPPFLAGS = -MMD -Isrc
 CFLAGS = -Wall -Wextra -pedantic --std=c23
-LDFLAGS = .L$(LIB_DIR) -laeolus
+LDFLAGS = -L$(LIB_DIR) -laeolus
 
 SRCS = $(wildcard src/*.c src/*/*.c)
 ROOT_SRCS = $(wildcard src/*.c)
@@ -54,11 +54,11 @@ build/libaeolus.a: $(AEOLUS_OBJS)
 .PHONY: install
 install: loki
 	mkdir -p $(INSTALL_DIR)
-	cp -f loki $(INSTALL_DIR)/bin
+	cp -f loki $(INSTALL_DIR)
 
 .PHONY: uninstall
 uninstall:
-	rm -f $(INSTALL_DIR)/bin/loki
+	rm -f $(INSTALL_DIR)/loki
 
 # ----- Just preprocessing -----
 build/utils_pre_%.c: src/utils/%.c

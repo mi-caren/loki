@@ -11,10 +11,10 @@ Usage: $0 [OPTION]...
 Create config.mk file
 
 OPTIONS:
-    -c      Set compiler
-    -a      Set archiver
-    -i      Set install directory
-    -l      Set linker search directory
+    -c      Set compiler (default: $CC)
+    -a      Set archiver (default: $AR)
+    -i      Set install directory (default: $INSTALL_DIR)
+    -l      Set linker search directory (default: $LIB_DIR)
     -h      Display this help message
 EOF
 }
