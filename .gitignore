@@ -3,3 +3,4 @@ valgrind.txt
 build
 tests/bin
 test.txt
+config.mk
