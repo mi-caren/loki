@@ -1,6 +1,8 @@
 #ifndef ITERATOR_H
 #define ITERATOR_H
 
+#include "utils.h"
+
 #define Iterator(ITERABLE)          CAT(ITERABLE, Iterator)
 #define IterItem(ITERABLE)          CAT(Iterator(ITERABLE), Item)
 
