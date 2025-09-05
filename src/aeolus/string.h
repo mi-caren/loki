@@ -3,37 +3,39 @@
 
 #include <unistd.h>
 
-typedef char* String;
+#include "aeolus/iterator.h"
+#include "vec.h"
 
+// struct Iterator(String);
 
-#define STR_NEW()                   strNew(0)
-#define STR_NEW_WITH_CAP(CAP)       strNew(CAP)
+typedef struct {
+    Vec(char)* vec;
+    ITER_DRIVER(String);
+} String;
 
-#define STR_FOREACH(C, STR) \
-    for (char C = strBegin(STR); C != '\0'; C = strNext(STR))
+ITER_DEFS(String, char)
 
-#define STR_FOR(IDX, STR) \
-    for (size_t IDX = 0; IDX < strLen(STR); IDX++)
+String str_new();
+String str_new_with_cap(size_t initial_size);
+String str_from(char* chars);
 
-
-String strNew(size_t initial_size);
-String strFromStr(char* str);
-
-void strEmpty(String str);
-size_t strLen(String str);
-char strBegin(String str);
-char strNext(String str);
-String strInsertChar(String* str, size_t pos, char c);
-String strInsert(String* str, size_t pos, char* str2);
-char strRemove(String str, size_t pos);
-void strFree(String str);
+void str_empty(String* self);
+size_t str_len(String* self);
+// char strBegin(String str);
+// char strNext(String str);
+String* str_insertc(String* self, char c, size_t pos);
+String* str_insert(String* self, size_t pos, char* chars);
+// String* str_insert_str(String* self, String* str);
+char str_remove(String* self, size_t pos);
 /* str2 MUST be 0 terminated */
-String strAppend(String* str, char* str2);
-String strAppendChar(String* str, char c);
-String strRepeatAppendChar(String* str, char c, size_t n);
-String strTruncate(String str, size_t new_len);
+String* str_append(String* self, char* chars);
+String* str_appendc(String* self, char c);
+String* str_repeat_appendc(String* self, char c, size_t n);
+void str_trucate(String* self, size_t new_len);
+void str_free(String* self);
 
-char strSetAt(String str, size_t pos);
-size_t strCurrIdx(String str);
+// TODO: iterator methods
+void str_set_at(String* self, size_t pos);
+size_t str_curri(String* self);
 
 #endif

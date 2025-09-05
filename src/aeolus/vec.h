@@ -260,8 +260,8 @@
 
 
 #define VEC_DEFS(TYPE)\
-    struct VecDriver(TYPE);\
-    struct Iterator(Vec(TYPE));\
+    /* struct VecDriver(TYPE); */\
+    /* struct Iterator(Vec(TYPE)); */\
     VEC_STRUCT_DEF(TYPE);\
     VEC_DRIVER_DEF(TYPE);\
     VEC_NEW_FUNC_SIGNATURE(TYPE);\

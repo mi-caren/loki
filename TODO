@@ -106,3 +106,16 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
     essere necessario passare il tipo del Vec.
 
 * Eliminare funzione vec_empty. la macro vec_empty semplicemente setta la len = 0;
+
+* Rimuovere asserts da string.c
+
+* vec_new potrebbe ritornare direttamente un vettore e non un puntatore
+
+* creare vec_from
+
+* creare vec_insert_array
+
+* creare vec_append
+
+* move str_set_at in Iterator interface
+* move str_curri in Iterator interface
