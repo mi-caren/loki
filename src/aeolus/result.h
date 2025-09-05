@@ -2,84 +2,66 @@
 #define RESULT_H
 
 #include "utils.h"
+#include "generics.h"
 
 /* *********** RESULT *********** */
 
 typedef int Error;
 
-#define RESULT(TYPE)\
-    IF_UNSIGNED(TYPE)(\
-        CAT(RESULT_, PAREN_CLOSE(TYPE)),\
-        IF_STRUCT(TYPE)(\
-            CAT(RESULT_, PAREN_CLOSE(TYPE)),\
-            CAT(result_, TYPE)\
-        )\
-    )
-
-
-#define RESULT_unsigned                     RESULT_UNSIGNED(
-#define RESULT_UNSIGNED(TYPE)               PRIMITIVE_CAT(result_unsigned_, TYPE)
-
-#define RESULT_struct                       RESULT_STRUCT(
-#define RESULT_STRUCT(NAME)                 PRIMITIVE_CAT(result_struct_, NAME)
-
-
+#define Result(TYPE) GenericName(TYPE, Result)
 
 #define RESULT_STRUCT_DEF(TYPE)\
-    typedef struct RESULT(TYPE) {\
+    typedef struct {\
         IF_VOID(TYPE)(\
             ,\
             TYPE val;\
         )\
         Error err;\
-    } RESULT(TYPE)
+    } Result(TYPE)
 
 
 
 #define INIT_RESULT                     { .err = OK_CODE }
 
 
-#define UNWRAP_FUNC_NAME(TYPE)          CAT(unwrap_, RESULT(TYPE))
-#define UNWRAP_FUNC_SIGNATURE(TYPE)     TYPE UNWRAP_FUNC_NAME(TYPE)(RESULT(TYPE) result, char* filename, int linenumber)
-
-#define UNWRAP_FUNC_DEF(TYPE) \
+#define UNWRAP_FUNC_NAME(TYPE)          CAT(Result(TYPE), _unwrap)
+#define UNWRAP_FUNC_SIGNATURE(TYPE)     TYPE UNWRAP_FUNC_NAME(TYPE)(Result(TYPE) res, char* filename, int linenumber)
+#define UNWRAP_FUNC_IMPL(TYPE) \
     UNWRAP_FUNC_SIGNATURE(TYPE) { \
-        if (result.err != OK_CODE) { \
+        if (res.err != OK_CODE) { \
             char __err_msg_buf__[24]; \
-            snprintf(__err_msg_buf__, 24, "ERROR CODE: [%d]", result.err); \
+            snprintf(__err_msg_buf__, 24, "ERROR CODE: [%d]", res.err); \
             panic(filename, linenumber, __err_msg_buf__); \
         } \
         IF_VOID(TYPE)( \
             , \
-            return result.val; \
+            return res.val; \
         ) \
     }
 
-
-#define UNWRAP(TYPE, RESULT)            UNWRAP_FUNC_NAME(TYPE)(RESULT, __FILE__, __LINE__)
+#define unwrap(TYPE, RESULT)            UNWRAP_FUNC_NAME(TYPE)(RESULT, __FILE__, __LINE__)
 
 void __set_try_error__(Error err);
 Error __get_try_error__();
 
-#define TRY_FUNC_NAME(TYPE)             CAT(try_, RESULT(TYPE))
-#define TRY_FUNC_SIGNATURE(TYPE)              TYPE TRY_FUNC_NAME(TYPE)(RESULT(TYPE) result)
-
-#define TRY_FUNC_DEF(TYPE) \
+#define TRY_FUNC_NAME(TYPE)             CAT(Result(TYPE), _try)
+#define TRY_FUNC_SIGNATURE(TYPE)        TYPE TRY_FUNC_NAME(TYPE)(Result(TYPE) res)
+#define TRY_FUNC_IMPL(TYPE) \
     TRY_FUNC_SIGNATURE(TYPE) { \
-        __set_try_error__(result.err); \
+        __set_try_error__(res.err); \
         IF_VOID(TYPE)( \
             , \
-            return result.val; \
+            return res.val; \
         ) \
     }
 
-#define TRY(TYPE, EXPR) \
+#define try(TYPE, EXPR) \
     TRY_FUNC_NAME(TYPE)(EXPR); \
     if (__get_try_error__() != OK_CODE) \
-        return (RESULT(TYPE)){ .err = __get_try_error__() };
+        return (Result(TYPE)){ .err = __get_try_error__() };
 
 
-#define CATCH(TYPE, EXPR, ERR) \
+#define catch(TYPE, EXPR, ERR) \
     TRY_FUNC_NAME(TYPE)(EXPR); \
     Error ERR = __get_try_error__(); \
     if (ERR != OK_CODE)
@@ -87,53 +69,51 @@ Error __get_try_error__();
 
 
 
-#define ERROR_FUNC_NAME(TYPE)           CAT(error_, RESULT(TYPE))
-#define ERROR_FUNC_SIGNATURE(TYPE)      RESULT(TYPE) ERROR_FUNC_NAME(TYPE)(Error code)
-
-#define ERROR_FUNC_DEF(TYPE) \
-    inline ERROR_FUNC_SIGNATURE(TYPE) { \
-        RESULT(TYPE) res; \
+#define ERR_FUNC_NAME(TYPE)           CAT(Result(TYPE), _err)
+#define ERR_FUNC_SIGNATURE(TYPE)      Result(TYPE) ERR_FUNC_NAME(TYPE)(Error code)
+#define ERR_FUNC_IMPL(TYPE) \
+    inline ERR_FUNC_SIGNATURE(TYPE) { \
+        Result(TYPE) res; \
         res.err = code; \
         return res; \
     }
 
-#define ERROR_PARAMS(CODE, MSG)         CODE, MSG
-#define ERROR(TYPE, CODE)               ERROR_FUNC_NAME(TYPE)(CODE)
+#define ERR_PARAMS(CODE, MSG)         CODE, MSG
+#define Err(TYPE, CODE)               ERR_FUNC_NAME(TYPE)(CODE)
 
-#define OK_FUNC_NAME(TYPE)              CAT(ok_, RESULT(TYPE))
+#define OK_FUNC_NAME(TYPE)              CAT(Result(TYPE), _ok)
 #define OK_FUNC_SIGNATURE(TYPE) \
-    RESULT(TYPE) OK_FUNC_NAME(TYPE)( \
+    Result(TYPE) OK_FUNC_NAME(TYPE)( \
         IF_VOID(TYPE)( \
             , \
             TYPE val \
         ) \
     )
-
-#define OK_FUNC_DEF(TYPE) \
+#define OK_FUNC_IMPL(TYPE) \
     inline OK_FUNC_SIGNATURE(TYPE) { \
-        RESULT(TYPE) res = INIT_RESULT; \
+        Result(TYPE) res = INIT_RESULT; \
         IF_VOID(TYPE) ( , res.val = val;) \
         return res; \
     }
 
 #define OK_CODE 0
-#define OK(TYPE, ...)                   OK_FUNC_NAME(TYPE)(IF_VOID(TYPE)( , __VA_ARGS__))
+#define Ok(TYPE, ...)                   OK_FUNC_NAME(TYPE)(IF_VOID(TYPE)( , __VA_ARGS__))
 
-#define IS_OK(RESULT)                   (RESULT.err == OK_CODE)
-#define IS_ERROR(RESULT)                (RESULT.err != OK_CODE)
+#define is_ok(RESULT)                   (RESULT.err == OK_CODE)
+#define is_err(RESULT)                  (RESULT.err != OK_CODE)
 
 #define RESULT_DEFS(TYPE) \
     RESULT_STRUCT_DEF(TYPE); \
     UNWRAP_FUNC_SIGNATURE(TYPE); \
     TRY_FUNC_SIGNATURE(TYPE); \
-    ERROR_FUNC_SIGNATURE(TYPE); \
+    ERR_FUNC_SIGNATURE(TYPE); \
     OK_FUNC_SIGNATURE(TYPE);
 
 #define RESULT_IMPL(TYPE) \
-    UNWRAP_FUNC_DEF(TYPE) \
-    TRY_FUNC_DEF(TYPE) \
-    ERROR_FUNC_DEF(TYPE) \
-    OK_FUNC_DEF(TYPE)
+    UNWRAP_FUNC_IMPL(TYPE) \
+    TRY_FUNC_IMPL(TYPE) \
+    ERR_FUNC_IMPL(TYPE) \
+    OK_FUNC_IMPL(TYPE)
 
 
 RESULT_DEFS(void)

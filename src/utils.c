@@ -6,11 +6,6 @@
 
 static Error __try_error__ = OK_CODE;
 
-RESULT_IMPL(void)
-RESULT_IMPL(int)
-RESULT_IMPL(unsigned int)
-RESULT_IMPL(char)
-
 
 unsigned int saturating_sub(unsigned int n1, unsigned int n2) {
     if (n2 > n1) return 0;
