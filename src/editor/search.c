@@ -1,3 +1,4 @@
+#include "aeolus/string.h"
 #include "aeolus/vec.h"
 #include "editor/defs.h"
 #include "editor/utils.h"
@@ -106,8 +107,8 @@ int editorSearch(char* query) {
         EditorRow* row = vec_get(editor.rows, i);
         vec_empty(row->search_match_pos);
 
-        while ((match = strstr(&row->chars[last_pos], query)) != NULL) {
-            unsigned int match_pos = match - row->chars;
+        while ((match = strstr(&str_chars(&row->chars)[last_pos], query)) != NULL) {
+            unsigned int match_pos = match - str_chars(&row->chars);
             if (!vec_push(row->search_match_pos, match_pos)) {
                 messageBarSet("Unable to push match result");
                 return -1;

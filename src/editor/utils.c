@@ -219,7 +219,7 @@ void editorCxToRx() {
     editor.rx = rowNumberColumnWidth();
     unsigned int i;
     for (i = 0; i < getCol(editor.editing_point); i++) {
-        if (CURR_ROW->chars[i] == '\t') {
+        if (str_char_at(&CURR_ROW->chars, i) == '\t') {
             editor.rx += TAB_SPACE_NUM - 1;
         }
         editor.rx++;
@@ -230,12 +230,12 @@ void editorRefreshScreen() {
     editorCxToRx();
     editorScroll();
 
-    String buf = STR_NEW();
+    String buf = str_new();
 
     // hide cursor while drawing on screen
-    strAppend(&buf, HIDE_CURSOR_SEQ);
+    str_append(&buf, HIDE_CURSOR_SEQ);
     // ensure cursor is positioned top-left
-    strAppend(&buf, MOVE_CURSOR_TO_ORIG_SEQ);
+    str_append(&buf, MOVE_CURSOR_TO_ORIG_SEQ);
 
     editorDrawRows(&buf);
     infoBarDraw(&buf);
@@ -244,28 +244,28 @@ void editorRefreshScreen() {
     char seq_buf[32];
     // move cursor to terminal cursor position
     snprintf(seq_buf, sizeof(seq_buf), "\x1b[%d;%dH", getRow(editor.editing_point) - editor.rowoff + 1, editor.rx - editor.coloff + 1);
-    strAppend(&buf, seq_buf);
+    str_append(&buf, seq_buf);
 
     // show cursor
-    strAppend(&buf, SHOW_CURSOR_SEQ);
+    str_append(&buf, SHOW_CURSOR_SEQ);
 
-    write(STDOUT_FILENO, buf, strLen(buf));
-    strFree(buf);
+    write(STDOUT_FILENO, str_chars(&buf), str_len(&buf));
+    str_free(&buf);
 }
 
 String editorRowsToString() {
     size_t buflen = 0;
     for (EACH(row, editor.rows)) {
-        buflen += strLen(row->chars) + 1;
+        buflen += str_len(&row->chars) + 1;
     }
 
-    String buf = STR_NEW_WITH_CAP(buflen);
-    if (buf == NULL)
-        return NULL;
+    String buf = str_new_with_cap(buflen);
+    // if (buf == NULL)
+    //     return NULL;
 
     for (EACH(row, editor.rows)) {
-        strAppend(&buf, row->chars);
-        strAppendChar(&buf, '\n');
+        str_appends(&buf, &row->chars);
+        str_appendc(&buf, '\n');
     }
 
     return buf;
@@ -275,10 +275,10 @@ int editorInsertRow(unsigned int pos, char *s) {
     if (pos > editor.rows->len)
         return -1;
 
-    String chars = strFromStr(s);
+    String str = str_from(s);
     EditorRow row = {
-        .chars = chars,
-        .render = STR_NEW(),
+        .chars = str,
+        .render = str_new(),
         .hl = vec_new(Highlight),
         .search_match_pos = vec_new(unsigned int),
     };
@@ -309,23 +309,23 @@ void editorDrawRow(unsigned int filerow, String* buf) {
 
     char row_number_buf[32];
     sprintf(row_number_buf, fmt_string, filerow + 1);
-    strAppend(buf, row_number_buf);
+    str_append(buf, row_number_buf);
 
-    if (strLen(row->render) == 0) return;
+    if (str_len(&row->render) == 0) return;
 
     unsigned int j = 0;
     unsigned int printable_chars = 0;
     char first_hl[COLOR_SEQ_SIZE + 1];
     // I'm assuming that the firts thing in a line is a color escape sequence
-    memcpy(first_hl, row->render, COLOR_SEQ_SIZE);
+    memcpy(first_hl, str_chars(&row->render), COLOR_SEQ_SIZE);
     first_hl[COLOR_SEQ_SIZE] = '\0';
 
-    while (j < strLen(row->render)) {
-        char c = row->render[j];
+    while (j < str_len(&row->render)) {
+        char c = str_char_at(&row->render, j);
 
         if (printable_chars < editor.coloff) {
             if (c == '\x1b') {
-                memcpy(first_hl, &row->render[j], COLOR_SEQ_SIZE);
+                memcpy(first_hl, &str_chars(&row->render)[j], COLOR_SEQ_SIZE);
                 j += COLOR_SEQ_SIZE;
             } else {
                 printable_chars++;
@@ -333,19 +333,19 @@ void editorDrawRow(unsigned int filerow, String* buf) {
             }
             continue;
         } else if (printable_chars == editor.coloff) {
-            strAppend(buf, first_hl);
+            str_append(buf, first_hl);
         }
 
         if ((int)(printable_chars - editor.coloff) == terminal.screencols) break;
 
         if (c == '\x1b') {
             char seq[COLOR_SEQ_SIZE + 1];
-            memcpy(seq, &row->render[j], COLOR_SEQ_SIZE);
+            memcpy(seq, &str_chars(&row->render)[j], COLOR_SEQ_SIZE);
             seq[COLOR_SEQ_SIZE] = '\0';
-            strAppend(buf, seq);
+            str_append(buf, seq);
             j += COLOR_SEQ_SIZE;
         } else {
-            strAppendChar(buf, c);
+            str_appendc(buf, c);
             printable_chars++;
             j++;
         }
@@ -366,26 +366,26 @@ void editorDrawRows(String* buf) {
 
                 int padding = (terminal.screencols - welcomelen) / 2;
                 if (padding) {
-                    strAppendChar(buf, '~');
+                    str_appendc(buf, '~');
                     padding--;
                 }
-                strRepeatAppendChar(buf, ' ', padding);
-                strAppend(buf, welcome);
+                str_repeat_appendc(buf, ' ', padding);
+                str_append(buf, welcome);
             } else {
-                strAppendChar(buf, '~');
+                str_appendc(buf, '~');
             }
         } else {
             editorDrawRow(filerow, buf);
         }
 
-        strAppend(buf, "\x1b[039;049m");
+        str_append(buf, "\x1b[039;049m");
 
         // erase the part of the line to the right of the cursor:
         // we erase all that is remained after drawing the line
-        strAppend(buf, CLEAR_LINE_CURSOR_TO_END_SEQ);
+        str_append(buf, CLEAR_LINE_CURSOR_TO_END_SEQ);
 
         if (y < editor.view_rows -1) {
-            strAppend(buf, "\r\n");
+            str_append(buf, "\r\n");
         }
     }
 }

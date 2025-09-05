@@ -17,8 +17,8 @@
 #define PREV_ROW                vec_get(editor.rows, getRow(editor.editing_point) - 1)
 #define ROW_AT(EDITING_POINT)   vec_get(editor.rows, getRow(EDITING_POINT))
 
-#define CURR_CHAR               CURR_ROW->chars[getCol(editor.editing_point)]
-#define CHAR_AT(EDITING_POINT)  vec_get(editor.rows, getRow(EDITING_POINT))->chars[getCol(EDITING_POINT)]
+#define CURR_CHAR               str_char_at(&CURR_ROW->chars, getCol(editor.editing_point))
+#define CHAR_AT(EDITING_POINT)  str_char_at(&vec_get(editor.rows, getRow(EDITING_POINT))->chars, getCol(EDITING_POINT))
 
 #define STATUS_BAR_ROW          ( editor.view_rows + 1 )
 

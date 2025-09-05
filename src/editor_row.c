@@ -27,11 +27,11 @@ inline EditorRow* editorRowGet(EditingPoint ep) {
 }
 
 static void _editorRowResetHighlight(EditorRow* row) {
-    if (strLen(row->chars) == 0)
+    if (str_len(&row->chars) == 0)
         return;
 
     vec_empty(row->hl);
-    vec_repeat_append(row->hl, HL_NORMAL, strLen(row->chars));
+    vec_repeat_append(row->hl, HL_NORMAL, str_len(&row->chars));
 }
 
 static bool isSeparator(char c) {
@@ -83,19 +83,19 @@ void editorRowHighlightSyntax(unsigned int filerow) {
     EditorRow* row = vec_get(editor.rows, filerow);
     Highlight* hl = row->hl->items;
 
-    STR_FOREACH(c, row->chars) {
-        size_t i = strCurrIdx(row->chars);
+    for (EACH(c, &row->chars)) {
+        size_t i = str_curri(&row->chars);
 
-        bool prev_sep = i > 0 ? isSeparator(row->chars[i - 1]) : true;  // beginning of line is considered a separator
+        bool prev_sep = i > 0 ? isSeparator(str_char_at(&row->chars, i - 1)) : true;  // beginning of line is considered a separator
         Highlight prev_hl = i > 0 ? hl[i - 1] : HL_NORMAL;
 
         // Highlights includes
-        char* include_match = strstr(row->chars, "#include <");
-        if (c == '<' && include_match) {
+        char* include_match = strstr(str_chars(&row->chars), "#include <");
+        if (*c == '<' && include_match) {
             hl[i] = HL_STRING;
             in_string = true;
             continue;
-        } else if (c == '>' && include_match) {
+        } else if (*c == '>' && include_match) {
             hl[i] = HL_STRING;
             in_string = false;
             continue;
@@ -104,13 +104,13 @@ void editorRowHighlightSyntax(unsigned int filerow) {
         // Highlights strings
         if (in_string) {
             hl[i] = HL_STRING;
-            if (c == opening_string_quote_type) {
+            if (*c == opening_string_quote_type) {
                 // if prev char is backsles, closing quote is escaped
                 // so it means we are still in string
-                if (i > 0 && row->chars[i - 1] == '\\') {
+                if (i > 0 && str_char_at(&row->chars, i - 1) == '\\') {
                     // but if the char before \ is not \,
                     // because it would mean we escaped backslash
-                    if (i > 1 && row->chars[i - 2] != '\\')
+                    if (i > 1 && str_char_at(&row->chars, i - 2) != '\\')
                         continue;
                 }
 
@@ -119,19 +119,19 @@ void editorRowHighlightSyntax(unsigned int filerow) {
             }
             continue;
         } else {
-            if (!(in_comment || in_multiline_comment) && (c == '\'' || c == '"')) {
+            if (!(in_comment || in_multiline_comment) && (*c == '\'' || *c == '"')) {
                 hl[i] = HL_STRING;
                 in_string = true;
-                opening_string_quote_type = c;
+                opening_string_quote_type = *c;
                 continue;
             }
         }
 
         // Highlights comments
         if (in_comment || in_multiline_comment) {
-            if (strncmp(&row->chars[i], multiline_comment_end, strlen(multiline_comment_end)) == 0) {
+            if (strncmp(&str_chars(&row->chars)[i], multiline_comment_end, strlen(multiline_comment_end)) == 0) {
                 _highlightFill(row, &i, HL_COMMENT, strlen(multiline_comment_end));
-                strSetAt(row->chars, i);
+                str_set_at(&row->chars, i);
                 in_multiline_comment = false;
                 continue;
             } else {
@@ -139,13 +139,13 @@ void editorRowHighlightSyntax(unsigned int filerow) {
             }
             continue;
         } else {
-            if (strncmp(&row->chars[i], single_line_comment_start, strlen(single_line_comment_start)) == 0) {
+            if (strncmp(&str_chars(&row->chars)[i], single_line_comment_start, strlen(single_line_comment_start)) == 0) {
                 hl[i] = HL_COMMENT;
                 in_comment = true;
                 continue;
-            } else if (strncmp(&row->chars[i], multiline_comment_start, strlen(multiline_comment_start)) == 0) {
+            } else if (strncmp(&str_chars(&row->chars)[i], multiline_comment_start, strlen(multiline_comment_start)) == 0) {
                 _highlightFill(row, &i, HL_COMMENT, strlen(multiline_comment_start));
-                strSetAt(row->chars, i);
+                str_set_at(&row->chars, i);
                 in_multiline_comment = true;
                 continue;
             }
@@ -153,7 +153,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 
 
         // Highlights numbers
-        if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) || (c == '.' && prev_hl == HL_NUMBER)) {
+        if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) || (*c == '.' && prev_hl == HL_NUMBER)) {
             hl[i] = HL_NUMBER;
             continue;
         }
@@ -165,9 +165,9 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                 const char* keyword = C_KEYWORDS[j];
                 size_t klen = strlen(keyword);
 
-                if (strncmp(&row->chars[i], keyword, klen) == 0 && isSeparator(row->chars[i + klen])) {
+                if (strncmp(&str_chars(&row->chars)[i], keyword, klen) == 0 && isSeparator(str_char_at(&row->chars, i + klen))) {
                     _highlightFill(row, &i, HL_KEYWORD, klen);
-                    strSetAt(row->chars, i);
+                    str_set_at(&row->chars, i);
                     break;
                 }
             }
@@ -181,9 +181,9 @@ void editorRowHighlightSyntax(unsigned int filerow) {
                 const char* type = C_TYPES[j];
                 int tlen = strlen(type);
 
-                if (strncmp(&row->chars[i], type, tlen) == 0 && isSeparator(row->chars[i + tlen])) {
+                if (strncmp(&str_chars(&row->chars)[i], type, tlen) == 0 && isSeparator(str_char_at(&row->chars, i + tlen))) {
                     _highlightFill(row, &i, HL_TYPE, tlen);
-                    strSetAt(row->chars, i);
+                    str_set_at(&row->chars, i);
                     break;
                 }
             }
@@ -191,16 +191,16 @@ void editorRowHighlightSyntax(unsigned int filerow) {
         }
 
         // Highlights operators
-        if (isOperator(c)) {
+        if (isOperator(*c)) {
             hl[i] = HL_OPERATOR;
             continue;
         }
 
         // Highlights functions
-        if (c == '(' && i > 0) {
+        if (*c == '(' && i > 0) {
             hl[i] = HL_PARENTHESIS;
             int j = i - 1;
-            while (j >= 0 && !isSeparator(row->chars[j])) {
+            while (j >= 0 && !isSeparator(str_char_at(&row->chars, j))) {
                 hl[j] = HL_FUNCTION;
                 j--;
             }
@@ -208,7 +208,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
         }
 
         // Highlights parenthesis
-        if (isParenthesis(c)) {
+        if (isParenthesis(*c)) {
             hl[i] = HL_PARENTHESIS;
             continue;
         }
@@ -244,18 +244,18 @@ void editorRowHighlightSelection(unsigned int filerow) {
     // I don't use STR_FOR here because I wanto to
     // loop until i <= strLen(row->chars), while
     // STR_FOR loops untile i < strLen(row->chars)
-    for (unsigned int i = 0; i <= strLen(row->chars); i++) {
+    for (unsigned int i = 0; i <= str_len(&row->chars); i++) {
         if (in_selection) {
             if (editingPointNew(filerow, i) == SELECTION_END) {
                 in_selection = false;
-            } else if (i < strLen(row->chars)) {
+            } else if (i < str_len(&row->chars)) {
                 hl[i] = HL_SELECTION;
             }
         } else {
             EditingPoint curr_ep = editingPointNew(filerow, i);
             if (curr_ep == SELECTION_START && curr_ep != SELECTION_END) {
                 in_selection = true;
-                if (i < strLen(row->chars))
+                if (i < str_len(&row->chars))
                     hl[i] = HL_SELECTION;
             }
         }
@@ -294,24 +294,24 @@ int editorRowRender(unsigned int filerow) {
     }
     editorRowHighlightSelection(filerow);
 
-    strEmpty(row->render);
+    str_empty(&row->render);
 
     int prev_color = -1;
-    STR_FOREACH(c, row->chars) {
-        int color = syntaxToColor(row->hl->items[vvec_curr_idx(row->chars)]);
+    for (EACH(c, &row->chars)) {
+        int color = syntaxToColor(row->hl->items[str_curri(&row->chars)]);
         int fg = (color >> 8) & 0xff;
         int bg = color & 0xff;
         if (color != prev_color) {
             char buf[16];
             snprintf(buf, sizeof(buf), "\x1b[%03d;%03dm", fg, bg);
-            strAppend(&row->render, buf);
+            str_append(&row->render, buf);
         }
         prev_color = color;
 
-        if (c == '\t') {
-            strRepeatAppendChar(&row->render, ' ', TAB_SPACE_NUM);
+        if (*c == '\t') {
+            str_repeat_appendc(&row->render, ' ', TAB_SPACE_NUM);
         } else {
-            strAppendChar(&row->render, c);
+            str_appendc(&row->render, *c);
         }
     }
 
@@ -319,25 +319,25 @@ int editorRowRender(unsigned int filerow) {
 }
 
 void editorRowInsertChar(EditorRow* row, unsigned int pos, char c) {
-    if (pos > strLen(row->chars))
-        pos = strLen(row->chars);
+    if (pos > str_len(&row->chars))
+        pos = str_len(&row->chars);
 
     if (c == '\t') {
-        strInsert(&row->chars, pos, "    ");
+        str_insert(&row->chars, pos, "    ");
     } else {
-        strInsertChar(&row->chars, pos, c);
+        str_insertc(&row->chars, pos, c);
     }
 }
 
 void editorRowDeleteChar(EditorRow* row, unsigned int pos) {
-    if (pos >= strLen(row->chars)) return;
-    strRemove(row->chars, pos);
+    if (pos >= str_len(&row->chars)) return;
+    str_remove(&row->chars, pos);
     editorSetDirty();
 }
 
 void editorRowFree(EditorRow* row) {
-    strFree(row->chars);
-    strFree(row->render);
+    str_free(&row->chars);
+    str_free(&row->render);
     vec_free(row->hl);
     vec_free(row->search_match_pos);
 }

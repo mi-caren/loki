@@ -119,3 +119,16 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
 
 * move str_set_at in Iterator interface
 * move str_curri in Iterator interface
+
+* considerare l'idea di aggiungere una variabile `chars` in String
+    che punti a self->vec->items, in modo da rendere carino
+    l'accesso al buffer sottostante.
+    Potrebbe essere o char** chars = &self->vec->items, e quindi
+    essere sempre un riferimento valido, oppure
+    char* chars = self->vec->items, e quindi si dovrebbe
+    riassegnare la varibile dopo ogni operazione che potrebbe riallocare items, tipo una chiamata a vec_realloc, vec_push,
+    o vec_insert
+
+* in editor_row.c ci sono molti punti un cui utilizzo funzioni
+di String e in cui passo &row->chars come argomento. Creare una varibile `String* chars = &row->chars` e usare quella per
+rendere il codice più leggibile

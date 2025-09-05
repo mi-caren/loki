@@ -58,12 +58,12 @@ static RESULT(char) _coreDeleteChar(EditingPoint ep) {
     if (editor.rows->len == 0)
         return ERROR(char, ERR_CORE_DELETE_NO_ROWS);
 
-    if (getRow(ep) >= editor.rows->len || getCol(ep) > strLen(ROW_AT(ep)->chars))
+    if (getRow(ep) >= editor.rows->len || getCol(ep) > str_len(&ROW_AT(ep)->chars))
         return ERROR(char, ERR_CORE_DELETE_CHAR_INVALID_EP);
 
-    if (getCol(ep) == strLen(ROW_AT(ep)->chars)) {
+    if (getCol(ep) == str_len(&ROW_AT(ep)->chars)) {
         EditorRow* next_row = ROW_AT(addRows(ep, 1));
-        strAppend(&ROW_AT(ep)->chars, next_row->chars);
+        str_appends(&ROW_AT(ep)->chars, &next_row->chars);
         editorSetDirty();
         editorDeleteRow(getRow(ep) + 1);
 
@@ -84,19 +84,19 @@ static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep) {
     // + the number of spaces of current row, to mantain current indentation
     // when inserting a newline
     EditorRow* row = editorRowGet(ep);
-    unsigned int row_slice_size = strLen(row->chars) - getCol(ep);
+    unsigned int row_slice_size = str_len(&row->chars) - getCol(ep);
     unsigned int leading_spaces_count = _countLeadingSpacesBeforeCol(row, getCol(ep));
     unsigned int new_row_size =  row_slice_size + leading_spaces_count;
 
-    String new_row_chars = STR_NEW_WITH_CAP(new_row_size);
-    if (new_row_chars == NULL)
-        goto insert_newline_error;
+    String new_row = str_new_with_cap(new_row_size);
+    // if (new_row_chars == NULL)
+    //     goto insert_newline_error;
 
-    strRepeatAppendChar(&new_row_chars, ' ', leading_spaces_count);
-    strAppend(&new_row_chars, &row->chars[getCol(ep)]);
+    str_repeat_appendc(&new_row, ' ', leading_spaces_count);
+    str_append(&new_row, &str_chars(&row->chars)[getCol(ep)]);
 
-    int res = editorInsertRow(getRow(ep) + 1, new_row_chars);
-    strFree(new_row_chars);
+    int res = editorInsertRow(getRow(ep) + 1, str_chars(&new_row));
+    str_free(&new_row);
 
     if (res == -1)
         goto insert_newline_error;
@@ -104,7 +104,7 @@ static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep) {
     // fetch row again because calling editorInsertRow
     // calls realloc. The address of row could change
     row = editorRowGet(ep);
-    strTruncate(row->chars, getCol(ep));
+    str_truncate(&row->chars, getCol(ep));
 
     incRow(&ep);
     setCol(&ep, leading_spaces_count);
@@ -281,7 +281,7 @@ bool cmdUndo() {
 
 static unsigned int _countLeadingSpacesBeforeCol(EditorRow* row, unsigned int col) {
     unsigned int i = 0;
-    while (row->chars[i] == ' ' && i < col) {
+    while (str_char_at(&row->chars, i) == ' ' && i < col) {
         i++;
     }
     return i;
@@ -312,21 +312,21 @@ bool cmdSave() {
     }
 
     String buf = editorRowsToString();
-    int len = strLen(buf);
-    if (buf == NULL) goto end;
+    int len = str_len(&buf);
+    // if (buf == NULL) goto end;
 
     int fd = open(editor.filename, O_RDWR | O_CREAT, 0644);
     if (fd == -1) goto clean_buf;
     if (ftruncate(fd, len) == -1) goto clean_fd;
-    if (write(fd, buf, len) != len) goto clean_fd;
+    if (write(fd, str_chars(&buf), len) != len) goto clean_fd;
     ok = true;
     editor.dirty = false;
 
 clean_fd:
     close(fd);
 clean_buf:
-    strFree(buf);
-end:
+    str_free(&buf);
+// end:
     if (ok) {
         messageBarSet("%d bytes written", len);
     } else {
@@ -397,7 +397,7 @@ bool cmdCopy() {
                 if (!vec_push(editor.copy_buf, CHAR_AT(ep))) goto copy_error;
             }
 
-            if (getCol(ep) == strLen(vec_get(editor.rows, getRow(ep))->chars)) {
+            if (getCol(ep) == str_len(&vec_get(editor.rows, getRow(ep))->chars)) {
                 incRow(&ep);
                 setCol(&ep, 0);
             } else {

@@ -117,6 +117,10 @@ size_t str_len(String *self) {
     return self->vec->len - 1;
 }
 
+char* str_chars(String* self) {
+    return self->vec->items;
+}
+
 // char strBegin(String str) {
 //     STR_HEAD(str)->cur = 0;
 //     return str[0];
@@ -254,6 +258,14 @@ String* str_appendc(String* self, char c) {
     return self;
 }
 
+String* str_appends(String*self, String* str) {
+    vec_pop(self->vec);
+    for (size_t i = 0; i < str_len(str); i++)
+        assert(vec_push(self->vec, str->vec->items[i]));
+    _str_push0(self);
+    return self;
+}
+
 // String strRepeatAppendChar(String* str, char c, size_t n) {
 //     size_t str_len = STR_HEAD(*str)->len;
 //     size_t total_space = str_len + n;
@@ -300,7 +312,7 @@ char str_remove(String* self, size_t pos) {
 //     STR_HEAD(str)->len = new_len;
 //     return str;
 // }
-void str_trucate(String* self, size_t new_len) {
+void str_truncate(String* self, size_t new_len) {
     if (new_len > str_len(self))
         return;
     vec_pop(self->vec);
@@ -308,6 +320,11 @@ void str_trucate(String* self, size_t new_len) {
         vec_pop(self->vec);
     }
     _str_push0(self);
+}
+
+char str_char_at(String* self, size_t pos) {
+    assert(pos < str_len(self));
+    return self->vec->items[pos];
 }
 
 // char strSetAt(String str, size_t pos) {

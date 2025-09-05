@@ -1,6 +1,7 @@
 #ifndef STRING_H
 #define STRING_H
 
+#include <bits/types/struct_iovec.h>
 #include <unistd.h>
 
 #include "aeolus/iterator.h"
@@ -21,17 +22,20 @@ String str_from(char* chars);
 
 void str_empty(String* self);
 size_t str_len(String* self);
+char* str_chars(String* self);
 // char strBegin(String str);
 // char strNext(String str);
 String* str_insertc(String* self, char c, size_t pos);
 String* str_insert(String* self, size_t pos, char* chars);
 // String* str_insert_str(String* self, String* str);
 char str_remove(String* self, size_t pos);
-/* str2 MUST be 0 terminated */
+/* chars MUST be 0 terminated */
 String* str_append(String* self, char* chars);
 String* str_appendc(String* self, char c);
+String* str_appends(String*self, String* str);
 String* str_repeat_appendc(String* self, char c, size_t n);
-void str_trucate(String* self, size_t new_len);
+void str_truncate(String* self, size_t new_len);
+char str_char_at(String* self, size_t pos);
 void str_free(String* self);
 
 // TODO: iterator methods

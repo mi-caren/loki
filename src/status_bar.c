@@ -22,10 +22,10 @@ void messageBarDraw(String* buf) {
     char seq_buf[32];
     // move cursor to beginning message bar
     snprintf(seq_buf, sizeof(seq_buf), "\x1b[%d;%dH", editor.view_rows + 2, 0);
-    strAppend(buf, seq_buf);
-    strAppend(buf, CLEAR_LINE_CURSOR_TO_END_SEQ);
+    str_append(buf, seq_buf);
+    str_append(buf, CLEAR_LINE_CURSOR_TO_END_SEQ);
     if (strlen(editor.message_bar_buf) && time(NULL) - editor.message_bar_time < 5)
-        strAppend(buf, editor.message_bar_buf);
+        str_append(buf, editor.message_bar_buf);
 }
 
 void messageBarSet(const char *fmt, ...) {
@@ -141,9 +141,9 @@ void infoBarDraw(String* buf) {
     char seq_buf[32];
     // move cursor to beginning status bar
     snprintf(seq_buf, sizeof(seq_buf), "\x1b[%d;%dH", editor.view_rows + 1, 0);
-    strAppend(buf, seq_buf);
+    str_append(buf, seq_buf);
 
-    strAppend(buf, INVERTED_COLOR_SEQ);
+    str_append(buf, INVERTED_COLOR_SEQ);
 
     char status[terminal.screencols];
     int len = snprintf(
@@ -153,7 +153,7 @@ void infoBarDraw(String* buf) {
         editor.filename ? editor.filename : "[New Buffer]",
         editor.dirty ? "(modified)" : ""
     );
-    strAppend(buf, status);
+    str_append(buf, status);
     int len_s2 = snprintf(
         status,
         terminal.screencols / 4,
@@ -163,7 +163,7 @@ void infoBarDraw(String* buf) {
     );
 
 
-    strRepeatAppendChar(buf, ' ', terminal.screencols - len_s2 - len);
-    strAppend(buf, status);
-    strAppend(buf, NORMAL_FORMATTING_SEQ);
+    str_repeat_appendc(buf, ' ', terminal.screencols - len_s2 - len);
+    str_append(buf, status);
+    str_append(buf, NORMAL_FORMATTING_SEQ);
 }
