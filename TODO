@@ -132,3 +132,5 @@ PROBLEMA -> * creare un editor key NO_OP, in caso non venga riconosciuta una esc
 * in editor_row.c ci sono molti punti un cui utilizzo funzioni
 di String e in cui passo &row->chars come argomento. Creare una varibile `String* chars = &row->chars` e usare quella per
 rendere il codice più leggibile
+
+* valutare se ritornare vec_new direttamente un Vec invece che un puntatore 

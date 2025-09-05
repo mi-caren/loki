@@ -2,10 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "aeolus/result.h"
-
-static Error __try_error__ = OK_CODE;
-
 
 unsigned int saturating_sub(unsigned int n1, unsigned int n2) {
     if (n2 > n1) return 0;
@@ -40,12 +36,4 @@ void panic(char* filename, int linenumber, char* msg) {
         fprintf(stderr, "%s\n", msg);
     }
     exit(EXIT_FAILURE);
-}
-
-
-inline void __set_try_error__(Error err) {
-    __try_error__ = err;
-}
-inline Error __get_try_error__() {
-    return __try_error__;
 }
