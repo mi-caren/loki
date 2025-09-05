@@ -23,11 +23,8 @@ String str_from(char* chars);
 void str_empty(String* self);
 size_t str_len(String* self);
 char* str_chars(String* self);
-// char strBegin(String str);
-// char strNext(String str);
 String* str_insertc(String* self, char c, size_t pos);
 String* str_insert(String* self, size_t pos, char* chars);
-// String* str_insert_str(String* self, String* str);
 char str_remove(String* self, size_t pos);
 /* chars MUST be 0 terminated */
 String* str_append(String* self, char* chars);
