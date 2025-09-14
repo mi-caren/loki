@@ -57,14 +57,21 @@ typedef struct {
     struct termios orig_termios;
 } Terminal;
 
-#define TERM_ERR_READ_ATTR              ERROR_PARAMS(TermReadAttr, "Unable to read terminal attributes")
-#define TERM_ERR_WRITE_ATTR             ERROR_PARAMS(TermWriteAttr, "Unable to write terminal attributes")
-#define TERM_ERR_GET_CURSOR_POS         ERROR_PARAMS(TermGetCursorPos, "Error while getting terminal cursor position")
-#define TERM_ERR_ESC_SEQ                ERROR_PARAMS(TermEscSeq, "Escape sequence error")
+// #define TERM_ERR_READ_ATTR              ERROR_PARAMS(TermReadAttr, "Unable to read terminal attributes")
+// #define TERM_ERR_WRITE_ATTR             ERROR_PARAMS(TermWriteAttr, "Unable to write terminal attributes")
+// #define TERM_ERR_GET_CURSOR_POS         ERROR_PARAMS(TermGetCursorPos, "Error while getting terminal cursor position")
+// #define TERM_ERR_ESC_SEQ                ERROR_PARAMS(TermEscSeq, "Escape sequence error")
 
-RESULT(void) terminalEnableRawMode();
+typedef enum {
+    TERM_ERR_READ_ATTR = 1,
+    TERM_ERR_WRITE_ATTR,
+    TERM_ERR_GET_CURSOR_POS,
+    TERM_ERR_ESC_SEQ,
+} TerminalError;
+
+Result(void) terminalEnableRawMode();
 void terminalDisableRawMode();
-RESULT(void) terminalInit();
+Result(void) terminalInit();
 void terminalDeinit();
 
 extern Terminal terminal;

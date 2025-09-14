@@ -41,7 +41,7 @@ void editorInit(Editor* ed) {
     // Leave alternate screen if a panic occurs
     atPanic(atPanicCallback);
 
-    if (IS_ERROR(terminalInit()))
+    if (is_err(terminalInit()))
         editorExitError("Unable to initialize terminal\n");
 
     atexit(terminalDeinit);

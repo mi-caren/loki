@@ -24,7 +24,8 @@
 #include "aeolus/utils.h"
 #include "aeolus/vec.h"
 #include "editor/commands.h"
-#include "error.h"
+
+#define cmd_err(TYPE, CODE) err(TYPE, CODE, command_strerror)
 
 
 extern struct Editor editor;
@@ -36,13 +37,29 @@ VEC_IMPL(Command)
 static unsigned int _countLeadingSpacesBeforeCol(EditorRow* row, unsigned int col);
 static bool _editorDeleteSelection();
 
-static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep);
+static Result(EditingPoint) _coreInsertNewline(EditingPoint ep);
 static void _historyPushCmd(Command cmd);
 
-static RESULT(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
+static char* command_strerror(CommandError code) {
+    switch (code) {
+        case CMD_ERR_INSERT_ROW:
+            return "Command insert row";
+        case CMD_ERR_DELETE_NO_ROWS:
+            return "Command delete no rows";
+        case CMD_ERR_DELETE_CHAR_INVALID_EP:
+            return "Command delete char invalid Editing Point";
+        case CMD_ERR_INSERT_NEWLINE:
+            return "Command insert newline";
+    }
+
+    return "Unreachable";
+}
+
+
+static Result(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
     if (editor.rows->len == 0) {
         if (editorInsertRow(0, "") == -1)
-            return ERROR(EditingPoint, ERR_CORE_INSERT_ROW);
+            return cmd_err(EditingPoint, CMD_ERR_INSERT_ROW);
     }
 
     if (c == '\r')
@@ -51,15 +68,15 @@ static RESULT(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
     editorRowInsertChar(ROW_AT(ep), getCol(ep), c);
     setCol(&ep, getCol(ep) + (c == '\t' ? 4 : 1));
 
-    return OK(EditingPoint, ep);
+    return ok(EditingPoint, ep);
 }
 
-static RESULT(char) _coreDeleteChar(EditingPoint ep) {
+static Result(char) _coreDeleteChar(EditingPoint ep) {
     if (editor.rows->len == 0)
-        return ERROR(char, ERR_CORE_DELETE_NO_ROWS);
+        return cmd_err(char, CMD_ERR_DELETE_NO_ROWS);
 
     if (getRow(ep) >= editor.rows->len || getCol(ep) > str_len(&ROW_AT(ep)->chars))
-        return ERROR(char, ERR_CORE_DELETE_CHAR_INVALID_EP);
+        return cmd_err(char, CMD_ERR_DELETE_CHAR_INVALID_EP);
 
     if (getCol(ep) == str_len(&ROW_AT(ep)->chars)) {
         EditorRow* next_row = ROW_AT(addRows(ep, 1));
@@ -67,15 +84,15 @@ static RESULT(char) _coreDeleteChar(EditingPoint ep) {
         editorSetDirty();
         editorDeleteRow(getRow(ep) + 1);
 
-        return OK(char, '\r');
+        return ok(char, '\r');
     }
 
     char c = CHAR_AT(ep);
     editorRowDeleteChar(ROW_AT(ep), getCol(ep));
-    return OK(char, c);
+    return ok(char, c);
 }
 
-static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep) {
+static Result(EditingPoint) _coreInsertNewline(EditingPoint ep) {
     // clear selection
     editor.selecting = false;
 
@@ -108,15 +125,15 @@ static RESULT(EditingPoint) _coreInsertNewline(EditingPoint ep) {
 
     incRow(&ep);
     setCol(&ep, leading_spaces_count);
-    return OK(EditingPoint, ep);
+    return ok(EditingPoint, ep);
 
 insert_newline_error:
     messageBarSet("Unable to insert new row");
-    return ERROR(EditingPoint, ERR_CORE_INSERT_NEWLINE);
+    return cmd_err(EditingPoint, CMD_ERR_INSERT_NEWLINE);
 }
 
 void cmdInsertChar(char c) {
-    EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(c, editor.editing_point));
+    EditingPoint ep = unwrap(EditingPoint, _coreInsertChar(c, editor.editing_point));
 
     /* Rimuovere la logica per aggiustare l'indentazione
        da dentro _coreInsertNewline. Questa funzione non deve fare altro
@@ -148,7 +165,7 @@ void cmdPaste() {
     Command cmd = vec_new(CoreCommand);
 
     for (EACH(c, editor.copy_buf)) {
-        EditingPoint ep = UNWRAP(EditingPoint, _coreInsertChar(*c, editor.editing_point));
+        EditingPoint ep = unwrap(EditingPoint, _coreInsertChar(*c, editor.editing_point));
 
         // Insert every CoreCommand into the Editor Command
         CoreCommand ccmd = {
@@ -184,8 +201,8 @@ static bool _editorDeleteSelection() {
     Command cmd = vec_new(CoreCommand);
 
     while (editor.editing_point >= selection_start) {
-        char c = CATCH(char, _coreDeleteChar(editor.editing_point), err) {
-            if (err != ERR_CORE_DELETE_NO_ROWS)
+        char c = catch(char, _coreDeleteChar(editor.editing_point), err) {
+            if (err != CMD_ERR_DELETE_NO_ROWS)
                 PANIC_FMT("[ERROR CODE %d]: core delete char", err);
         }
 
@@ -210,8 +227,8 @@ void cmdDelete(bool del_key) {
         if (!del_key)
             editingPointMove(ARROW_LEFT);
 
-        char c = CATCH(char, _coreDeleteChar(editor.editing_point), err) {
-            if (err != ERR_CORE_DELETE_NO_ROWS)
+        char c = catch(char, _coreDeleteChar(editor.editing_point), err) {
+            if (err != CMD_ERR_DELETE_NO_ROWS)
                 PANIC_FMT("[ERROR CODE %d]: core delete char", err);
         }
 
@@ -253,10 +270,10 @@ bool cmdUndo() {
     for (EACH_REV(ccmd, *cmd)) {
         switch (ccmd->type) {
             case CCMD_INSERT_CHAR:
-                UNWRAP(char, _coreDeleteChar(ccmd->ep));
+                unwrap(char, _coreDeleteChar(ccmd->ep));
                 break;
             case CCMD_DELETE_CHAR:
-                UNWRAP(EditingPoint, _coreInsertChar(ccmd->c, ccmd->ep));
+                unwrap(EditingPoint, _coreInsertChar(ccmd->c, ccmd->ep));
                 break;
         }
     }

@@ -6,30 +6,45 @@
 #include "aeolus/result.h"
 #include "error.h"
 
+#define term_err(TYPE, CODE)    err(TYPE, CODE, terminal_strerror)
+
 Terminal terminal;
 
 
-static RESULT(void) terminalGetCursorPosition(int *rows, int *cols);
-static RESULT(void) terminalGetWindowSize(int *rows, int *cols);
+static Result(void) terminalGetCursorPosition(int *rows, int *cols);
+static Result(void) terminalGetWindowSize(int *rows, int *cols);
 
+static char* terminal_strerror(TerminalError code) {
+    switch (code) {
+        case TERM_ERR_READ_ATTR:
+            return "Unable to read terminal attributes";
+        case TERM_ERR_WRITE_ATTR:
+            return "Unable to write terminal attributes";
+        case TERM_ERR_GET_CURSOR_POS:
+            return "Error while getting terminal cursor position";
+        case TERM_ERR_ESC_SEQ:
+            return "Escape sequence error";
+    }
 
+    return "Unreachable";
+}
 
-RESULT(void) terminalInit() {
-    TRY(void, terminalEnableRawMode());
+Result(void) terminalInit() {
+    try(void, terminalEnableRawMode());
     terminal.cursor_pos.cx = 0;
     terminal.cursor_pos.cy = 0;
-    TRY(void, terminalGetWindowSize(&terminal.screenrows, &terminal.screencols));
+    try(void, terminalGetWindowSize(&terminal.screenrows, &terminal.screencols));
 
-    return OK(void);
+    return ok(void);
 }
 
 /*
  * Legge gli attributi del terminale,
  * ne modifica alcuni e riscrive gli attributi.
  */
-RESULT(void) terminalEnableRawMode() {
+Result(void) terminalEnableRawMode() {
     if (tcgetattr(STDIN_FILENO, &terminal.orig_termios) == -1)
-        return ERROR(void, ERR_TERM_READ_ATTR);
+        return term_err(void, TERM_ERR_READ_ATTR);
 
     struct termios raw = terminal.orig_termios;
     raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -46,9 +61,9 @@ RESULT(void) terminalEnableRawMode() {
     //    aspetta che tutti gli output siano stati scritti sul terminale
     //    e scarta tutti gli input non letti
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1)
-        return ERROR(void, ERR_TERM_WRITE_ATTR);
+        return term_err(void, TERM_ERR_WRITE_ATTR);
 
-    return OK(void);
+    return ok(void);
 }
 
 /*
@@ -71,12 +86,12 @@ void terminalDeinit() {
 
 /* ----------------- STATIC ----------------- */
 
-static RESULT(void) terminalGetCursorPosition(int *rows, int *cols) {
+static Result(void) terminalGetCursorPosition(int *rows, int *cols) {
     char buf[32];
     unsigned int i = 0;
 
     if (WRITE_SEQ(REQUEST_CURSOR_POSITION) != 4)
-        return ERROR(void, ERR_TERM_GET_CURSOR_POS);
+        return term_err(void, TERM_ERR_GET_CURSOR_POS);
 
     while (i < sizeof(buf) - 1) {
         if (read(STDIN_FILENO, &buf[i], 1) != 1) break;
@@ -86,17 +101,17 @@ static RESULT(void) terminalGetCursorPosition(int *rows, int *cols) {
     buf[i] = '\0';
 
     if (buf[0] != '\x1b' || buf[1] != '[')
-        return ERROR(void, ERR_TERM_GET_CURSOR_POS);
+        return term_err(void, TERM_ERR_GET_CURSOR_POS);
 
     if (sscanf(&buf[2], "%d;%d", rows, cols) != 2)
-        return ERROR(void, ERR_TERM_GET_CURSOR_POS);
+        return term_err(void, TERM_ERR_GET_CURSOR_POS);
 
-    return OK(void);
+    return ok(void);
 }
 
-static RESULT(void) terminalGetWindowSize(int *rows, int *cols) {
+static Result(void) terminalGetWindowSize(int *rows, int *cols) {
     if (WRITE_SEQ(MOVE_CURSOR_TO_BOTTOM_RIGHT) != 12)
-        return ERROR(void, ERR_TERM_ESC_SEQ);
+        return term_err(void, TERM_ERR_ESC_SEQ);
 
     return terminalGetCursorPosition(rows, cols);
 }

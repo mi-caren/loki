@@ -12,8 +12,8 @@
 #include "editor/utils.h"
 #include "aeolus/string.h"
 #include "aeolus/vec.h"
-#include "aeolus/vvec.h"
 #include "editor_row.h"
+#include "editor/utils.h"
 
 #define PARENTHESIS      "()[]{}"
 #define C_OPERATORS     "+-*/%<>=!|&"
@@ -153,7 +153,7 @@ void editorRowHighlightSyntax(unsigned int filerow) {
 
 
         // Highlights numbers
-        if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) || (*c == '.' && prev_hl == HL_NUMBER)) {
+        if ((isdigit(*c) && (prev_sep || prev_hl == HL_NUMBER)) || (*c == '.' && prev_hl == HL_NUMBER)) {
             hl[i] = HL_NUMBER;
             continue;
         }

@@ -31,6 +31,13 @@ typedef struct {
     char c;
 } CoreCommand;
 
+typedef enum {
+    CMD_ERR_INSERT_ROW = 1,
+    CMD_ERR_DELETE_NO_ROWS,
+    CMD_ERR_DELETE_CHAR_INVALID_EP,
+    CMD_ERR_INSERT_NEWLINE,
+} CommandError;
+
 VEC_DEFS(CoreCommand)
 
 // typedef Command* CommandPtr;
