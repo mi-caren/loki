@@ -146,7 +146,7 @@ void str_truncate(String* self, size_t new_len) {
 }
 
 char str_char_at(String* self, size_t pos) {
-    assert(pos < str_len(self));
+    assert(pos < self->vec->len);
     return self->vec->items[pos];
 }
 
