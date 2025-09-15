@@ -207,7 +207,7 @@ void editingPointMove(enum EditorKey key) {
 }
 
 EditingPoint editingPointNew(unsigned int row, unsigned int col) {
-    EditingPoint ep;
+    EditingPoint ep = 0;
     setRow(&ep, row);
     setCol(&ep, col);
     return ep;
