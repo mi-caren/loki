@@ -88,7 +88,7 @@ String* str_insertc(String* self, char c, size_t pos) {
     return self;
 }
 
-String* str_insert(String* self, size_t pos, char* chars) {
+String* str_insert(String* self, char* chars, size_t pos) {
     if (pos > str_len(self)) return NULL;
     // TODO: vec_insert_array
     for (size_t i = 0; i < strlen(chars); i++)

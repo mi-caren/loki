@@ -323,9 +323,9 @@ void editorRowInsertChar(EditorRow* row, unsigned int pos, char c) {
         pos = str_len(&row->chars);
 
     if (c == '\t') {
-        str_insert(&row->chars, pos, "    ");
+        str_insert(&row->chars, "    ", pos);
     } else {
-        str_insertc(&row->chars, pos, c);
+        str_insertc(&row->chars, c, pos);
     }
 }
 
