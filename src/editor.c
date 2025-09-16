@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "editing_point.h"
 #include "editor.h"
@@ -40,7 +41,7 @@ void editorInit(Editor* ed) {
     WRITE_SEQ(ENTER_ALTERNATE_SCREEN);
 
     if (is_err(terminalInit()))
-        editorExitError("Unable to initialize terminal\n");
+        die("Unable to initialize terminal");
 
     atexit(terminalDeinit);
 
@@ -118,6 +119,12 @@ void editorRun() {
 /*
  * Print error message and exit with 1
  */
-inline void die(const char *s) {
-    editorExitError(s);
+void die(const char *s) {
+    WRITE_SEQ(LEAVE_ALTERNATE_SCREEN);
+    if (errno) {
+        perror(s);
+    } else {
+        fprintf(stderr, "%s\n\r", s);
+    }
+    exit(EXIT_FAILURE);
 }

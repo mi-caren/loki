@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "terminal.h"
 #include "aeolus/result.h"
@@ -42,6 +43,8 @@ Res(void) terminalInit() {
  * ne modifica alcuni e riscrive gli attributi.
  */
 Res(void) terminalEnableRawMode() {
+    errno = 5;
+    return term_err(void, TERM_ERR_READ_ATTR);
     if (tcgetattr(STDIN_FILENO, &terminal.orig_termios) == -1)
         return term_err(void, TERM_ERR_READ_ATTR);
 

@@ -6,6 +6,7 @@
 
 #include "editor/utils.h"
 #include "editing_point.h"
+#include "editor.h"
 #include "editor/commands.h"
 #include "editor/search.h"
 #include "editor/defs.h"
@@ -107,7 +108,7 @@ int editorReadKey() {
 
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
         if (nread == -1 && errno != EAGAIN)
-            editorExitError("editor/editor_read_key/read");
+            die("editor/editor_read_key/read");
     }
 
     if (c == '\x1b') {
@@ -183,13 +184,6 @@ void editorSetDirty() {
     editor.dirty = true;
     if (editor.search_query != NULL)
         editorSearch(editor.search_query); // search last query
-}
-
-void editorExitError(const char *s) {
-    WRITE_SEQ(LEAVE_ALTERNATE_SCREEN);
-    fprintf(stderr, "%s\n\r", s);
-    WRITE_SEQ(ENTER_ALTERNATE_SCREEN);
-    exit(EXIT_FAILURE);
 }
 
 void editorScroll() {

@@ -4,7 +4,6 @@
 void editorProcessKeypress();
 int editorReadKey();
 void editorSetDirty();
-void editorExitError(const char *s);
 
 void editorCxToRx();
 void editorScroll();
