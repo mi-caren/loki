@@ -69,9 +69,9 @@ typedef enum {
     TERM_ERR_ESC_SEQ,
 } TerminalError;
 
-Result(void) terminalEnableRawMode();
+Res(void) terminalEnableRawMode();
 void terminalDisableRawMode();
-Result(void) terminalInit();
+Res(void) terminalInit();
 void terminalDeinit();
 
 extern Terminal terminal;

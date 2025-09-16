@@ -37,7 +37,7 @@ VEC_IMPL(Command)
 static unsigned int _countLeadingSpacesBeforeCol(EditorRow* row, unsigned int col);
 static bool _editorDeleteSelection();
 
-static Result(EditingPoint) _coreInsertNewline(EditingPoint ep);
+static Res(EditingPoint) _coreInsertNewline(EditingPoint ep);
 static void _historyPushCmd(Command cmd);
 
 static char* command_strerror(CommandError code) {
@@ -56,7 +56,7 @@ static char* command_strerror(CommandError code) {
 }
 
 
-static Result(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
+static Res(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
     if (editor.rows->len == 0) {
         if (editorInsertRow(0, "") == -1)
             return cmd_err(EditingPoint, CMD_ERR_INSERT_ROW);
@@ -71,7 +71,7 @@ static Result(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
     return ok(EditingPoint, ep);
 }
 
-static Result(char) _coreDeleteChar(EditingPoint ep) {
+static Res(char) _coreDeleteChar(EditingPoint ep) {
     if (editor.rows->len == 0)
         return cmd_err(char, CMD_ERR_DELETE_NO_ROWS);
 
@@ -92,7 +92,7 @@ static Result(char) _coreDeleteChar(EditingPoint ep) {
     return ok(char, c);
 }
 
-static Result(EditingPoint) _coreInsertNewline(EditingPoint ep) {
+static Res(EditingPoint) _coreInsertNewline(EditingPoint ep) {
     // clear selection
     editor.selecting = false;
 

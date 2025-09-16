@@ -10,8 +10,8 @@
 Terminal terminal;
 
 
-static Result(void) terminalGetCursorPosition(int *rows, int *cols);
-static Result(void) terminalGetWindowSize(int *rows, int *cols);
+static Res(void) terminalGetCursorPosition(int *rows, int *cols);
+static Res(void) terminalGetWindowSize(int *rows, int *cols);
 
 static char* terminal_strerror(TerminalError code) {
     switch (code) {
@@ -28,7 +28,7 @@ static char* terminal_strerror(TerminalError code) {
     return "Unreachable";
 }
 
-Result(void) terminalInit() {
+Res(void) terminalInit() {
     try(void, terminalEnableRawMode());
     terminal.cursor_pos.cx = 0;
     terminal.cursor_pos.cy = 0;
@@ -41,7 +41,7 @@ Result(void) terminalInit() {
  * Legge gli attributi del terminale,
  * ne modifica alcuni e riscrive gli attributi.
  */
-Result(void) terminalEnableRawMode() {
+Res(void) terminalEnableRawMode() {
     if (tcgetattr(STDIN_FILENO, &terminal.orig_termios) == -1)
         return term_err(void, TERM_ERR_READ_ATTR);
 
@@ -85,7 +85,7 @@ void terminalDeinit() {
 
 /* ----------------- STATIC ----------------- */
 
-static Result(void) terminalGetCursorPosition(int *rows, int *cols) {
+static Res(void) terminalGetCursorPosition(int *rows, int *cols) {
     char buf[32];
     unsigned int i = 0;
 
@@ -108,7 +108,7 @@ static Result(void) terminalGetCursorPosition(int *rows, int *cols) {
     return ok(void);
 }
 
-static Result(void) terminalGetWindowSize(int *rows, int *cols) {
+static Res(void) terminalGetWindowSize(int *rows, int *cols) {
     if (WRITE_SEQ(MOVE_CURSOR_TO_BOTTOM_RIGHT) != 12)
         return term_err(void, TERM_ERR_ESC_SEQ);
 
