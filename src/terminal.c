@@ -4,7 +4,6 @@
 
 #include "terminal.h"
 #include "aeolus/result.h"
-#include "error.h"
 
 #define term_err(TYPE, CODE)    err(TYPE, CODE, terminal_strerror)
 

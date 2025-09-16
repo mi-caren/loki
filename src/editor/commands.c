@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
+#include "editor.h"
 #include "editing_point.h"
 #include "editor/keys.h"
 #include "status_bar.h"
@@ -21,7 +22,6 @@
 #include "aeolus/iterator.h"
 #include "aeolus/result.h"
 #include "aeolus/string.h"
-#include "aeolus/utils.h"
 #include "aeolus/vec.h"
 #include "editor/commands.h"
 
@@ -203,7 +203,7 @@ static bool _editorDeleteSelection() {
     while (editor.editing_point >= selection_start) {
         char c = catch(char, _coreDeleteChar(editor.editing_point), err) {
             if (err != CMD_ERR_DELETE_NO_ROWS)
-                PANIC_FMT("[ERROR CODE %d]: core delete char", err);
+                die("delete selection");
         }
 
         CoreCommand ccmd = {
@@ -229,7 +229,7 @@ void cmdDelete(bool del_key) {
 
         char c = catch(char, _coreDeleteChar(editor.editing_point), err) {
             if (err != CMD_ERR_DELETE_NO_ROWS)
-                PANIC_FMT("[ERROR CODE %d]: core delete char", err);
+                die("cmd delete");
         }
 
         CoreCommand ccmd = {

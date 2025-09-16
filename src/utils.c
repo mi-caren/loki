@@ -15,25 +15,3 @@ unsigned int umin(unsigned int a, unsigned int b) {
 unsigned int umax(unsigned int a, unsigned int b) {
     return a > b ? a : b;
 }
-
-
-static void (*beforePanicFunc) () = NULL;
-
-
-void atPanic(void (*beforePanicCallback) ()) {
-    beforePanicFunc = beforePanicCallback;
-}
-
-// Calls a function registered with atPanic,
-// print an error message and exits with error.
-void panic(char* filename, int linenumber, char* msg) {
-    if (beforePanicFunc) {
-        beforePanicFunc();
-    }
-
-    fprintf(stderr, "Panicked at %s:%d\n", filename, linenumber);
-    if (msg) {
-        fprintf(stderr, "%s\n", msg);
-    }
-    exit(EXIT_FAILURE);
-}

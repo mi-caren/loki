@@ -187,7 +187,8 @@ void editorSetDirty() {
 
 void editorExitError(const char *s) {
     WRITE_SEQ(LEAVE_ALTERNATE_SCREEN);
-    fprintf(stderr, "%s", s);
+    fprintf(stderr, "%s\n\r", s);
+    WRITE_SEQ(ENTER_ALTERNATE_SCREEN);
     exit(EXIT_FAILURE);
 }
 

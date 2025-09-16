@@ -38,8 +38,6 @@ void editorInit(Editor* ed) {
     // We immediately switch to alternate screen
     // because terminalInit function can mess the terminal by moving the cursor
     WRITE_SEQ(ENTER_ALTERNATE_SCREEN);
-    // Leave alternate screen if a panic occurs
-    atPanic(atPanicCallback);
 
     if (is_err(terminalInit()))
         editorExitError("Unable to initialize terminal\n");
