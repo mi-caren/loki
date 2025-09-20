@@ -3,6 +3,7 @@
 
 #include "utils.h"
 #include "generics.h"
+#include <bits/types/error_t.h>
 #include <string.h>
 
 /* *********** RESULT *********** */
@@ -58,7 +59,7 @@ typedef const char* Err;
 #define ERR_FUNC_SIGNATURE(TYPE)     Res(TYPE) ERR_FUNC_NAME(TYPE)(Err err, const char* filename, int linenumber)
 #define ERR_FUNC_IMPL(TYPE) \
     ERR_FUNC_SIGNATURE(TYPE) { \
-        errdbg("err", err, filename, linenumber)\
+        errdbg("error", err, filename, linenumber)\
         return (Res(TYPE)) {\
             .err = err,\
         };\
@@ -107,16 +108,24 @@ typedef const char* Err;
 #define try(TYPE, EXPR) \
     TRY_FUNC_NAME(TYPE)(EXPR); \
     if (_res_get_try_err()) {\
-        errdbg("try", _res_get_try_err(), __FILE__, __LINE__)\
+        errdbg("  try", _res_get_try_err(), __FILE__, __LINE__)\
         return (Res(TYPE)) {\
             .err = _res_get_try_err(),\
         };\
     }
 
+#ifdef NDEBUG
+    #define catch_errdbg(ERR)
+#else
+    #define catch_errdbg(ERR)\
+        if (ERR)\
+            errdbg("catch", ERR, __FILE__, __LINE__);
+#endif
 /* ********* CATCH *********** */
 #define catch(TYPE, EXPR, ERR) \
     TRY_FUNC_NAME(TYPE)(EXPR); \
     Err ERR = _res_get_try_err();\
+    catch_errdbg(ERR)\
     if (ERR)
 
 #define is_ok(RES)                   (RES.err == NULL)
