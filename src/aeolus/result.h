@@ -26,23 +26,11 @@ typedef const char* Err;
 #define RES_OK 0
 
 /* ********* OK *********** */
-#define OK_FUNC_NAME(TYPE)              CAT(Res(TYPE), _ok)
-#define OK_FUNC_SIGNATURE(TYPE) \
-    Res(TYPE) OK_FUNC_NAME(TYPE)( \
-        IF_VOID(TYPE)( \
-            , \
-            TYPE val \
-        ) \
-    )
-#define OK_FUNC_IMPL(TYPE) \
-    OK_FUNC_SIGNATURE(TYPE) { \
-        Res(TYPE) res = {\
-            .err = false,\
-            IF_VOID(TYPE) ( , .res.val = val) \
-        }; \
-        return res; \
+#define ok(TYPE, ...)\
+    (Res(TYPE)) {\
+        .err = false,\
+        IF_VOID(TYPE) ( , .res.val = __VA_ARGS__)\
     }
-#define ok(TYPE, ...)       OK_FUNC_NAME(TYPE)(IF_VOID(TYPE)( , __VA_ARGS__))
 
 /* ********* ERR *********** */
 #define ERR_FUNC_NAME(TYPE)           CAT(Res(TYPE), _err)
@@ -127,19 +115,16 @@ Err _res_get_try_strerror();
 
 #define RESULT_DEFS(TYPE)\
     RESULT_STRUCT_DEF(TYPE);\
-    OK_FUNC_SIGNATURE(TYPE);\
     ERR_FUNC_SIGNATURE(TYPE);\
     RES_PANIC_FUNC_SIGNATURE(TYPE);\
     UNWRAP_FUNC_SIGNATURE(TYPE);\
     TRY_FUNC_SIGNATURE(TYPE);\
 
 #define RESULT_IMPL(TYPE)\
-    OK_FUNC_IMPL(TYPE)\
     ERR_FUNC_IMPL(TYPE)\
     RES_PANIC_FUNC_IMPL(TYPE)\
     UNWRAP_FUNC_IMPL(TYPE)\
     TRY_FUNC_IMPL(TYPE)\
-    /* RES_STRERROR_FUNC_IMPL(TYPE) STRERROR_IMPL */\
 
 
 RESULT_DEFS(void)
