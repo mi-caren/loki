@@ -5,25 +5,16 @@
 
 #include "result.h"
 
-static thread_local bool _res_try_err = false;
-static thread_local Err _res_try_strerror = NULL;
+static thread_local Err _res_try_err = NULL;
 
-
-void _res_set_try_error(bool err, Err strerror) {
+void _res_set_try_err(Err err) {
     _res_try_err = err;
-    if (err)
-        _res_try_strerror = strerror;
-    else
-        _res_try_strerror = NULL;
 }
 
-bool _res_get_try_err() {
+Err _res_get_try_err() {
     return _res_try_err;
 }
 
-Err _res_get_try_strerror() {
-    return _res_try_strerror;
-}
 
 RESULT_IMPL(void)
 RESULT_IMPL(int)

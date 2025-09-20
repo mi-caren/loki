@@ -13,14 +13,11 @@ typedef const char* Err;
 
 #define RESULT_STRUCT_DEF(TYPE)\
     typedef struct {\
-        bool err;\
-        union {\
-            IF_VOID(TYPE)(\
-                ,\
-                TYPE val;\
-            )\
-            Err strerror;\
-        } res;\
+        Err err;\
+        IF_VOID(TYPE)(\
+            ,\
+            TYPE val;\
+        )\
     } Res(TYPE)
 
 #define RES_OK 0
@@ -28,15 +25,14 @@ typedef const char* Err;
 /* ********* OK *********** */
 #define ok(TYPE, ...)\
     (Res(TYPE)) {\
-        .err = false,\
-        IF_VOID(TYPE) ( , .res.val = __VA_ARGS__)\
+        .err = NULL,\
+        IF_VOID(TYPE) ( , .val = __VA_ARGS__)\
     }
 
 /* ********* ERR *********** */
 #define err(TYPE, ERR)\
     (Res(TYPE)) {\
-        .err = true,\
-        .res.strerror = ERR,\
+        .err = ERR,\
     };
 
 /* ********* PANIC *********** */
@@ -46,7 +42,7 @@ typedef const char* Err;
     RES_PANIC_FUNC_SIGNATURE(TYPE) {\
         fprintf(stderr, "Panicked at %s:%d\n", filename, linenumber);\
         if (res.err) {\
-            fprintf(stderr, "%s\n", res.res.strerror);\
+            fprintf(stderr, "%s\n", res.err);\
         }\
         abort();\
     }
@@ -62,7 +58,7 @@ typedef const char* Err;
         } \
         IF_VOID(TYPE)( \
             , \
-            return res.res.val; \
+            return res.val; \
         ) \
     }
 #define unwrap(TYPE, RES)            UNWRAP_FUNC_NAME(TYPE)(RES, __FILE__, __LINE__)
@@ -72,40 +68,28 @@ typedef const char* Err;
 #define TRY_FUNC_SIGNATURE(TYPE)        TYPE TRY_FUNC_NAME(TYPE)(Res(TYPE) res)
 #define TRY_FUNC_IMPL(TYPE) \
     TRY_FUNC_SIGNATURE(TYPE) { \
-        _res_set_try_error(res.err, res.res.strerror); \
+        _res_set_try_err(res.err); \
         IF_VOID(TYPE)( \
             , \
-            return res.res.val; \
+            return res.val; \
         ) \
     }
 #define try(TYPE, EXPR) \
     TRY_FUNC_NAME(TYPE)(EXPR); \
     if (_res_get_try_err()) \
-        return (Res(TYPE)){\
-            .err = _res_get_try_err(),\
-            .res.strerror = _res_get_try_strerror()\
-        };
+        return err(TYPE, _res_get_try_err());
 
 /* ********* CATCH *********** */
 #define catch(TYPE, EXPR, ERR) \
     TRY_FUNC_NAME(TYPE)(EXPR); \
-    Err ERR = _res_get_try_strerror();\
+    Err ERR = _res_get_try_err();\
     if (ERR)
 
-/* ********* PERROR *********** */
-/* #define res_perror(RES, MSG)    fprintf(STDERR_FILENO, "%s: %s", MSG, RES.res.strerror(RES.code)) */
-/* 
-#define RES_STRERROR_FUNC_NAME(TYPE)        CAT(Res(TYPE), _strerror)
-#define RES_STRERROR_FUNC_SIGNATURE(TYPE)   char* RES_STRERROR_FUNC_NAME(TYPE)(Error err);
-#define RES_STRERROR_FUNC_IMPL(TYPE)\
-        RES_STRERROR_FUNC_SIGNATURE(TYPE)
- */
-#define is_ok(RES)                   (RES.err == false)
-#define is_err(RES)                  (RES.err == true)
+#define is_ok(RES)                   (RES.err == NULL)
+#define is_err(RES)                  (RES.err != NULL)
 
-void _res_set_try_error(bool err, Err strerror);
-bool _res_get_try_err();
-Err _res_get_try_strerror();
+void _res_set_try_err(Err err);
+Err _res_get_try_err();
 
 #define RESULT_DEFS(TYPE)\
     RESULT_STRUCT_DEF(TYPE);\
