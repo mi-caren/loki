@@ -5,21 +5,24 @@
 
 #include "result.h"
 
-static thread_local Error _res_try_error_code = RES_OK;
-static thread_local char* (*_res_try_error_strerror)(Error);
+static thread_local bool _res_try_err = false;
+static thread_local Err _res_try_strerror = NULL;
 
 
-void _res_set_try_error(Error code, char* (*strerror) (Error)) {
-    _res_try_error_code = code;
-    _res_try_error_strerror = strerror;
+void _res_set_try_error(bool err, Err strerror) {
+    _res_try_err = err;
+    if (err)
+        _res_try_strerror = strerror;
+    else
+        _res_try_strerror = NULL;
 }
 
-Error _res_get_try_error_code() {
-    return _res_try_error_code;
+bool _res_get_try_err() {
+    return _res_try_err;
 }
 
-char* (*_res_get_try_error_strerror())(Error) {
-    return _res_try_error_strerror;
+Err _res_get_try_strerror() {
+    return _res_try_strerror;
 }
 
 RESULT_IMPL(void)

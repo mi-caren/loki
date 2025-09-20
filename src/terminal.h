@@ -43,6 +43,12 @@
 #define LEAVE_ALTERNATE_SCREEN_SEQ_SIZE         8
 
 
+/* TERMINAL ERRORS */
+#define ETERM_READ_ATTR         "read terminal attributes"
+#define ETERM_WRITE_ATTR        "write terminal attributes"
+#define ETERM_GET_CURSOR_POS    "get terminal cursor position"
+#define ETERM_ESC_SEQ           "write escape sequence"
+
 
 struct CursorPosition {
     unsigned int cx;
@@ -56,18 +62,6 @@ typedef struct {
 
     struct termios orig_termios;
 } Terminal;
-
-// #define TERM_ERR_READ_ATTR              ERROR_PARAMS(TermReadAttr, "Unable to read terminal attributes")
-// #define TERM_ERR_WRITE_ATTR             ERROR_PARAMS(TermWriteAttr, "Unable to write terminal attributes")
-// #define TERM_ERR_GET_CURSOR_POS         ERROR_PARAMS(TermGetCursorPos, "Error while getting terminal cursor position")
-// #define TERM_ERR_ESC_SEQ                ERROR_PARAMS(TermEscSeq, "Escape sequence error")
-
-typedef enum {
-    TERM_ERR_READ_ATTR = 1,
-    TERM_ERR_WRITE_ATTR,
-    TERM_ERR_GET_CURSOR_POS,
-    TERM_ERR_ESC_SEQ,
-} TerminalError;
 
 Res(void) terminalEnableRawMode();
 void terminalDisableRawMode();

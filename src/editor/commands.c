@@ -25,9 +25,6 @@
 #include "aeolus/vec.h"
 #include "editor/commands.h"
 
-#define cmd_err(TYPE, CODE) err(TYPE, CODE, command_strerror)
-
-
 extern struct Editor editor;
 
 VEC_IMPL(CoreCommand)
@@ -40,26 +37,11 @@ static bool _editorDeleteSelection();
 static Res(EditingPoint) _coreInsertNewline(EditingPoint ep);
 static void _historyPushCmd(Command cmd);
 
-static char* command_strerror(CommandError code) {
-    switch (code) {
-        case CMD_ERR_INSERT_ROW:
-            return "Command insert row";
-        case CMD_ERR_DELETE_NO_ROWS:
-            return "Command delete no rows";
-        case CMD_ERR_DELETE_CHAR_INVALID_EP:
-            return "Command delete char invalid Editing Point";
-        case CMD_ERR_INSERT_NEWLINE:
-            return "Command insert newline";
-    }
-
-    return "Unreachable";
-}
-
 
 static Res(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
     if (editor.rows->len == 0) {
         if (editorInsertRow(0, "") == -1)
-            return cmd_err(EditingPoint, CMD_ERR_INSERT_ROW);
+            return err(EditingPoint, ECMD_INSERT_ROW);
     }
 
     if (c == '\r')
@@ -73,10 +55,10 @@ static Res(EditingPoint) _coreInsertChar(char c, EditingPoint ep) {
 
 static Res(char) _coreDeleteChar(EditingPoint ep) {
     if (editor.rows->len == 0)
-        return cmd_err(char, CMD_ERR_DELETE_NO_ROWS);
+        return err(char, ECMD_NO_ROWS);
 
     if (getRow(ep) >= editor.rows->len || getCol(ep) > str_len(&ROW_AT(ep)->chars))
-        return cmd_err(char, CMD_ERR_DELETE_CHAR_INVALID_EP);
+        return err(char, ECMD_INVALID_EP);
 
     if (getCol(ep) == str_len(&ROW_AT(ep)->chars)) {
         EditorRow* next_row = ROW_AT(addRows(ep, 1));
@@ -129,7 +111,7 @@ static Res(EditingPoint) _coreInsertNewline(EditingPoint ep) {
 
 insert_newline_error:
     messageBarSet("Unable to insert new row");
-    return cmd_err(EditingPoint, CMD_ERR_INSERT_NEWLINE);
+    return err(EditingPoint, ECMD_INSERT_NEWLINE);
 }
 
 void cmdInsertChar(char c) {
@@ -201,9 +183,8 @@ static bool _editorDeleteSelection() {
     Command cmd = vec_new(CoreCommand);
 
     while (editor.editing_point >= selection_start) {
-        char c = catch(char, _coreDeleteChar(editor.editing_point), err) {
-            if (err != CMD_ERR_DELETE_NO_ROWS)
-                die("delete selection");
+        char c = catch(char, _coreDeleteChar(editor.editing_point), e) {
+            messageBarSet("Cannot delete selection: %s", e);
         }
 
         CoreCommand ccmd = {
@@ -227,9 +208,8 @@ void cmdDelete(bool del_key) {
         if (!del_key)
             editingPointMove(ARROW_LEFT);
 
-        char c = catch(char, _coreDeleteChar(editor.editing_point), err) {
-            if (err != CMD_ERR_DELETE_NO_ROWS)
-                die("cmd delete");
+        char c = catch(char, _coreDeleteChar(editor.editing_point), e) {
+            messageBarSet("Unable to delete char: %s", e);
         }
 
         CoreCommand ccmd = {

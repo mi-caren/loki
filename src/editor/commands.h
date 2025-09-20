@@ -10,6 +10,12 @@
 #include "aeolus/result.h"
 #include "aeolus/vec.h"
 
+/* COMMANDS ERROR */
+#define ECMD_INSERT_ROW     "insert row error"
+#define ECMD_NO_ROWS        "no rows"
+#define ECMD_INVALID_EP     "invalid editing point"
+#define ECMD_INSERT_NEWLINE "insert newline error"
+
 
 typedef enum {
     CCMD_INSERT_CHAR,
@@ -31,12 +37,6 @@ typedef struct {
     char c;
 } CoreCommand;
 
-typedef enum {
-    CMD_ERR_INSERT_ROW = 1,
-    CMD_ERR_DELETE_NO_ROWS,
-    CMD_ERR_DELETE_CHAR_INVALID_EP,
-    CMD_ERR_INSERT_NEWLINE,
-} CommandError;
 
 VEC_DEFS(CoreCommand)
 
