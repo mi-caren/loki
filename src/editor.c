@@ -128,3 +128,11 @@ void die(const char *s) {
     }
     exit(EXIT_FAILURE);
 }
+
+void pre_errdbg() {
+    WRITE_SEQ(LEAVE_ALTERNATE_SCREEN);
+}
+
+void post_errdbg() {
+    WRITE_SEQ(ENTER_ALTERNATE_SCREEN);
+}

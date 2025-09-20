@@ -22,6 +22,29 @@ typedef const char* Err;
 
 #define RES_OK 0
 
+#ifdef NDEBUG
+    #define errdbg(MSG, ERR, FILENAME, LINENUMBER)
+#else
+    #ifdef PRE_ERRDBG
+        void pre_errdbg();
+        #define _PRE_ERRDBG pre_errdbg();
+    #else
+        #define _PRE_ERRDBG
+    #endif
+
+    #ifdef POST_ERRDBG
+        void post_errdbg();
+        #define _POST_ERRDBG post_errdbg();
+    #else
+        #define _POST_ERRDBG
+    #endif
+
+    #define errdbg(MSG, ERR, FILENAME, LINENUMBER)\
+        _PRE_ERRDBG\
+        fprintf(stderr, "[errdbg] %s:%d\t %s: %s\n\r", FILENAME, LINENUMBER, MSG, ERR);\
+        _POST_ERRDBG
+#endif
+
 /* ********* OK *********** */
 #define ok(TYPE, ...)\
     (Res(TYPE)) {\
@@ -30,10 +53,17 @@ typedef const char* Err;
     }
 
 /* ********* ERR *********** */
-#define err(TYPE, ERR)\
-    (Res(TYPE)) {\
-        .err = ERR,\
-    };
+/* ********* UNWRAP *********** */
+#define ERR_FUNC_NAME(TYPE)          CAT(Res(TYPE), _err)
+#define ERR_FUNC_SIGNATURE(TYPE)     Res(TYPE) ERR_FUNC_NAME(TYPE)(Err err, const char* filename, int linenumber)
+#define ERR_FUNC_IMPL(TYPE) \
+    ERR_FUNC_SIGNATURE(TYPE) { \
+        errdbg("err", err, filename, linenumber)\
+        return (Res(TYPE)) {\
+            .err = err,\
+        };\
+    }
+#define err(TYPE, ERR)  ERR_FUNC_NAME(TYPE)(ERR, __FILE__, __LINE__)
 
 /* ********* PANIC *********** */
 #define RES_PANIC_FUNC_NAME(TYPE)           CAT(Res(TYPE), _panic)
@@ -76,8 +106,12 @@ typedef const char* Err;
     }
 #define try(TYPE, EXPR) \
     TRY_FUNC_NAME(TYPE)(EXPR); \
-    if (_res_get_try_err()) \
-        return err(TYPE, _res_get_try_err());
+    if (_res_get_try_err()) {\
+        errdbg("try", _res_get_try_err(), __FILE__, __LINE__)\
+        return (Res(TYPE)) {\
+            .err = _res_get_try_err(),\
+        };\
+    }
 
 /* ********* CATCH *********** */
 #define catch(TYPE, EXPR, ERR) \
@@ -93,12 +127,14 @@ Err _res_get_try_err();
 
 #define RESULT_DEFS(TYPE)\
     RESULT_STRUCT_DEF(TYPE);\
+    ERR_FUNC_SIGNATURE(TYPE);\
     RES_PANIC_FUNC_SIGNATURE(TYPE);\
     UNWRAP_FUNC_SIGNATURE(TYPE);\
     TRY_FUNC_SIGNATURE(TYPE);\
 
 #define RESULT_IMPL(TYPE)\
     RES_PANIC_FUNC_IMPL(TYPE)\
+    ERR_FUNC_IMPL(TYPE)\
     UNWRAP_FUNC_IMPL(TYPE)\
     TRY_FUNC_IMPL(TYPE)\
 

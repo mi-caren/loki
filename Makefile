@@ -1,6 +1,6 @@
 include config.mk
 
-CPPFLAGS = -MMD -Isrc
+CPPFLAGS = -MMD -Isrc -DPRE_ERRDBG -DPOST_ERRDBG
 CFLAGS = -Wall -Wextra -pedantic --std=c23
 LDFLAGS = -L$(LIB_DIR) -laeolus
 

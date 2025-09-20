@@ -26,6 +26,7 @@ Res(void) terminalInit() {
  * ne modifica alcuni e riscrive gli attributi.
  */
 Res(void) terminalEnableRawMode() {
+    return err(void, "test error");
     if (tcgetattr(STDIN_FILENO, &terminal.orig_termios) == -1)
         return err(void, ETERM_READ_ATTR);
 

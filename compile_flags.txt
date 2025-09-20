@@ -4,3 +4,5 @@
 -Isrc
 --std=c23
 -g
+-DPRE_ERRDBG
+-DPOST_ERRDBG
