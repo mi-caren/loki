@@ -33,17 +33,11 @@ typedef const char* Err;
     }
 
 /* ********* ERR *********** */
-#define ERR_FUNC_NAME(TYPE)           CAT(Res(TYPE), _err)
-#define ERR_FUNC_SIGNATURE(TYPE)      Res(TYPE) ERR_FUNC_NAME(TYPE)(Err err)
-#define ERR_FUNC_IMPL(TYPE) \
-    ERR_FUNC_SIGNATURE(TYPE) { \
-        Res(TYPE) res = {\
-            .err = true,\
-            .res.strerror = err,\
-        }; \
-        return res; \
-    }
-#define err(TYPE, ERR)     ERR_FUNC_NAME(TYPE)(ERR)
+#define err(TYPE, ERR)\
+    (Res(TYPE)) {\
+        .err = true,\
+        .res.strerror = ERR,\
+    };
 
 /* ********* PANIC *********** */
 #define RES_PANIC_FUNC_NAME(TYPE)           CAT(Res(TYPE), _panic)
@@ -115,13 +109,11 @@ Err _res_get_try_strerror();
 
 #define RESULT_DEFS(TYPE)\
     RESULT_STRUCT_DEF(TYPE);\
-    ERR_FUNC_SIGNATURE(TYPE);\
     RES_PANIC_FUNC_SIGNATURE(TYPE);\
     UNWRAP_FUNC_SIGNATURE(TYPE);\
     TRY_FUNC_SIGNATURE(TYPE);\
 
 #define RESULT_IMPL(TYPE)\
-    ERR_FUNC_IMPL(TYPE)\
     RES_PANIC_FUNC_IMPL(TYPE)\
     UNWRAP_FUNC_IMPL(TYPE)\
     TRY_FUNC_IMPL(TYPE)\
